@@ -97,13 +97,10 @@ function ensureAuth(req, res, next) {
 // ── Health check (no auth needed) ──
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
 
-// ── Protected dashboard ──
+// ── Protected dashboard (served from root, not public/) ──
 app.get('/', ensureAuth, (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
+  res.sendFile(path.join(__dirname, 'dashboard.html'));
 });
-
-// Serve static assets (CSS/JS/images if any) behind auth
-app.use(ensureAuth, express.static(path.join(__dirname, 'public')));
 
 // ── Start ──
 app.listen(PORT, () => {
