@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sophie's Dashboard — Fermat</title>
+<meta http-equiv="refresh" content="3600">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  /* Fermat Tangent Design System */
+  --forest:#294339;--leaf:#566146;--creme:#D1CFC1;--gold:#DBCB77;
+  --lavender:#C1B1D5;--cherry:#6C2B2F;--apple:#A4251D;--ochre:#CA983F;
+
+  /* Surfaces — Forest-tinted dark */
+  --bg:#060d0a;--surface:#0c1610;--card:#111d16;--card-hover:#172419;
+
+  /* Accent — Lavender */
+  --accent:#C1B1D5;--accent-dim:#9b86b5;--accent-soft:rgba(193,177,213,.12);
+
+  /* Semantic — from Tangent */
+  --green:#48BB78;--green-soft:rgba(72,187,120,.12);
+  --yellow:#ED8936;--yellow-soft:rgba(237,137,54,.12);
+  --red:#E53E3E;--red-soft:rgba(229,62,62,.12);
+  --blue:#4299E1;--blue-soft:rgba(66,153,225,.12);
+  --orange:#CA983F;--orange-soft:rgba(202,152,63,.12);
+  --gray:#7a8b7e;--gray-soft:rgba(86,97,70,.1);
+
+  /* Gold accent */
+  --gold-soft:rgba(219,203,119,.12);
+
+  /* Text — Creme-tinted */
+  --text:#D1CFC1;--text-dim:#9fa89a;--text-muted:#5c6b5e;
+
+  /* Borders — Forest */
+  --border:#1a2b22;--border-light:#243830
+}
+body{font-family:'Hanken Grotesk',-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.5}
+a{color:var(--accent);text-decoration:none}
+
+/* Header */
+.header{background:linear-gradient(135deg,var(--surface) 0%,#0f2118 40%,#1a2b22 70%,var(--surface) 100%);padding:28px 40px;border-bottom:1px solid var(--border)}
+.header-inner{max-width:1400px;margin:0 auto;display:flex;justify-content:space-between;align-items:center}
+.header h1{font-size:22px;font-weight:700;letter-spacing:-.3px}
+.header h1 .highlight{color:var(--gold)}
+.header .fermat-mark{font-weight:800;letter-spacing:1.5px;text-transform:uppercase;font-size:10px;color:var(--leaf);background:rgba(86,97,70,.15);padding:3px 8px;border-radius:4px;margin-left:12px;vertical-align:middle}
+.header .meta{font-size:12px;color:var(--text-muted);display:flex;gap:16px;align-items:center}
+.header .meta .dot{width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* Summary Strip */
+.summary{display:flex;gap:1px;background:var(--border);border-bottom:1px solid var(--border)}
+.summary-item{flex:1;padding:16px 20px;background:var(--surface);text-align:center;transition:background .2s}
+.summary-item:hover{background:var(--card)}
+.summary-item .number{font-size:28px;font-weight:800;letter-spacing:-1px}
+.summary-item .label{font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--text-muted);margin-top:2px}
+.summary-item.green .number{color:var(--green)}
+.summary-item.yellow .number{color:var(--yellow)}
+.summary-item.red .number{color:var(--red)}
+.summary-item.blue .number{color:var(--blue)}
+.summary-item.accent .number{color:var(--gold)}
+
+/* Main Layout */
+.main{max-width:1400px;margin:0 auto;padding:24px 40px 60px;display:grid;grid-template-columns:1fr 380px;gap:24px}
+@media(max-width:900px){.main{grid-template-columns:1fr;padding:16px}}
+
+/* Sections */
+.section{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:20px}
+.section-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.section-title{font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px}
+.section-badge{font-size:11px;padding:2px 8px;border-radius:10px;font-weight:600}
+.section-body{padding:16px 20px}
+.section-body.compact{padding:12px 16px}
+
+/* Alert Items */
+.alert-item{padding:12px 16px;border-radius:8px;margin-bottom:8px;background:var(--surface);border:1px solid var(--border);font-size:13px;transition:all .2s}
+.alert-item:last-child{margin-bottom:0}
+.alert-item:hover{border-color:var(--border-light);background:var(--card-hover)}
+.alert-item .alert-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.alert-item .alert-time{font-size:11px;color:var(--text-muted);white-space:nowrap}
+.alert-item .alert-tag{font-size:10px;padding:2px 6px;border-radius:6px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.tag-red{background:var(--red-soft);color:var(--red)}
+.tag-yellow{background:var(--yellow-soft);color:var(--yellow)}
+.tag-green{background:var(--green-soft);color:var(--green)}
+.tag-blue{background:var(--blue-soft);color:var(--blue)}
+.tag-accent{background:var(--gold-soft);color:var(--gold)}
+.tag-gray{background:var(--gray-soft);color:var(--gray)}
+.alert-item .alert-content{color:var(--text-dim);line-height:1.6}
+.alert-item .alert-content strong{color:var(--text);font-weight:600}
+
+/* Action Item List */
+.action-list{list-style:none}
+.action-list li{padding:10px 0;border-bottom:1px solid var(--border);display:flex;gap:10px;align-items:flex-start;font-size:13px}
+.action-list li:last-child{border-bottom:none}
+.action-dot{width:8px;height:8px;border-radius:50%;margin-top:5px;flex-shrink:0}
+.action-dot.red{background:var(--red)}
+.action-dot.yellow{background:var(--yellow)}
+.action-dot.green{background:var(--green)}
+
+/* Spam List */
+.spam-item{display:flex;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;align-items:center}
+.spam-item:last-child{border-bottom:none}
+.spam-sender{font-weight:600;color:var(--text);min-width:120px}
+.spam-reason{color:var(--text-muted);flex:1}
+.spam-time{font-size:11px;color:var(--text-muted);white-space:nowrap}
+
+/* Sidebar */
+.sidebar .section{margin-bottom:16px}
+.mini-stat{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px}
+.mini-stat:last-child{border-bottom:none}
+.mini-stat .label{color:var(--text-dim)}
+.mini-stat .value{font-weight:700}
+
+/* Task Status Grid */
+.task-status-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.task-pill{font-size:11px;padding:6px 10px;border-radius:8px;background:var(--surface);border:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:4px}
+.task-pill .name{color:var(--text-dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.task-pill .status-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.task-pill .status-dot.ok{background:var(--green)}
+.task-pill .status-dot.warn{background:var(--yellow)}
+.task-pill .status-dot.err{background:var(--red)}
+.task-pill .status-dot.off{background:var(--gray)}
+
+/* Timeline */
+.timeline-item{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);font-size:12px}
+.timeline-item:last-child{border-bottom:none}
+.timeline-time{color:var(--text-muted);width:55px;flex-shrink:0;text-align:right}
+.timeline-dot{width:8px;height:8px;border-radius:50%;margin-top:4px;flex-shrink:0;background:var(--leaf)}
+.timeline-text{color:var(--text-dim)}
+.timeline-text strong{color:var(--text);font-weight:600}
+
+/* Empty state */
+.empty-state{text-align:center;padding:32px;color:var(--text-muted);font-size:13px}
+
+/* Task Checklist */
+.task-checklist{list-style:none}
+.task-check-item{display:flex;align-items:flex-start;gap:12px;padding:10px 12px;border-radius:8px;margin-bottom:4px;transition:all .2s;cursor:pointer;user-select:none}
+.task-check-item:hover{background:var(--surface)}
+.task-check-item.checked{opacity:.5}
+.task-check-item.checked .task-check-text{text-decoration:line-through;color:var(--text-muted)}
+.task-checkbox{width:18px;height:18px;border-radius:5px;border:2px solid var(--border-light);flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;transition:all .2s;cursor:pointer}
+.task-checkbox:hover{border-color:var(--leaf)}
+.task-checkbox.checked{background:var(--forest);border-color:var(--leaf)}
+.task-checkbox.checked::after{content:'✓';color:#fff;font-size:11px;font-weight:700}
+.task-check-text{font-size:13px;flex:1;line-height:1.4}
+.task-check-meta{display:flex;gap:6px;margin-top:4px;align-items:center}
+.task-due{font-size:10px;padding:2px 6px;border-radius:4px;font-weight:600}
+.task-due.overdue{background:var(--red-soft);color:var(--red)}
+.task-due.today{background:var(--orange-soft);color:var(--orange)}
+.task-due.upcoming{background:var(--blue-soft);color:var(--blue)}
+.task-due.none{background:var(--gray-soft);color:var(--gray)}
+.task-priority-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.task-owner{font-size:10px;color:var(--text-muted);background:var(--gray-soft);padding:1px 6px;border-radius:4px}
+.task-filter-bar{display:flex;gap:6px;padding:0 0 12px;border-bottom:1px solid var(--border);margin-bottom:8px;flex-wrap:wrap}
+.task-filter{font-size:11px;padding:4px 10px;border-radius:6px;background:var(--surface);border:1px solid var(--border);color:var(--text-dim);cursor:pointer;transition:all .15s;font-weight:600}
+.task-filter.active{background:var(--gold-soft);border-color:var(--gold);color:var(--gold)}
+.task-filter:hover{border-color:var(--gold)}
+.task-counter{font-size:12px;color:var(--text-muted);padding:8px 0;text-align:right}
+.notion-link{font-size:11px;color:var(--gold);text-decoration:none;opacity:0;transition:opacity .15s;margin-left:auto;flex-shrink:0;padding:2px 6px}
+.task-check-item:hover .notion-link{opacity:1}
+
+/* Tabs within sections */
+.section-tabs{display:flex;gap:0;border-bottom:1px solid var(--border)}
+.section-tab{padding:10px 16px;font-size:12px;font-weight:600;color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s}
+.section-tab.active{color:var(--gold);border-bottom-color:var(--gold)}
+.section-tab:hover{color:var(--text)}
+.section-tab-content{display:none}
+.section-tab-content.active{display:block}
+
+/* Scroll */
+.scroll-area{max-height:320px;overflow-y:auto}
+.scroll-area::-webkit-scrollbar{width:4px}
+.scroll-area::-webkit-scrollbar-track{background:transparent}
+.scroll-area::-webkit-scrollbar-thumb{background:var(--border-light);border-radius:4px}
+
+/* FPPC Events */
+.fppc-event{display:flex;gap:12px;padding:12px;border-radius:8px;background:var(--surface);border:1px solid var(--border);margin-bottom:8px;transition:all .2s;align-items:flex-start}
+.fppc-event:last-child{margin-bottom:0}
+.fppc-event:hover{border-color:var(--border-light);background:var(--card-hover)}
+.fppc-event .fppc-votes{font-size:20px;font-weight:800;color:var(--gold);min-width:36px;text-align:center;line-height:1}
+.fppc-event .fppc-votes small{font-size:9px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;display:block;margin-top:2px}
+.fppc-event .fppc-info{flex:1}
+.fppc-event .fppc-name{font-size:13px;font-weight:600;color:var(--text)}
+.fppc-event .fppc-meta{font-size:11px;color:var(--text-muted);margin-top:3px;display:flex;gap:8px;flex-wrap:wrap}
+.fppc-event .fppc-type{font-size:10px;padding:2px 6px;border-radius:4px;font-weight:600;background:rgba(219,203,119,.1);color:var(--gold)}
+.fppc-empty{text-align:center;padding:24px 16px;color:var(--text-muted);font-size:12px;line-height:1.6}
+
+/* Today's Calendar */
+.cal-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:700px){.cal-grid{grid-template-columns:1fr}}
+.cal-column{}
+.cal-column-header{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;padding:8px 0 10px;border-bottom:1px solid var(--border);margin-bottom:6px;display:flex;justify-content:space-between;align-items:center}
+.cal-column-header .cal-count{font-size:10px;font-weight:600;color:var(--text-muted);text-transform:none;letter-spacing:0}
+.cal-event{display:flex;gap:8px;padding:6px 8px;border-radius:6px;margin-bottom:3px;font-size:12px;align-items:flex-start;transition:background .15s}
+.cal-event:hover{background:rgba(255,255,255,.03)}
+.cal-event .cal-time{color:var(--text-muted);min-width:62px;flex-shrink:0;font-variant-numeric:tabular-nums;font-size:11px;line-height:1.6}
+.cal-event .cal-title{flex:1;color:var(--text-dim);line-height:1.4}
+.cal-event .cal-type{width:4px;height:4px;border-radius:50%;margin-top:6px;flex-shrink:0}
+.cal-event .cal-type.external{background:var(--red)}
+.cal-event .cal-type.internal{background:var(--leaf)}
+.cal-event .cal-type.one-on-one{background:var(--lavender)}
+.cal-event.tentative .cal-title{opacity:.6;font-style:italic}
+.cal-event.conflict{background:rgba(229,62,62,.06);border:1px solid rgba(229,62,62,.15);border-radius:6px}
+</style>
+</head>
+<body>
+
+<div class="header">
+<div class="header-inner">
+<h1><span class="highlight">Sophie's</span> Dashboard<span class="fermat-mark">Fermat</span></h1>
+<div class="meta">
+<span><span class="dot"></span> Auto-refreshes hourly</span>
+<span id="refresh-time"></span>
+</div>
+</div>
+</div>
+
+<div class="summary" id="summary-strip"></div>
+
+<div class="main" style="grid-template-columns:1fr 420px">
+<div class="primary" id="primary"></div>
+<div class="sidebar" id="sidebar"></div>
+</div>
+
+<script>
+// ============================================================
+// DATA — regenerated hourly by update-task-dashboard
+// ============================================================
+const DATA = {
+  refreshedAt: "2026-03-16T08:10:00-07:00",
+  date: "Monday, March 16",
+
+  actionItems: {
+    totalToday: 11,
+    lastUpdated: "Fri 4:53 PM",
+    draftLink: "https://mail.google.com/mail/u/0/#drafts?compose=19ce99ea15c01b62",
+    runsToday: 0,
+    items: [
+      {text:"Follow up with Bobbie team on POC expansion", priority:"red", source:"Slack"},
+      {text:"Jennifer newsroom page sign-off needed", priority:"red", source:"Slack"},
+      {text:"Syndication outreach — finalize target list", priority:"yellow", source:"Granola"},
+      {text:"Review updated enterprise deck for Kevin call (Daniel)", priority:"yellow", source:"Slack"},
+      {text:"Weigh in on newsroom/product updates page direction", priority:"yellow", source:"Slack"},
+      {text:"Liquid Death AI Search analysis content", priority:"yellow", source:"Granola"},
+      {text:"Kevin call prep — review enterprise deck updates", priority:"green", source:"Granola"},
+      {text:"On Running / Christian Limon / Gen Digital — waiting", priority:"green", source:"Slack"},
+      {text:"Albertsons POC doc review", priority:"green", source:"Granola"},
+      {text:"Tapestry close paperwork", priority:"green", source:"Gmail"},
+      {text:"Scots report — in progress", priority:"green", source:"Slack"}
+    ]
+  },
+
+  spam: {
+    caughtToday: 3,
+    lastScan: "Mon 8:06 AM",
+    runsToday: 1,
+    items: [
+      {sender:"LinkedIn", reason:"62 new lead suggestions (automated)", time:"Mon 8:06 AM"},
+      {sender:"Xanthe Sutton", reason:"Cold outreach — cold email services pitch", time:"Mon 8:06 AM"},
+      {sender:"John Moran", reason:"Cold sales — analytics services pitch", time:"Mon 8:06 AM"}
+    ]
+  },
+
+  spamCleanup: {
+    threadsCleaned: 0,
+    lastRun: "Fri 6:42 PM",
+    runsToday: 0,
+    details: "Resumes today ~8:26 AM. Last Fri: 0 cleaned for both. 28 Rishabh + ~34K Shreyas threads still labeled."
+  },
+
+  colorCoding: {
+    lastRun: "Mon 7:55 AM",
+    runsToday: 1,
+    status: "ok",
+    note: "First Monday run completed at 7:55 AM. Runs every 15 min."
+  },
+
+  eodCheckin: {
+    delivered: false,
+    deliveredAt: "—",
+    summary: "Scheduled for 3:45 PM today. Last: Fri 3:56 PM."
+  },
+
+  morningBrief: {
+    delivered: true,
+    deliveredAt: "Mon 7:01 AM",
+    summary: "CEO daily brief delivered to Rishabh. Week at a Glance for Mon Mar 16."
+  },
+
+  morningDigest: {
+    delivered: true,
+    deliveredAt: "Mon 7:30 AM",
+    summary: "Slack morning digest delivered to Sophie at 7:30 AM."
+  },
+
+  newsDigest: {
+    delivered: false,
+    deliveredAt: "—",
+    topStory: "Scheduled for 8:34 AM today. Last: Fri — GPT-5.4 1M context, DeepSeek V4, Gemini 3.1 Flash-Lite, Nvidia GTC keynote today."
+  },
+
+  weeklyReview: {
+    delivered: false,
+    deliveredAt: "—",
+    summary: "Fri only. Last: Fri 3:12 PM — Week 11 complete. Next: Fri Mar 20."
+  },
+
+  meetingScheduler: {
+    draftsCreated: 3,
+    lastCheck: "Mon 8:02 AM",
+    runsToday: "running (every 15 min)"
+  },
+
+  myTasks: [
+    {id:"3231ad76-fd2a-8148-8a10-c72dda2428ff",title:"Schedule Christian Limon meeting for Rishabh",done:false,priority:"High",due:"2026-03-14",context:"Draft ready in Gmail — review & send (Re: Catching up)"},
+    {id:"3231ad76-fd2a-815d-9fb7-cfc15ddda626",title:"Coordinate with Evelyn on TeamLink invite follow-ups",done:false,priority:"High",due:"2026-03-14",context:"Coordinate TeamLink follow-ups with Evelyn"},
+    {id:"3221ad76-fd2a-81e1-80a1-d0862bd73ba9",title:"Reach out to Bharat before Town Hall (Mar 19)",done:false,priority:"Medium",due:"2026-03-18",context:"Town Hall is Thursday. Coordinate beforehand."},
+    {id:"3231ad76-fd2a-818c-abe2-d32d6f98d34e",title:"Confirm Rishabh ShopTalk travel plans (Mar 23-26)",done:false,priority:"Medium",due:"2026-03-17",context:"Confirm travel logistics for ShopTalk"},
+    {id:"3231ad76-fd2a-81f0-9180-d695b6c8e494",title:"Schedule Jake Bailey / Meta meeting (coordinate with Laura)",done:false,priority:"Medium",due:null,context:"Coordinate with Laura on scheduling"},
+    {id:"3231ad76-fd2a-8196-8c4b-f8ff31911b7c",title:"Ghostwrite investor follow-up emails",done:false,priority:"Medium",due:null,context:"Waiting on Rishabh to decide strategy — then execute with Evelyn"},
+    {id:"3231ad76-fd2a-81e8-974f-cf90f4c9bb19",title:"Finish BOD scheduling tool",done:false,priority:"Medium",due:null,context:"Google Apps Script project — in progress"},
+    {id:"3231ad76-fd2a-8106-a4f9-c4e1a2e65e2b",title:"FPPC Happy Hour — finalize date, venue, invite",done:false,priority:"Medium",due:null,context:"Party planning committee — coordinate with Ranga"},
+    {id:"3231ad76-fd2a-8183-92e5-df9caaa49f28",title:"Coordinate with Maya on event scheduling process",done:false,priority:"Low",due:null,context:"Asked Maya to email event details when R/S needed"},
+    {id:"3231ad76-fd2a-8129-a949-de794bd86cb5",title:"Clean up duplicate action item email drafts in Gmail",done:false,priority:"Low",due:"2026-03-14",context:"Old drafts cleared — action items task fixed to always create fresh draft"}
+  ],
+
+  notionTasks: [
+    {id:"3221ad76-fd2a-8133-9a6f-c6be5466d4ae",title:"[Omaha] Updated POC due",owner:"Team",done:false,priority:"High",due:"2026-03-13"},
+    {id:"3221ad76-fd2a-8120-a2be-e6e1d5aac5ea",title:"[Albertsons] POC doc ready",owner:"Isabel",done:false,priority:"High",due:"2026-03-13"},
+    {id:"3221ad76-fd2a-8199-95d2-c14f2ef12ada",title:"[Shop Talk] Finalize logistics (Mar 23-26)",owner:"Maya",done:false,priority:"High",due:"2026-03-23"},
+    {id:"3221ad76-fd2a-818f-a3cc-f598d5db26d6",title:"[Team] Atlanta Salesforce — confirm second attendee",owner:"Team",done:false,priority:"High",due:null},
+    {id:"3231ad76-fd2a-81bc-a874-e9007736d239",title:"[James] J McLaughlin call Tue 2:30-3 — prep DPP/AIS",owner:"James",done:false,priority:"High",due:"2026-03-17"},
+    {id:"3221ad76-fd2a-816f-bbe0-d020906b9a15",title:"[Rishabh] Send syndication questions to industry contacts",owner:"Rishabh",done:false,priority:"High",due:null},
+    {id:"3221ad76-fd2a-81c3-88a7-d91d607d6b64",title:"[Rhea] Town Hall dry run + demo Sam",owner:"Rhea",done:false,priority:"Medium",due:"2026-03-18"},
+    {id:"3221ad76-fd2a-810c-b2ba-cfed9e67c1df",title:"Campaign outline mapping — channels, content, CTAs",owner:null,done:false,priority:"Medium",due:null},
+    {id:"3221ad76-fd2a-81bb-965e-ea6fee4a134f",title:"Update blogs with readiness messaging",owner:"Jennifer",done:false,priority:"Medium",due:null},
+    {id:"3221ad76-fd2a-8188-8617-c4c85250908c",title:"[Ashley] Coordinate ebook CTA to AI search blogs",owner:"Ashley",done:false,priority:"Medium",due:null},
+    {id:"3221ad76-fd2a-810a-be42-fb89ad93b257",title:"[Atlanta Salesforce] Confirm second attendee",owner:"Jessica",done:false,priority:"Medium",due:null},
+    {id:"3231ad76-fd2a-815a-a0ca-fe932f4ff1eb",title:"[Tonal] Performance readout for contract renewal",owner:null,done:false,priority:"Medium",due:null},
+    {id:"3221ad76-fd2a-812c-a0c1-d7f3b8466fdb",title:"[Jennifer] Update blogs with readiness messaging",owner:"Jennifer",done:false,priority:"Medium",due:"2026-03-17"},
+    {id:"3221ad76-fd2a-8186-9308-d2c91f5e2db9",title:"[Kohl’s] Executive-level reengagement strategy",owner:null,done:false,priority:"Medium",due:null},
+    {id:"3221ad76-fd2a-8167-9ea0-ef84a3aa9c97",title:"[Rishabh] Create Liquid Death analysis content",owner:"Rishabh",done:false,priority:"Medium",due:null},
+    {id:"3221ad76-fd2a-8199-95d2-c14f2ef12ada2",title:"[Shop Talk] Finalize logistics (Mar 23-26)",owner:"Maya",done:false,priority:"Medium",due:"2026-03-23"}
+  ],
+
+  todayCalendar: {
+    dateLabel: "Monday, March 16",
+    rishabh: [
+      {time:"8:00 AM",end:"8:20 AM",title:"Marketing Standup - Content/PR",type:"internal",rsvp:"accepted"},
+      {time:"8:20 AM",end:"8:40 AM",title:"Pipeline Standup",type:"internal",rsvp:"accepted"},
+      {time:"8:40 AM",end:"9:20 AM",title:"Current Account Review",type:"internal",rsvp:"accepted"},
+      {time:"9:20 AM",end:"9:50 AM",title:"Ali / Rishabh",type:"1on1",rsvp:"accepted"},
+      {time:"11:00 AM",end:"11:30 AM",title:"FERMAT <> ML / UTA",type:"external",rsvp:"accepted"},
+      {time:"11:30 AM",end:"12:00 PM",title:"Sophie / Rishabh",type:"1on1",rsvp:"accepted"},
+      {time:"12:00 PM",end:"1:20 PM",title:"Rishabh Kaushik Lunch",type:"external",rsvp:"accepted"},
+      {time:"2:00 PM",end:"2:25 PM",title:"Leadership Coaching Follow Up",type:"internal",rsvp:"accepted"},
+      {time:"3:00 PM",end:"3:30 PM",title:"jam",type:"internal",rsvp:"accepted"}
+    ],
+    shreyas: [
+      {time:"8:00 AM",end:"8:20 AM",title:"Marketing Standup - Content/PR",type:"internal",rsvp:"accepted"},
+      {time:"8:20 AM",end:"8:40 AM",title:"Pipeline Standup",type:"internal",rsvp:"accepted"},
+      {time:"8:40 AM",end:"9:20 AM",title:"Current Account Review",type:"internal",rsvp:"accepted"},
+      {time:"9:15 AM",end:"9:45 AM",title:"Untitled Event",type:"internal",rsvp:"pending"},
+      {time:"10:00 AM",end:"11:00 AM",title:"BLR Eng Weekly Planning",type:"internal",rsvp:"accepted"},
+      {time:"11:00 AM",end:"11:30 AM",title:"Storefront UI for Fashion",type:"internal",rsvp:"accepted"},
+      {time:"11:30 AM",end:"12:00 PM",title:"Shreyas / Rhea",type:"1on1",rsvp:"accepted"},
+      {time:"12:00 PM",end:"12:45 PM",title:"FERMÀT | American Eagle & Aerie",type:"external",rsvp:"accepted"},
+      {time:"1:00 PM",end:"1:45 PM",title:"Perry Ellis - Overview",type:"external",rsvp:"accepted"},
+      {time:"2:00 PM",end:"2:30 PM",title:"Sophie / Shreyas — Claude Check-in",type:"1on1",rsvp:"accepted"},
+      {time:"2:30 PM",end:"3:00 PM",title:"A tad bit of direction",type:"1on1",rsvp:"accepted"},
+      {time:"3:00 PM",end:"3:30 PM",title:"jam",type:"internal",rsvp:"accepted"},
+      {time:"3:30 PM",end:"4:30 PM",title:"US Eng Weekly Planning",type:"internal",rsvp:"accepted"}
+    ]
+  },
+
+  fppcEvents: [],
+
+  conflicts: {
+    openCount: 11,
+    newToday: 0,
+    resolvedToday: 0,
+    items: []
+  },
+
+  taskSync: {
+    itemsSynced: 8,
+    lastSync: "Fri 11:03 PM",
+    runsToday: 0,
+    highPriority: "Jen Digital legal review, Syndication questions, J McLaughlin call prep (due Tue)"
+  },
+
+  reminders: [
+    {text: "Snack order reminder fires at 9 AM", time: "9:00 AM", done: false},
+    {text: "Travel monitor — flag out-of-SF events, sync flights", time: "8:30 AM", done: false},
+    {text: "SF events scout — find this week’s team event", time: "9:30 AM", done: false},
+    {text: "Lunch recs delivered at 9 AM", time: "9:00 AM", done: false},
+    {text: "Bharat reminders fire Friday Mar 20", time: "Fri", done: false}
+  ],
+
+  tasks: [
+    {name:"CEO Brief", status:"ok"}, {name:"Morning Digest", status:"ok"},
+    {name:"News Digest", status:"pending"}, {name:"Action Items", status:"pending"},
+    {name:"Spam Scanner", status:"ok"}, {name:"Spam Cleanup", status:"pending"},
+    {name:"Conflict Monitor", status:"ok"}, {name:"Color Coding", status:"ok"},
+    {name:"Task Sync", status:"pending"}, {name:"Meeting Sched.", status:"ok"},
+    {name:"EOD Check-in", status:"pending"}, {name:"Dashboard", status:"ok"},
+    {name:"Lunch Recs", status:"pending"}, {name:"Weekly Review", status:"off"},
+    {name:"Travel Monitor", status:"pending"}, {name:"SF Events", status:"pending"},
+    {name:"LinkedIn Posts", status:"off"}, {name:"Bharat Reminders", status:"off"},
+    {name:"Offsite Agenda", status:"pending"}, {name:"Email Events", status:"ok"},
+    {name:"FPPC Votes", status:"pending"}, {name:"Gmail Labels", status:"pending"}
+  ]
+};
+
+// ============================================================
+// RENDER
+// ============================================================
+function init() {
+  document.getElementById('refresh-time').textContent =
+    new Date(DATA.refreshedAt).toLocaleString('en-US',{timeZone:'America/Los_Angeles',month:'short',day:'numeric',hour:'numeric',minute:'2-digit',hour12:true}) + ' PT';
+
+  renderSummary();
+  renderPrimary();
+  renderSidebar();
+}
+
+function renderSummary() {
+  const s = document.getElementById('summary-strip');
+  s.innerHTML = `
+    <div class="summary-item ${DATA.myTasks.filter(t=>!t.done).length > 3 ? 'yellow' : 'accent'}">
+      <div class="number">${DATA.myTasks.filter(t=>!t.done).length}</div>
+      <div class="label">My Tasks</div>
+    </div>
+    <div class="summary-item ${DATA.actionItems.items.filter(i=>i.priority==='red').length > 0 ? 'red' : 'green'}">
+      <div class="number">${DATA.actionItems.totalToday}</div>
+      <div class="label">Action Items</div>
+    </div>
+    <div class="summary-item yellow">
+      <div class="number">${DATA.spam.caughtToday}</div>
+      <div class="label">Spam Caught</div>
+    </div>
+    <div class="summary-item blue">
+      <div class="number">${DATA.spamCleanup.threadsCleaned}</div>
+      <div class="label">Labels Cleaned</div>
+    </div>
+    <div class="summary-item green">
+      <div class="number">${DATA.tasks.filter(t=>t.status==='ok').length}/${DATA.tasks.length}</div>
+      <div class="label">Tasks Healthy</div>
+    </div>
+  `;
+}
+
+function renderPrimary() {
+  const el = document.getElementById('primary');
+  el.innerHTML = `
+    ${renderMyTasks()}
+    ${renderTodayCalendar()}
+    ${renderNotionTasks()}
+    ${renderActionItems()}
+    ${renderSpam()}
+  `;
+  initTaskInteractions();
+}
+
+function renderTodayCalendar() {
+  const cal = DATA.todayCalendar;
+  if (!cal) return '';
+
+  // Parse time string to minutes for overlap detection
+  function toMin(t) {
+    const m = t.match(/(\d+):(\d+)\s*(AM|PM)/i);
+    if (!m) return 0;
+    let h = parseInt(m[1]); const mn = parseInt(m[2]); const ap = m[3].toUpperCase();
+    if (ap === 'PM' && h !== 12) h += 12;
+    if (ap === 'AM' && h === 12) h = 0;
+    return h * 60 + mn;
+  }
+
+  // Filter rules from calendar-conflict-monitor skill:
+  // Skip standup/sitter/gym, declined, and [optional] events before checking overlaps
+  const SKIP_PATTERN = /standup|sitter|gym/i;
+  const OPTIONAL_PATTERN = /\[optional\]/i;
+
+  function shouldSkip(e) {
+    if (SKIP_PATTERN.test(e.title)) return true;
+    if (OPTIONAL_PATTERN.test(e.title)) return true;
+    if (e.rsvp === 'declined') return true;
+    return false;
+  }
+
+  // Detect conflicts (overlapping events) within a person's calendar
+  function detectConflicts(events) {
+    const conflictSet = new Set();
+    for (let i = 0; i < events.length; i++) {
+      if (shouldSkip(events[i])) continue;
+      for (let j = i + 1; j < events.length; j++) {
+        if (shouldSkip(events[j])) continue;
+        const aStart = toMin(events[i].time), aEnd = toMin(events[i].end);
+        const bStart = toMin(events[j].time), bEnd = toMin(events[j].end);
+        if (aStart < bEnd && bStart < aEnd) {
+          conflictSet.add(i);
+          conflictSet.add(j);
+        }
+      }
+    }
+    return conflictSet;
+  }
+
+  const rConflicts = detectConflicts(cal.rishabh);
+  const sConflicts = detectConflicts(cal.shreyas);
+
+  const rCount = cal.rishabh.length;
+  const sCount = cal.shreyas.length;
+  const rExternal = cal.rishabh.filter(e => e.type === 'external').length;
+  const sExternal = cal.shreyas.filter(e => e.type === 'external').length;
+  const rConflictCount = rConflicts.size > 0 ? Math.floor(rConflicts.size / 2) : 0;
+  const sConflictCount = sConflicts.size > 0 ? Math.floor(sConflicts.size / 2) : 0;
+  const totalConflicts = rConflictCount + sConflictCount;
+
+  function renderEvent(e, idx, conflictSet) {
+    const typeClass = e.type === 'external' ? 'external' : e.type === '1on1' ? 'one-on-one' : 'internal';
+    const tentClass = e.rsvp === 'tentative' ? ' tentative' : '';
+    const isConflict = conflictSet.has(idx);
+    const conflictClass = isConflict ? ' conflict' : '';
+    const conflictBadge = isConflict ? ' <span style="font-size:9px;color:var(--red);font-weight:700">CONFLICT</span>' : '';
+    const tentBadge = e.rsvp === 'tentative' ? ' <span style="font-size:10px;color:var(--yellow)">(tentative)</span>' : '';
+    const href = e.link ? ` href="${e.link}" target="_blank"` : '';
+    return `
+      <a${href} class="cal-event${tentClass}${conflictClass}" style="text-decoration:none;color:inherit;display:flex">
+        <span class="cal-time">${e.time}</span>
+        <span class="cal-type ${typeClass}"></span>
+        <span class="cal-title">${e.title}${conflictBadge}${tentBadge}</span>
+      </a>`;
+  }
+
+  return `
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title">&#128197; ${cal.dateLabel}</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        ${totalConflicts > 0 ? `<span class="section-badge tag-red">${totalConflicts} conflict${totalConflicts>1?'s':''}</span>` : ''}
+        <span style="font-size:11px;color:var(--text-muted);display:flex;align-items:center;gap:4px"><span style="width:6px;height:6px;border-radius:50%;background:var(--red);display:inline-block"></span> External</span>
+        <span style="font-size:11px;color:var(--text-muted);display:flex;align-items:center;gap:4px"><span style="width:6px;height:6px;border-radius:50%;background:var(--lavender);display:inline-block"></span> 1:1</span>
+        <span style="font-size:11px;color:var(--text-muted);display:flex;align-items:center;gap:4px"><span style="width:6px;height:6px;border-radius:50%;background:var(--leaf);display:inline-block"></span> Internal</span>
+      </div>
+    </div>
+    <div class="section-body" style="padding:12px 16px">
+      <div class="cal-grid">
+        <div class="cal-column">
+          <div class="cal-column-header"><span style="color:var(--accent)">Rishabh</span> <span class="cal-count">${rCount} meetings &middot; ${rExternal} external${rConflictCount > 0 ? ` &middot; <span style="color:var(--red)">${rConflictCount} conflict${rConflictCount>1?'s':''}</span>` : ''}</span></div>
+          <div class="scroll-area" style="max-height:300px">
+            ${cal.rishabh.map((e, i) => renderEvent(e, i, rConflicts)).join('')}
+          </div>
+        </div>
+        <div class="cal-column">
+          <div class="cal-column-header"><span style="color:var(--gold)">Shreyas</span> <span class="cal-count">${sCount} meetings &middot; ${sExternal} external${sConflictCount > 0 ? ` &middot; <span style="color:var(--red)">${sConflictCount} conflict${sConflictCount>1?'s':''}</span>` : ''}</span></div>
+          <div class="scroll-area" style="max-height:300px">
+            ${cal.shreyas.map((e, i) => renderEvent(e, i, sConflicts)).join('')}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderMyTasks() {
+  const tasks = DATA.myTasks;
+  const open = tasks.filter(t => !t.done);
+  const high = open.filter(t => t.priority === 'High');
+  const done = tasks.filter(t => t.done);
+  const today = new Date().toISOString().slice(0,10);
+
+  function getDueClass(due) {
+    if (!due) return 'none';
+    if (due < today) return 'overdue';
+    if (due === today) return 'today';
+    return 'upcoming';
+  }
+
+  function getDueLabel(due) {
+    if (!due) return '';
+    if (due < today) return 'Overdue';
+    if (due === today) return 'Due today';
+    const d = new Date(due + 'T12:00:00');
+    return 'Due ' + d.toLocaleDateString('en-US', {month:'short', day:'numeric'});
+  }
+
+  function renderTask(t) {
+    const dueHtml = t.due ? `<span class="task-due ${getDueClass(t.due)}">${getDueLabel(t.due)}</span>` : '';
+    const prioColor = t.priority === 'High' ? 'var(--red)' : t.priority === 'Medium' ? 'var(--yellow)' : 'var(--green)';
+    const contextHtml = t.context ? `<div style="font-size:11px;color:var(--text-muted);margin-top:2px;line-height:1.3">${t.context}</div>` : '';
+
+    return `
+      <li class="task-check-item ${t.done ? 'checked' : ''}" data-id="${t.id}" data-priority="${t.priority}" data-has-due="${t.due ? 'yes' : 'no'}" data-section="my" onclick="toggleMyTask(this)">
+        <div class="task-checkbox ${t.done ? 'checked' : ''}"></div>
+        <div style="flex:1">
+          <div class="task-check-text">${t.title}</div>
+          <div class="task-check-meta">
+            <span class="task-priority-dot" style="background:${prioColor}"></span>
+            ${dueHtml}
+          </div>
+          ${contextHtml}
+        </div>
+        <a class="notion-link" href="https://notion.so/${t.id.replace(/-/g,'')}" target="_blank" onclick="event.stopPropagation()">Open &#8599;</a>
+      </li>`;
+  }
+
+  return `
+  <div class="section" style="border-color:var(--gold);border-width:1px">
+    <div class="section-header" style="background:linear-gradient(135deg, rgba(219,203,119,.08), rgba(219,203,119,.02))">
+      <div class="section-title" style="color:var(--gold)">&#128142; My Tasks</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span class="section-badge tag-red">${high.length} urgent</span>
+        <span class="section-badge tag-accent">${open.length} open</span>
+        ${done.length > 0 ? `<span class="section-badge tag-green">${done.length} done</span>` : ''}
+        <a href="https://notion.so/ec04c3e35f534ee487592c1fb304991e" target="_blank" style="font-size:11px;color:var(--gold)">Notion &#8599;</a>
+      </div>
+    </div>
+    <div class="section-body" style="padding:12px 16px 8px">
+      <div class="task-filter-bar">
+        <button class="task-filter active" data-filter="my-all" onclick="filterMyTasks('all',this)">All (${tasks.length})</button>
+        <button class="task-filter" data-filter="my-high" onclick="filterMyTasks('high',this)">&#128308; Urgent (${high.length})</button>
+        <button class="task-filter" data-filter="my-due" onclick="filterMyTasks('due',this)">&#128197; Has due date</button>
+        <button class="task-filter" data-filter="my-done" onclick="filterMyTasks('done',this)">&#9989; Done (${done.length})</button>
+      </div>
+      <div class="scroll-area" style="max-height:400px">
+        <ul class="task-checklist" id="my-task-list">
+          ${tasks.map(renderTask).join('')}
+        </ul>
+      </div>
+      <div class="task-counter" id="my-task-counter">${open.length} open &middot; ${done.length} done</div>
+    </div>
+  </div>`;
+}
+
+function toggleMyTask(el) {
+  const isChecked = el.classList.toggle('checked');
+  const checkbox = el.querySelector('.task-checkbox');
+  checkbox.classList.toggle('checked');
+
+  const allItems = document.querySelectorAll('#my-task-list .task-check-item');
+  const doneCount = document.querySelectorAll('#my-task-list .task-check-item.checked').length;
+  const openCount = allItems.length - doneCount;
+  document.getElementById('my-task-counter').textContent = openCount + ' open \u00b7 ' + doneCount + ' done';
+
+  // Update summary strip
+  const summaryItems = document.querySelectorAll('.summary-item');
+  if (summaryItems[0]) summaryItems[0].querySelector('.number').textContent = openCount;
+
+  const list = document.getElementById('my-task-list');
+  if (isChecked) {
+    el.style.transition = 'opacity .3s, transform .3s';
+    el.style.opacity = '0.3';
+    el.style.transform = 'translateX(8px)';
+    setTimeout(() => {
+      list.appendChild(el);
+      el.style.opacity = '';
+      el.style.transform = '';
+    }, 300);
+  }
+}
+
+function filterMyTasks(filter, btn) {
+  btn.parentElement.querySelectorAll('.task-filter').forEach(f => f.classList.remove('active'));
+  btn.classList.add('active');
+
+  document.querySelectorAll('#my-task-list .task-check-item').forEach(item => {
+    let show = true;
+    if (filter === 'high') show = item.dataset.priority === 'High';
+    else if (filter === 'due') show = item.dataset.hasDue === 'yes';
+    else if (filter === 'done') show = item.classList.contains('checked');
+    item.style.display = show ? '' : 'none';
+  });
+}
+
+function renderNotionTasks() {
+  const tasks = DATA.notionTasks;
+  const high = tasks.filter(t => t.priority === 'High');
+  const med = tasks.filter(t => t.priority === 'Medium');
+  const low = tasks.filter(t => t.priority === 'Low');
+  const done = tasks.filter(t => t.done);
+  const today = new Date().toISOString().slice(0,10);
+
+  function getDueClass(due) {
+    if (!due) return 'none';
+    if (due < today) return 'overdue';
+    if (due === today) return 'today';
+    return 'upcoming';
+  }
+
+  function getDueLabel(due) {
+    if (!due) return '';
+    if (due < today) return 'Overdue';
+    if (due === today) return 'Due today';
+    const d = new Date(due + 'T12:00:00');
+    return 'Due ' + d.toLocaleDateString('en-US', {month:'short', day:'numeric'});
+  }
+
+  function renderTask(t) {
+    const dueHtml = t.due ? `<span class="task-due ${getDueClass(t.due)}">${getDueLabel(t.due)}</span>` : '';
+    const ownerHtml = t.owner ? `<span class="task-owner">${t.owner}</span>` : '';
+    const prioColor = t.priority === 'High' ? 'var(--red)' : t.priority === 'Medium' ? 'var(--yellow)' : 'var(--green)';
+
+    return `
+      <li class="task-check-item ${t.done ? 'checked' : ''}" data-id="${t.id}" data-priority="${t.priority}" data-has-due="${t.due ? 'yes' : 'no'}" onclick="toggleTask(this)">
+        <div class="task-checkbox ${t.done ? 'checked' : ''}"></div>
+        <div style="flex:1">
+          <div class="task-check-text">${t.title}</div>
+          <div class="task-check-meta">
+            <span class="task-priority-dot" style="background:${prioColor}"></span>
+            ${dueHtml}
+            ${ownerHtml}
+          </div>
+        </div>
+        <a class="notion-link" href="https://notion.so/${t.id.replace(/-/g,'')}" target="_blank" onclick="event.stopPropagation()">Open &#8599;</a>
+      </li>`;
+  }
+
+  return `
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title">&#9745;&#65039; Team Tasks</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span class="section-badge tag-red">${high.filter(t=>!t.done).length} high</span>
+        <span class="section-badge tag-yellow">${med.filter(t=>!t.done).length} medium</span>
+        <span class="section-badge tag-green">${done.length} done</span>
+        <a href="https://notion.so/ec04c3e35f534ee487592c1fb304991e" target="_blank" style="font-size:11px;color:var(--gold)">Notion &#8599;</a>
+      </div>
+    </div>
+    <div class="section-body" style="padding:12px 16px 8px">
+      <div class="task-filter-bar">
+        <button class="task-filter active" data-filter="all" onclick="filterTasks('all',this)">All (${tasks.length})</button>
+        <button class="task-filter" data-filter="high" onclick="filterTasks('high',this)">&#128308; High (${high.length})</button>
+        <button class="task-filter" data-filter="medium" onclick="filterTasks('medium',this)">&#128992; Medium (${med.length})</button>
+        <button class="task-filter" data-filter="due" onclick="filterTasks('due',this)">&#128197; Has due date</button>
+        <button class="task-filter" data-filter="done" onclick="filterTasks('done',this)">&#9989; Done (${done.length})</button>
+      </div>
+      <div class="scroll-area" style="max-height:420px">
+        <ul class="task-checklist" id="task-list">
+          ${tasks.map(renderTask).join('')}
+        </ul>
+      </div>
+      <div class="task-counter" id="task-counter">${tasks.filter(t=>!t.done).length} open &middot; ${done.length} done</div>
+    </div>
+  </div>`;
+}
+
+function toggleTask(el) {
+  const isChecked = el.classList.toggle('checked');
+  const checkbox = el.querySelector('.task-checkbox');
+  checkbox.classList.toggle('checked');
+
+  // Update counter
+  const allItems = document.querySelectorAll('.task-check-item');
+  const doneCount = document.querySelectorAll('.task-check-item.checked').length;
+  const openCount = allItems.length - doneCount;
+  document.getElementById('task-counter').textContent = openCount + ' open \u00b7 ' + doneCount + ' done';
+
+  // Move checked items to bottom with animation
+  const list = document.getElementById('task-list');
+  if (isChecked) {
+    el.style.transition = 'opacity .3s, transform .3s';
+    el.style.opacity = '0.3';
+    el.style.transform = 'translateX(8px)';
+    setTimeout(() => {
+      list.appendChild(el);
+      el.style.opacity = '';
+      el.style.transform = '';
+    }, 300);
+  }
+}
+
+function filterTasks(filter, btn) {
+  document.querySelectorAll('.task-filter').forEach(f => f.classList.remove('active'));
+  btn.classList.add('active');
+
+  document.querySelectorAll('.task-check-item').forEach(item => {
+    let show = true;
+    if (filter === 'high') show = item.dataset.priority === 'High';
+    else if (filter === 'medium') show = item.dataset.priority === 'Medium';
+    else if (filter === 'due') show = item.dataset.hasDue === 'yes';
+    else if (filter === 'done') show = item.classList.contains('checked');
+    item.style.display = show ? '' : 'none';
+  });
+}
+
+function initTaskInteractions() {
+  // nothing extra needed — inline onclick handles it
+}
+
+function renderActionItems() {
+  const d = DATA.actionItems;
+  const red = d.items.filter(i=>i.priority==='red');
+  const yellow = d.items.filter(i=>i.priority==='yellow');
+  const green = d.items.filter(i=>i.priority==='green');
+
+  return `
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title">&#128203; Rishabh Action Items</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span class="section-badge tag-red">${red.length} urgent</span>
+        <span class="section-badge tag-yellow">${yellow.length} this week</span>
+        <span class="section-badge tag-green">${green.length} FYI</span>
+        <span style="font-size:11px;color:var(--text-muted)">Updated ${d.lastUpdated}</span>
+      </div>
+    </div>
+    <div class="section-body">
+      <ul class="action-list">
+        ${d.items.map(item => `
+          <li>
+            <span class="action-dot ${item.priority}"></span>
+            <div>
+              <strong>${item.text}</strong>
+              <span style="font-size:11px;color:var(--text-muted);margin-left:8px">${item.source}</span>
+            </div>
+          </li>
+        `).join('')}
+      </ul>
+      <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);font-size:12px;color:var(--text-muted)">
+        <a href="${d.draftLink}" target="_blank">Open Gmail draft &#8599;</a>
+        <span style="float:right">${d.runsToday} scans today</span>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderSpam() {
+  const d = DATA.spam;
+  return `
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title">&#128233; Spam Caught</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span class="section-badge tag-yellow">${d.caughtToday} today</span>
+        <span style="font-size:11px;color:var(--text-muted)">Last scan ${d.lastScan}</span>
+      </div>
+    </div>
+    <div class="section-body compact">
+      <div class="scroll-area">
+        ${d.items.map(s => `
+          <div class="spam-item">
+            <span class="spam-sender">${s.sender}</span>
+            <span class="spam-reason">${s.reason}</span>
+            <span class="spam-time">${s.time}</span>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderSidebar() {
+  const el = document.getElementById('sidebar');
+  el.innerHTML = `
+    ${renderFPPCEvents()}
+    ${renderTaskHealth()}
+    ${renderDailyDeliveries()}
+    ${renderSpamCleanup()}
+    ${renderReminders()}
+  `;
+}
+
+function renderFPPCEvents() {
+  const events = DATA.fppcEvents || [];
+  const approved = events.filter(e => e.votes >= 4);
+
+  if (approved.length === 0) {
+    return `
+    <div class="section" style="border-color:var(--gold);border-width:1px">
+      <div class="section-header" style="background:linear-gradient(135deg, rgba(219,203,119,.08), rgba(219,203,119,.02))">
+        <div class="section-title" style="color:var(--gold)">&#127881; FPPC Events</div>
+        <a href="file:///Users/sophieweiler/Library/Application%20Support/Claude/local-agent-mode-sessions/4a923541-1c0e-4435-8d7e-db3e7db780f1/674aadd1-1194-4b98-b287-cfa0f86b5893/local_c4756e3d-128f-41e2-98f6-c36ec5440033/outputs/fppc-dashboard.html" target="_blank" style="font-size:11px;color:var(--gold)">FPPC Dashboard &#8599;</a>
+      </div>
+      <div class="section-body compact">
+        <div class="fppc-empty">No events have reached 4+ votes yet.<br>Vote on events in the <a href="https://docs.google.com/spreadsheets/d/1Z9Q_0YwK-To5Tu7ErFWl20fnP4xjGB1mgrJyWcbn53w/edit" target="_blank">FPPC Vote Tracker</a> spreadsheet!</div>
+      </div>
+    </div>`;
+  }
+
+  return `
+  <div class="section" style="border-color:var(--gold);border-width:1px">
+    <div class="section-header" style="background:linear-gradient(135deg, rgba(219,203,119,.08), rgba(219,203,119,.02))">
+      <div class="section-title" style="color:var(--gold)">&#127881; FPPC Events</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span class="section-badge tag-accent">${approved.length} approved</span>
+        <a href="file:///Users/sophieweiler/Library/Application%20Support/Claude/local-agent-mode-sessions/4a923541-1c0e-4435-8d7e-db3e7db780f1/674aadd1-1194-4b98-b287-cfa0f86b5893/local_c4756e3d-128f-41e2-98f6-c36ec5440033/outputs/fppc-dashboard.html" target="_blank" style="font-size:11px;color:var(--gold)">FPPC Dashboard &#8599;</a>
+      </div>
+    </div>
+    <div class="section-body compact">
+      ${approved.map(e => `
+        <div class="fppc-event">
+          <div class="fppc-votes">${e.votes}<small>votes</small></div>
+          <div class="fppc-info">
+            <div class="fppc-name">${e.name}</div>
+            <div class="fppc-meta">
+              ${e.type ? `<span class="fppc-type">${e.type}</span>` : ''}
+              ${e.date ? `<span>&#128197; ${e.date}</span>` : ''}
+              ${e.location ? `<span>&#128205; ${e.location}</span>` : ''}
+            </div>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  </div>`;
+}
+
+function renderTaskHealth() {
+  return `
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title">&#9889; Task Health</div>
+      <span class="section-badge tag-green">${DATA.tasks.filter(t=>t.status==='ok').length} healthy</span>
+    </div>
+    <div class="section-body compact">
+      <div class="task-status-grid">
+        ${DATA.tasks.map(t => `
+          <div class="task-pill">
+            <span class="name">${t.name}</span>
+            <span class="status-dot ${t.status}"></span>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderDailyDeliveries() {
+  const deliveries = [
+    {name: "CEO Morning Brief", ...DATA.morningBrief},
+    {name: "Slack Morning Digest", ...DATA.morningDigest},
+    {name: "AI Business News", delivered: DATA.newsDigest.delivered, deliveredAt: DATA.newsDigest.deliveredAt, summary: DATA.newsDigest.topStory},
+    {name: "EOD Task Check-in", ...DATA.eodCheckin},
+    {name: "Weekly Review", ...DATA.weeklyReview}
+  ];
+
+  return `
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title">&#128172; Daily Deliveries</div>
+    </div>
+    <div class="section-body compact">
+      ${deliveries.map(d => `
+        <div class="mini-stat">
+          <div>
+            <span class="label">${d.name}</span>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:2px;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d.summary || ''}</div>
+          </div>
+          <div style="text-align:right">
+            <span class="value" style="color:${d.delivered ? 'var(--green)' : 'var(--text-muted)'}">${d.delivered ? '&#10003;' : '&#8212;'}</span>
+            <div style="font-size:10px;color:var(--text-muted)">${d.deliveredAt || ''}</div>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  </div>`;
+}
+
+function renderSpamCleanup() {
+  const d = DATA.spamCleanup;
+  return `
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title">&#128465;&#65039; Spam Cleanup</div>
+      <span class="section-badge tag-blue">${d.threadsCleaned} cleaned</span>
+    </div>
+    <div class="section-body compact">
+      <div style="font-size:13px;color:var(--text-dim);line-height:1.6">${d.details}</div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:8px">${d.runsToday} runs today &middot; Last run ${d.lastRun}</div>
+    </div>
+  </div>`;
+}
+
+function renderReminders() {
+  const d = DATA.reminders;
+  return `
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title">&#128276; Reminders</div>
+    </div>
+    <div class="section-body compact">
+      ${d.map(r => `
+        <div class="mini-stat">
+          <span class="label">${r.done ? '<s>' : ''}${r.text}${r.done ? '</s>' : ''}</span>
+          <span class="value" style="color:${r.done ? 'var(--green)' : 'var(--yellow)'}; font-size:12px">${r.done ? '&#10003;' : '&#9711;'} ${r.time}</span>
+        </div>
+      `).join('')}
+    </div>
+  </div>`;
+}
+
+init();
+</script>
+</body>
+</html>
