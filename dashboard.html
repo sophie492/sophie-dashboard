@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sophie's Dashboard â Fermat</title>
+<title>Sophie's Dashboard  -  Fermat</title>
 <meta http-equiv="refresh" content="900">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -30,7 +30,7 @@
 body{font-family:'Hanken Grotesk',-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.5}
 a{color:var(--accent);text-decoration:none}
 
-/* ââ Header ââ */
+/* -- Header -- */
 .header{padding:24px 40px 20px;max-width:1520px;margin:0 auto;display:flex;justify-content:space-between;align-items:flex-end}
 .header-left h1{font-size:28px;font-weight:800;letter-spacing:-.5px;line-height:1.1}
 .header-left h1 .hi{color:var(--gold)}
@@ -47,7 +47,7 @@ a{color:var(--accent);text-decoration:none}
 .kpi.yellow .num{color:var(--yellow)}
 .kpi.blue .num{color:var(--blue)}
 
-/* ââ Top Nav Tabs ââ */
+/* -- Top Nav Tabs -- */
 .top-nav{max-width:1520px;margin:0 auto;padding:0 40px;display:flex;gap:0;border-bottom:1px solid var(--border)}
 .top-nav-tab{padding:12px 24px;font-size:14px;font-weight:700;color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;letter-spacing:-.2px}
 .top-nav-tab.active{color:var(--gold);border-bottom-color:var(--gold)}
@@ -55,7 +55,7 @@ a{color:var(--accent);text-decoration:none}
 .top-page{display:none}
 .top-page.active{display:block}
 
-/* ââ Fermat Newsroom Sidebar ââ */
+/* -- Fermat Newsroom Sidebar -- */
 .newsroom-sidebar{position:sticky;top:20px;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px}
 .newsroom-header{display:flex;justify-content:space-between;align-items:center;padding-bottom:10px;border-bottom:1px solid var(--border)}
 .newsroom-item{display:block;padding:10px 0;border-bottom:1px solid var(--border);text-decoration:none;color:inherit;transition:opacity .15s}
@@ -67,13 +67,13 @@ a{color:var(--accent);text-decoration:none}
 .newsroom-date{font-size:10px;color:var(--text-muted);margin-top:4px}
 @media(max-width:1100px){.newsroom-sidebar{display:none}}
 
-/* ââ Bento Grid ââ */
+/* -- Bento Grid -- */
 .bento{max-width:1520px;margin:0 auto;padding:8px 40px 60px;display:grid;grid-template-columns:repeat(12,1fr);gap:16px;grid-auto-rows:minmax(60px,auto)}
 .bento>div:not(.bento-section){max-height:480px;display:flex;flex-direction:column}
 @media(max-width:1100px){.bento{grid-template-columns:repeat(12,1fr);padding:12px 16px 40px}.bento>div[style*="span 5"],.bento>div[style*="span 7"],.bento>div[style*="span 4"]{grid-column:span 6!important}}
 @media(max-width:700px){.bento{grid-template-columns:1fr;padding:12px 16px 40px}.bento>div{grid-column:span 1!important}.bento>.bento-section{grid-column:span 1!important}}
 
-/* ââ Card ââ */
+/* -- Card -- */
 .card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;transition:border-color .2s;height:100%}
 .card:hover{border-color:var(--border-light)}
 .card-head{padding:14px 18px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);flex-shrink:0}
@@ -91,7 +91,7 @@ a{color:var(--accent);text-decoration:none}
 .card.featured{border-color:rgba(219,203,119,.2);background:linear-gradient(165deg,var(--card) 0%,rgba(219,203,119,.03) 100%)}
 .card.featured .card-head{background:linear-gradient(135deg,rgba(219,203,119,.06),transparent)}
 
-/* ââ Tags ââ */
+/* -- Tags -- */
 .tag-red{background:var(--red-soft);color:var(--red)}
 .tag-yellow{background:var(--yellow-soft);color:var(--yellow)}
 .tag-green{background:var(--green-soft);color:var(--green)}
@@ -99,7 +99,7 @@ a{color:var(--accent);text-decoration:none}
 .tag-accent{background:var(--gold-soft);color:var(--gold)}
 .tag-gray{background:var(--gray-soft);color:var(--gray)}
 
-/* ââ Task Checklist ââ */
+/* -- Task Checklist -- */
 .task-checklist{list-style:none}
 .task-check-item{display:flex;align-items:flex-start;gap:10px;padding:8px 10px;border-radius:8px;margin-bottom:3px;transition:all .2s;cursor:pointer;user-select:none}
 .task-check-item:hover{background:var(--surface)}
@@ -108,7 +108,7 @@ a{color:var(--accent);text-decoration:none}
 .task-checkbox{width:16px;height:16px;border-radius:4px;border:2px solid var(--border-light);flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;transition:all .2s;cursor:pointer}
 .task-checkbox:hover{border-color:var(--leaf)}
 .task-checkbox.checked{background:var(--forest);border-color:var(--leaf)}
-.task-checkbox.checked::after{content:'â';color:#fff;font-size:10px;font-weight:700}
+.task-checkbox.checked::after{content:'*';color:#fff;font-size:10px;font-weight:700}
 .task-check-text{font-size:12px;flex:1;line-height:1.4}
 .task-check-meta{display:flex;gap:5px;margin-top:3px;align-items:center;flex-wrap:wrap}
 .task-due{font-size:9px;padding:1px 5px;border-radius:3px;font-weight:600;cursor:pointer;transition:all .15s}
@@ -165,7 +165,7 @@ a{color:var(--accent);text-decoration:none}
 .filter-btn:hover{border-color:var(--gold)}
 .task-counter{font-size:11px;color:var(--text-muted);padding:6px 0;text-align:right}
 
-/* ââ Calendar ââ */
+/* -- Calendar -- */
 .cal-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 @media(max-width:700px){.cal-grid{grid-template-columns:1fr}}
 .cal-col-head{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;padding:6px 0 8px;border-bottom:1px solid var(--border);margin-bottom:4px;display:flex;justify-content:space-between;align-items:center}
@@ -182,33 +182,33 @@ a.cal-ev:hover .cn{color:var(--gold)}
 .cal-ev.tentative .cn{opacity:.6;font-style:italic}
 .cal-ev.conflict{background:rgba(229,62,62,.06);border:1px solid rgba(229,62,62,.15)}
 
-/* ââ Action Items ââ */
+/* -- Action Items -- */
 .ai-row{display:flex;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);font-size:12px;align-items:flex-start}
 .ai-row:last-child{border-bottom:none}
 .ai-dot{width:7px;height:7px;border-radius:50%;margin-top:4px;flex-shrink:0}
 .ai-dot.red{background:var(--red)}.ai-dot.yellow{background:var(--yellow)}.ai-dot.green{background:var(--green)}
 
-/* ââ Spam ââ */
+/* -- Spam -- */
 .spam-row{display:flex;gap:6px;padding:6px 0;border-bottom:1px solid var(--border);font-size:11px;align-items:center}
 .spam-row:last-child{border-bottom:none}
 .spam-who{font-weight:600;color:var(--text);min-width:100px;font-size:11px}
 .spam-why{color:var(--text-muted);flex:1;font-size:11px}
 .spam-when{font-size:10px;color:var(--text-muted);white-space:nowrap}
 
-/* ââ Mini Stats ââ */
+/* -- Mini Stats -- */
 .mstat{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);font-size:12px}
 .mstat:last-child{border-bottom:none}
 .mstat .ml{color:var(--text-dim)}
 .mstat .mv{font-weight:700}
 
-/* ââ Task Health Grid ââ */
+/* -- Task Health Grid -- */
 .health-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px}
 .health-pill{font-size:10px;padding:5px 8px;border-radius:6px;background:var(--surface);border:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:3px}
 .health-pill .hp-name{color:var(--text-dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .health-pill .hp-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
 .hp-dot.ok{background:var(--green)}.hp-dot.warn{background:var(--yellow)}.hp-dot.err{background:var(--red)}.hp-dot.off{background:var(--gray)}
 
-/* ââ FPPC ââ */
+/* -- FPPC -- */
 .fppc-ev{display:flex;gap:10px;padding:10px;border-radius:7px;background:var(--surface);border:1px solid var(--border);margin-bottom:6px;transition:all .2s;align-items:flex-start}
 .fppc-ev:last-child{margin-bottom:0}
 .fppc-ev:hover{border-color:var(--border-light);background:var(--card-hover)}
@@ -220,7 +220,7 @@ a.cal-ev:hover .cn{color:var(--gold)}
 .fppc-ev .ft{font-size:9px;padding:2px 5px;border-radius:3px;font-weight:600;background:rgba(219,203,119,.1);color:var(--gold)}
 .fppc-empty{text-align:center;padding:20px 12px;color:var(--text-muted);font-size:11px;line-height:1.6}
 
-/* ââ Divider line between header KPIs ââ */
+/* -- Divider line between header KPIs -- */
 .kpi-divider{width:1px;height:28px;background:var(--border)}
 
 /* Legend dots */
@@ -245,7 +245,7 @@ a.cal-ev:hover .cn{color:var(--gold)}
 .tab:hover{color:var(--text)}
 .tab-pane{display:none}.tab-pane.active{display:block}
 
-/* ââ Marketing Tab ââ */
+/* -- Marketing Tab -- */
 .mkt-nav{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:16px;flex-wrap:wrap}
 .mkt-nav-btn{padding:10px 20px;font-size:13px;font-weight:700;color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;letter-spacing:-.2px;background:none;border-top:none;border-left:none;border-right:none;font-family:inherit}
 .mkt-nav-btn.active{color:var(--gold);border-bottom-color:var(--gold)}
@@ -280,7 +280,7 @@ a.cal-ev:hover .cn{color:var(--gold)}
 .mkt-targets{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
 .mkt-target{font-size:10px;padding:3px 8px;border-radius:5px;background:var(--surface);border:1px solid var(--border);color:var(--text-dim);font-weight:600}
 
-/* ââ Editable Todos ââ */
+/* -- Editable Todos -- */
 .todo-text-edit{background:none;border:none;color:var(--text);font-size:12px;font-family:inherit;width:100%;outline:none;line-height:1.4;padding:0;resize:none;overflow:hidden}
 .todo-text-edit:focus{border-bottom:1px solid var(--gold)}
 .todo-text-edit::placeholder{color:var(--text-muted)}
@@ -318,10 +318,10 @@ a.loop-row:hover .loop-source{color:var(--gold)}
 .pulse-section-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px;letter-spacing:-.2px}
 .pulse-item{font-size:12px;color:var(--text-dim);padding:6px 0;border-bottom:1px solid var(--border);line-height:1.4}
 .pulse-item:last-child{border-bottom:none}
-.pulse-item::before{content:"â ";color:var(--gold)}
-.pulse-carry::before{content:"â³ ";color:var(--yellow)}
+.pulse-item::before{content:"-> ";color:var(--gold)}
+.pulse-carry::before{content:" ";color:var(--yellow)}
 
-/* News Feed â Newspaper */
+/* News Feed  -  Newspaper */
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&display=swap');
 .paper{max-width:1100px;margin:0 auto}
 .paper-masthead{text-align:center;padding:24px 0 16px;border-bottom:4px double var(--text)}
@@ -417,7 +417,7 @@ a.loop-row:hover .loop-source{color:var(--gold)}
 <script>
 // ============================================================
 // ============================================================
-// DATA â regenerated every 15 min by update-task-dashboard
+// DATA  -  regenerated every 15 min by update-task-dashboard
 // ============================================================
 const DATA = {
   refreshedAt: "2026-03-20T19:45:00-07:00",
@@ -723,7 +723,7 @@ const DATA = {
             {
               "time": "10:00 AM",
               "end": "10:30 AM",
-              "title": "Matt/Tina â Rishabh",
+              "title": "Matt/Tina <-> Rishabh",
               "type": "internal",
               "rsvp": "accepted",
               "link": "https://www.google.com/calendar/event?eid=OTRzbmlmMWZjMDlqajluczNma2NhbzZyczQgcmlzaGFiaEBmZXJtYXRjb21tZXJjZS5jb20&ctz=America/Los_Angeles"
@@ -884,7 +884,7 @@ const DATA = {
             {
               "time": "8:30 AM",
               "end": "9:00 AM",
-              "title": "Performance Review 1:1 â Isabel",
+              "title": "Performance Review 1:1  -  Isabel",
               "type": "internal",
               "rsvp": "accepted",
               "link": "https://www.google.com/calendar/event?eid=MGMwb3RsYWVpcjRoODZjdG44MDFscGVrazggcmlzaGFiaEBmZXJtYXRjb21tZXJjZS5jb20&ctz=America/Los_Angeles"
@@ -924,7 +924,7 @@ const DATA = {
             {
               "time": "10:30 AM",
               "end": "11:00 AM",
-              "title": "Performance Review 1:1 â Jennifer",
+              "title": "Performance Review 1:1  -  Jennifer",
               "type": "internal",
               "rsvp": "accepted",
               "link": "https://www.google.com/calendar/event?eid=cm1lN2FuZ2o2ZjN1azRpZGxzdG05Mjc1OGcgcmlzaGFiaEBmZXJtYXRjb21tZXJjZS5jb20&ctz=America/Los_Angeles"
@@ -932,7 +932,7 @@ const DATA = {
             {
               "time": "12:30 PM",
               "end": "1:00 PM",
-              "title": "Performance Review 1:1 â Evelyn",
+              "title": "Performance Review 1:1  -  Evelyn",
               "type": "internal",
               "rsvp": "accepted",
               "link": "https://www.google.com/calendar/event?eid=cHQzZ3Q0b250bWd2OWk1YzJjdHFhaTI3NWMgcmlzaGFiaEBmZXJtYXRjb21tZXJjZS5jb20&ctz=America/Los_Angeles"
@@ -948,7 +948,7 @@ const DATA = {
             {
               "time": "2:30 PM",
               "end": "3:00 PM",
-              "title": "Performance Review 1:1 â Sophie",
+              "title": "Performance Review 1:1  -  Sophie",
               "type": "internal",
               "rsvp": "accepted",
               "link": "https://www.google.com/calendar/event?eid=NGNnZWg2Y3JkZGVzdGplN3NyZzIycjU0MTggcmlzaGFiaEBmZXJtYXRjb21tZXJjZS5jb20&ctz=America/Los_Angeles"
@@ -1022,7 +1022,7 @@ const DATA = {
             {
               "time": "11:00 AM",
               "end": "11:30 AM",
-              "title": "Performance Review 1:1 â Rhea Mehta",
+              "title": "Performance Review 1:1  -  Rhea Mehta",
               "type": "internal",
               "rsvp": "accepted",
               "link": "https://www.google.com/calendar/event?eid=MjJ0ZzRhbDEwbGJwbDM4MTNpbXJvYzdkMjAgc2hyZXlhc0BmZXJtYXRjb21tZXJjZS5jb20&ctz=America/Los_Angeles"
@@ -1109,7 +1109,7 @@ const DATA = {
             {
               "time": "8:38 AM",
               "end": "10:53 AM",
-              "title": "ð Travel to SFO",
+              "title": " Travel to SFO",
               "type": "internal",
               "rsvp": "needsAction",
               "link": "https://www.google.com/calendar/event?eid=Z2dsaTBmc21iZTY0NHQ4ODJiMjJwdXIwbzggcmlzaGFiaEBmZXJtYXRjb21tZXJjZS5jb20&ctz=America/Los_Angeles"
@@ -1125,7 +1125,7 @@ const DATA = {
             {
               "time": "8:45 AM",
               "end": "9:30 AM",
-              "title": "Salesforce x FERMÃT - J.Jill connect",
+              "title": "Salesforce x FERMAT - J.Jill connect",
               "type": "external",
               "rsvp": "accepted",
               "link": "https://www.google.com/calendar/event?eid=b2ttbmI4MWNoM2RqZ2wzN3NuOWRmOWFybmMgcmlzaGFiaEBmZXJtYXRjb21tZXJjZS5jb20&ctz=America/Los_Angeles"
@@ -1149,7 +1149,7 @@ const DATA = {
             {
               "time": "10:53 AM",
               "end": "12:41 PM",
-              "title": "âï¸ Flight to Las Vegas (UA 611)",
+              "title": " Flight to Las Vegas (UA 611)",
               "type": "internal",
               "rsvp": "needsAction",
               "link": "https://www.google.com/calendar/event?eid=dWg2cHVwZ2Q2OWw2ajJsMTJnOWhjYW81OXMgcmlzaGFiaEBmZXJtYXRjb21tZXJjZS5jb20&ctz=America/Los_Angeles"
@@ -1157,7 +1157,7 @@ const DATA = {
             {
               "time": "12:41 PM",
               "end": "1:41 PM",
-              "title": "ð Travel from LAS",
+              "title": " Travel from LAS",
               "type": "internal",
               "rsvp": "needsAction",
               "link": "https://www.google.com/calendar/event?eid=ZWxrMmU2cWV2NGlhcWljc3JwMmpqY2hzc3MgcmlzaGFiaEBmZXJtYXRjb21tZXJjZS5jb20&ctz=America/Los_Angeles"
@@ -1173,7 +1173,7 @@ const DATA = {
             {
               "time": "3:00 PM",
               "end": "3:30 PM",
-              "title": "Rishabh (Fermat) Clara (Tomâs)",
+              "title": "Rishabh (Fermat) Clara (Tom's)",
               "type": "internal",
               "rsvp": "accepted",
               "link": "https://www.google.com/calendar/event?eid=a2c0aGkzMGNuZWgzcnZzY3E2N2djb3JhOTggcmlzaGFiaEBmZXJtYXRjb21tZXJjZS5jb20&ctz=America/Los_Angeles"
@@ -1255,7 +1255,7 @@ const DATA = {
             {
               "time": "8:45 AM",
               "end": "9:30 AM",
-              "title": "Salesforce x FERMÃT - J.Jill connect",
+              "title": "Salesforce x FERMAT - J.Jill connect",
               "type": "external",
               "rsvp": "needsAction",
               "link": "https://www.google.com/calendar/event?eid=b2ttbmI4MWNoM2RqZ2wzN3NuOWRmOWFybmMgc2hyZXlhc0BmZXJtYXRjb21tZXJjZS5jb20&ctz=America/Los_Angeles"
@@ -1287,7 +1287,7 @@ const DATA = {
             {
               "time": "11:00 AM",
               "end": "11:45 AM",
-              "title": "FERMÃT | Albertsons Media Collective POC review ",
+              "title": "FERMAT | Albertsons Media Collective POC review ",
               "type": "internal",
               "rsvp": "accepted",
               "link": "https://www.google.com/calendar/event?eid=MWFlYmpsanBiZHB2Z2V2dGNnZWlwNjJjcjAgc2hyZXlhc0BmZXJtYXRjb21tZXJjZS5jb20&ctz=America/Los_Angeles"
@@ -1303,7 +1303,7 @@ const DATA = {
             {
               "time": "12:00 PM",
               "end": "12:30 PM",
-              "title": "Performance Review 1:1 â Joshua Feiber",
+              "title": "Performance Review 1:1  -  Joshua Feiber",
               "type": "internal",
               "rsvp": "accepted",
               "link": "https://www.google.com/calendar/event?eid=Mmp2b3VhZGgydWs4OTR0MzZvMzFkaHFwOWMgc2hyZXlhc0BmZXJtYXRjb21tZXJjZS5jb20&ctz=America/Los_Angeles"
@@ -1366,7 +1366,7 @@ const DATA = {
             {
               "time": "6:00 AM",
               "end": "7:30 AM",
-              "title": "ð Travel to LAS",
+              "title": " Travel to LAS",
               "type": "internal",
               "rsvp": "needsAction",
               "link": "https://www.google.com/calendar/event?eid=YjdvYm5lbjVnbnBjYTIxOWFubjh1MWdtb3MgcmlzaGFiaEBmZXJtYXRjb21tZXJjZS5jb20&ctz=America/Los_Angeles"
@@ -1382,7 +1382,7 @@ const DATA = {
             {
               "time": "7:30 AM",
               "end": "9:18 AM",
-              "title": "âï¸ Flight to San Francisco (UA 2356)",
+              "title": " Flight to San Francisco (UA 2356)",
               "type": "internal",
               "rsvp": "needsAction",
               "link": "https://www.google.com/calendar/event?eid=MTZyZjQ3YmRyZjM3ZGFtOTJrYnZrNG1zY2sgcmlzaGFiaEBmZXJtYXRjb21tZXJjZS5jb20&ctz=America/Los_Angeles"
@@ -1406,7 +1406,7 @@ const DATA = {
             {
               "time": "9:18 AM",
               "end": "11:03 AM",
-              "title": "ð Travel from SFO",
+              "title": " Travel from SFO",
               "type": "internal",
               "rsvp": "needsAction",
               "link": "https://www.google.com/calendar/event?eid=cW9kYjNqbzk1cGJvNm43ZHVnZm42NmFlOGMgcmlzaGFiaEBmZXJtYXRjb21tZXJjZS5jb20&ctz=America/Los_Angeles"
@@ -1464,7 +1464,7 @@ const DATA = {
             {
               "time": "7:00 AM",
               "end": "7:30 AM",
-              "title": "Performance Review 1:1 â Nidhi Singh",
+              "title": "Performance Review 1:1  -  Nidhi Singh",
               "type": "internal",
               "rsvp": "accepted",
               "link": "https://www.google.com/calendar/event?eid=cjdrMHNuZWgwNDZpdTVmZWJsMDVhM21uZWsgc2hyZXlhc0BmZXJtYXRjb21tZXJjZS5jb20&ctz=America/Los_Angeles"
@@ -1472,7 +1472,7 @@ const DATA = {
             {
               "time": "7:30 AM",
               "end": "8:00 AM",
-              "title": "Performance Review 1:1 â Mukul Varshney",
+              "title": "Performance Review 1:1  -  Mukul Varshney",
               "type": "internal",
               "rsvp": "accepted",
               "link": "https://www.google.com/calendar/event?eid=OTFkZ3QxOHJrdm01aTBoYWdldmV0c3VsZ2Mgc2hyZXlhc0BmZXJtYXRjb21tZXJjZS5jb20&ctz=America/Los_Angeles"
@@ -1615,7 +1615,7 @@ const DATA = {
             {
               "time": "10:15 AM",
               "end": "10:45 AM",
-              "title": "Performance Review 1:1 â Gillian",
+              "title": "Performance Review 1:1  -  Gillian",
               "type": "internal",
               "rsvp": "accepted",
               "link": "https://www.google.com/calendar/event?eid=N3NsMXZzaGs5Zm02MDVpOTh0YjFvY3ZkaDggcmlzaGFiaEBmZXJtYXRjb21tZXJjZS5jb20&ctz=America/Los_Angeles"
@@ -1631,7 +1631,7 @@ const DATA = {
             {
               "time": "12:00 PM",
               "end": "12:30 PM",
-              "title": "Performance Review 1:1 â Jess",
+              "title": "Performance Review 1:1  -  Jess",
               "type": "internal",
               "rsvp": "accepted",
               "link": "https://www.google.com/calendar/event?eid=Nm81cnBxMmN0dms3YjBuMTgzYjJyYWF0ajggcmlzaGFiaEBmZXJtYXRjb21tZXJjZS5jb20&ctz=America/Los_Angeles"
@@ -1647,7 +1647,7 @@ const DATA = {
             {
               "time": "2:00 PM",
               "end": "2:30 PM",
-              "title": "Performance Review 1:1 â Saunder",
+              "title": "Performance Review 1:1  -  Saunder",
               "type": "internal",
               "rsvp": "accepted",
               "link": "https://www.google.com/calendar/event?eid=b2JxaTZncWtxczRqcnJ2a2drajY3bTVhZjAgcmlzaGFiaEBmZXJtYXRjb21tZXJjZS5jb20&ctz=America/Los_Angeles"
@@ -1713,7 +1713,7 @@ const DATA = {
             {
               "time": "10:00 AM",
               "end": "10:30 AM",
-              "title": "Performance Review 1:1 â Alex Harelick",
+              "title": "Performance Review 1:1  -  Alex Harelick",
               "type": "internal",
               "rsvp": "accepted",
               "link": "https://www.google.com/calendar/event?eid=dHM3NXZhZWptcXRqOXIwNnY2YzRoNGgwOWMgc2hyZXlhc0BmZXJtYXRjb21tZXJjZS5jb20&ctz=America/Los_Angeles"
@@ -1737,7 +1737,7 @@ const DATA = {
             {
               "time": "12:00 PM",
               "end": "12:30 PM",
-              "title": "Performance Review 1:1 â Daniel Haber",
+              "title": "Performance Review 1:1  -  Daniel Haber",
               "type": "internal",
               "rsvp": "accepted",
               "link": "https://www.google.com/calendar/event?eid=c2E4aHQzYmFiajc5NDR2cThmM2tiZzU3cXMgc2hyZXlhc0BmZXJtYXRjb21tZXJjZS5jb20&ctz=America/Los_Angeles"
@@ -1745,7 +1745,7 @@ const DATA = {
             {
               "time": "1:00 PM",
               "end": "1:30 PM",
-              "title": "Performance Review 1:1 â Bharat Murali",
+              "title": "Performance Review 1:1  -  Bharat Murali",
               "type": "internal",
               "rsvp": "accepted",
               "link": "https://www.google.com/calendar/event?eid=a2p2a2lzNGdnY2drbmhsMnNoNjFndmMxZjQgc2hyZXlhc0BmZXJtYXRjb21tZXJjZS5jb20&ctz=America/Los_Angeles"
@@ -2021,7 +2021,7 @@ const DATA = {
 
 
 // ============================================================
-// MARKETING EVENTS DATA â from Notion MKT Events
+// MARKETING EVENTS DATA  -  from Notion MKT Events
 // ============================================================
 const FERMAT_EVENTS_CAL = "https://calendar.google.com/calendar/embed?src=c_e611ed498cde340f125c26be2ef1b329409ea41fe820481f13eacc332e7c0446%40group.calendar.google.com";
 
@@ -2030,7 +2030,7 @@ const MKT_EVENTS = [
     id: "salesforce-sko",
     name: "Salesforce Team Kick Off",
     shortName: "Salesforce SKO",
-    dates: "Mar 19â20, 2026",
+    dates: "Mar 19-20, 2026",
     startDate: "2026-03-19",
     endDate: "2026-03-20",
     location: "Atlanta, GA",
@@ -2047,16 +2047,16 @@ const MKT_EVENTS = [
       attendees: "~200 Salesforce sellers",
       fermatTeam: "Jess McDaid, Bharat Murali",
       travelIn: "Mar 18 (fly in day before)",
-      travelOut: "Mar 20â21",
+      travelOut: "Mar 20-21",
       hotel: "JW Marriott Buckhead"
     },
     todos: []
   },
   {
     id: "shoptalk",
-    name: "Shoptalk Spring â Glam Suite",
+    name: "Shoptalk Spring  -  Glam Suite",
     shortName: "Shoptalk",
-    dates: "Mar 23â26, 2026",
+    dates: "Mar 23-26, 2026",
     startDate: "2026-03-23",
     endDate: "2026-03-26",
     location: "Las Vegas, NV",
@@ -2066,34 +2066,34 @@ const MKT_EVENTS = [
     rishabh: true,
     shreyas: false,
     team: ["Maya"],
-    description: "GlamSuite activation with 30 appointment slots targeting enterprise retailers ($100M+ GMV). Theme: \"AI Search is Infrastructure, Not Experimentation.\" Includes Sellebrate party (Mar 25, ChÃ©ri Rooftop, Paris Hotel).",
+    description: "GlamSuite activation with 30 appointment slots targeting enterprise retailers ($100M+ GMV). Theme: \"AI Search is Infrastructure, Not Experimentation.\" Includes Sellebrate party (Mar 25, Cheri Rooftop, Paris Hotel).",
     calendarLink: "https://www.google.com/calendar/event?eid=NnJtcm83bm8wbDhlcHIzcjM3MzRib2phOW8gY19lNjExZWQ0OThjZGUzNDBmMTI1YzI2YmUyZWYxYjMyOTQwOWVhNDFmZTgyMDQ4MWYxM2VhY2MzMzJlN2MwNDQ2QGc&ctz=America/Los_Angeles",
     notionLink: "https://www.notion.so/fermat-commerce/Shoptalk-3111ad76fd2a805c92a9da0b0d207143",
     lumaLink: "https://luma.com/xdnjnh7z",
     details: {
-      format: "GlamSuite activation â 30 appointment slots",
+      format: "GlamSuite activation  -  30 appointment slots",
       target: "$100M+ GMV enterprise retailers",
       airlineCode: "ZRUP899432",
       arriveDate: "Mar 23 evening",
       departDate: "Mar 26"
     },
     subEvents: [
-      {name: "Glam Suite Day 1", date: "Mar 23, 4â6 PM", link: "https://www.google.com/calendar/event?eid=NGg4bXJhYmtvOW51NTFxaWxhbW5iYW9xZGggY19lNjExZWQ0OThjZGUzNDBmMTI1YzI2YmUyZWYxYjMyOTQwOWVhNDFmZTgyMDQ4MWYxM2VhY2MzMzJlN2MwNDQ2QGc&ctz=America/Los_Angeles"},
-      {name: "Glam Suite Day 2", date: "Mar 24, 9 AMâ4 PM", link: "https://www.google.com/calendar/event?eid=NHE1MHU5dWczYTA1MTN2NnRlYXBva2tjZ2UgY19lNjExZWQ0OThjZGUzNDBmMTI1YzI2YmUyZWYxYjMyOTQwOWVhNDFmZTgyMDQ4MWYxM2VhY2MzMzJlN2MwNDQ2QGc&ctz=America/Los_Angeles"},
-      {name: "Glam Suite Day 3", date: "Mar 25, 9 AMâ4 PM", link: "https://www.google.com/calendar/event?eid=NmI4c25qM2NqNjY4a2I1MnV0cXJ0djhhdWggY19lNjExZWQ0OThjZGUzNDBmMTI1YzI2YmUyZWYxYjMyOTQwOWVhNDFmZTgyMDQ4MWYxM2VhY2MzMzJlN2MwNDQ2QGc&ctz=America/Los_Angeles"},
-      {name: "Sellebrate Party", date: "Mar 25, 9 PMâ12 AM", link: "https://www.google.com/calendar/event?eid=NXJtOXVmMzJrM2F1bGh0OTloNmhxdGRjbTMgY19lNjExZWQ0OThjZGUzNDBmMTI1YzI2YmUyZWYxYjMyOTQwOWVhNDFmZTgyMDQ4MWYxM2VhY2MzMzJlN2MwNDQ2QGc&ctz=America/Los_Angeles"}
+      {name: "Glam Suite Day 1", date: "Mar 23, 4-6 PM", link: "https://www.google.com/calendar/event?eid=NGg4bXJhYmtvOW51NTFxaWxhbW5iYW9xZGggY19lNjExZWQ0OThjZGUzNDBmMTI1YzI2YmUyZWYxYjMyOTQwOWVhNDFmZTgyMDQ4MWYxM2VhY2MzMzJlN2MwNDQ2QGc&ctz=America/Los_Angeles"},
+      {name: "Glam Suite Day 2", date: "Mar 24, 9 AM-4 PM", link: "https://www.google.com/calendar/event?eid=NHE1MHU5dWczYTA1MTN2NnRlYXBva2tjZ2UgY19lNjExZWQ0OThjZGUzNDBmMTI1YzI2YmUyZWYxYjMyOTQwOWVhNDFmZTgyMDQ4MWYxM2VhY2MzMzJlN2MwNDQ2QGc&ctz=America/Los_Angeles"},
+      {name: "Glam Suite Day 3", date: "Mar 25, 9 AM-4 PM", link: "https://www.google.com/calendar/event?eid=NmI4c25qM2NqNjY4a2I1MnV0cXJ0djhhdWggY19lNjExZWQ0OThjZGUzNDBmMTI1YzI2YmUyZWYxYjMyOTQwOWVhNDFmZTgyMDQ4MWYxM2VhY2MzMzJlN2MwNDQ2QGc&ctz=America/Los_Angeles"},
+      {name: "Sellebrate Party", date: "Mar 25, 9 PM-12 AM", link: "https://www.google.com/calendar/event?eid=NXJtOXVmMzJrM2F1bGh0OTloNmhxdGRjbTMgY19lNjExZWQ0OThjZGUzNDBmMTI1YzI2YmUyZWYxYjMyOTQwOWVhNDFmZTgyMDQ4MWYxM2VhY2MzMzJlN2MwNDQ2QGc&ctz=America/Los_Angeles"}
     ],
     targets: ["Gap", "Macy's", "American Eagle", "ELC", "Lululemon", "Walmart"],
     todos: [
       {text: "Book Rishabh's flight (arrive Mar 23, depart Mar 26)", done: false},
       {text: "Book Rishabh's hotel", done: false},
-      {text: "Block Rishabh's calendar Mar 23â26", done: false},
+      {text: "Block Rishabh's calendar Mar 23-26", done: false},
       {text: "Clear / reschedule conflicts on Rishabh's calendar", done: false}
     ]
   },
   {
     id: "buybox",
-    name: "Beyond the Buy Box â Tinuiti & Amazon",
+    name: "Beyond the Buy Box  -  Tinuiti & Amazon",
     shortName: "Buy Box",
     dates: "Apr 8, 2026",
     startDate: "2026-04-08",
@@ -2105,7 +2105,7 @@ const MKT_EVENTS = [
     rishabh: false,
     shreyas: false,
     team: ["Jess McDaid"],
-    description: "Tinuiti & Amazon annual commerce symposium. ~40 attendees â PE/VC operators and brand leaders (Sony, Skechers, Carter's, NÃ©cessaire). Includes Amazon Studios tour + happy hour + networking dinner.",
+    description: "Tinuiti & Amazon annual commerce symposium. ~40 attendees  -  PE/VC operators and brand leaders (Sony, Skechers, Carter's, Necessaire). Includes Amazon Studios tour + happy hour + networking dinner.",
     calendarLink: "https://www.google.com/calendar/event?eid=NnJ1ZDZycWJmamJ2dDNwMWUxbzh1OGxvNmMgY19lNjExZWQ0OThjZGUzNDBmMTI1YzI2YmUyZWYxYjMyOTQwOWVhNDFmZTgyMDQ4MWYxM2VhY2MzMzJlN2MwNDQ2QGc&ctz=America/Los_Angeles",
     notionLink: "https://www.notion.so/fermat-commerce/Beyond-the-Buy-Box-Tinuiti-Amazon-31f1ad76fd2a80078868e0a8fb1df1a7",
     details: {
@@ -2119,7 +2119,7 @@ const MKT_EVENTS = [
     id: "cab",
     name: "CAB Spring 2026",
     shortName: "CAB Spring",
-    dates: "Apr 27â29, 2026",
+    dates: "Apr 27-29, 2026",
     startDate: "2026-04-27",
     endDate: "2026-04-29",
     location: "Carefree, AZ",
@@ -2139,11 +2139,11 @@ const MKT_EVENTS = [
     todos: [
       {text: "Book Rishabh's flights to Phoenix (arrive Apr 26)", done: false},
       {text: "Book Rishabh's hotel", done: false},
-      {text: "Block Rishabh's calendar Apr 27â29", done: false},
+      {text: "Block Rishabh's calendar Apr 27-29", done: false},
       {text: "Clear / reschedule conflicts on Rishabh's calendar", done: false},
       {text: "Book Shreyas's flights to Phoenix (arrive Apr 26)", done: false},
       {text: "Book Shreyas's hotel", done: false},
-      {text: "Block Shreyas's calendar Apr 27â29", done: false},
+      {text: "Block Shreyas's calendar Apr 27-29", done: false},
       {text: "Clear / reschedule conflicts on Shreyas's calendar", done: false}
     ]
   },
@@ -2165,11 +2165,11 @@ const MKT_EVENTS = [
     calendarLink: "https://www.google.com/calendar/event?eid=MmUyNXExaDU0bmtmNmw1cDc2ZTlpcGg3MmsgY19lNjExZWQ0OThjZGUzNDBmMTI1YzI2YmUyZWYxYjMyOTQwOWVhNDFmZTgyMDQ4MWYxM2VhY2MzMzJlN2MwNDQ2QGc&ctz=America/Los_Angeles",
     notionLink: "https://www.notion.so/fermat-commerce/Tinuiti-Live-3221ad76fd2a80f9bd79c22377c63a21",
     details: {
-      sponsorLevel: "Travel Sponsor â $7,500",
+      sponsorLevel: "Travel Sponsor  -  $7,500",
       attendees: "250+ in-person brand leaders",
       perks: "1 conference pass, 10 travel stipends ($500 each), co-branded email",
       contact: "Melissa Feinman (melissa.feinman@tinuiti.com)",
-      schedule: "9 AM doors, 10â4:30 PM content, 4:30â6 PM cocktails"
+      schedule: "9 AM doors, 10-4:30 PM content, 4:30-6 PM cocktails"
     },
     todos: []
   },
@@ -2177,7 +2177,7 @@ const MKT_EVENTS = [
     id: "cannes",
     name: "Cannes Lions 2026",
     shortName: "Cannes Lions",
-    dates: "Jun 22â27, 2026",
+    dates: "Jun 22-27, 2026",
     startDate: "2026-06-22",
     endDate: "2026-06-27",
     location: "Cannes, France",
@@ -2187,27 +2187,27 @@ const MKT_EVENTS = [
     rishabh: true,
     shreyas: true,
     team: [],
-    description: "Fermat villa activation at Cannes Lions. Villa La Mascotte Plus â 6 beds, 2 couch beds, 5 baths. Both co-founders attending.",
+    description: "Fermat villa activation at Cannes Lions. Villa La Mascotte Plus  -  6 beds, 2 couch beds, 5 baths. Both co-founders attending.",
     calendarLink: "https://www.google.com/calendar/event?eid=NmRjdG4ybXJqNTZybmtnMHE0MWIwYWpoc2MgY19lNjExZWQ0OThjZGUzNDBmMTI1YzI2YmUyZWYxYjMyOTQwOWVhNDFmZTgyMDQ4MWYxM2VhY2MzMzJlN2MwNDQ2QGc&ctz=America/Los_Angeles",
     details: {
       villa: "Villa La Mascotte Plus",
       capacity: "6 beds, 2 couch beds, 5 baths",
-      rooms: "Rishabh â Room 1, Shreyas â Room 1",
+      rooms: "Rishabh  -  Room 1, Shreyas  -  Room 1",
       format: "Villa activation + Cannes Lions festival"
     },
     todos: [
-      {text: "Book Rishabh's flights SFO â Nice (arrive Jun 21, depart Jun 27)", done: false},
-      {text: "Block Rishabh's calendar Jun 22â27", done: false},
+      {text: "Book Rishabh's flights SFO -> Nice (arrive Jun 21, depart Jun 27)", done: false},
+      {text: "Block Rishabh's calendar Jun 22-27", done: false},
       {text: "Clear / reschedule conflicts on Rishabh's calendar", done: false},
-      {text: "Book Shreyas's flights SFO â Nice (arrive Jun 21, depart Jun 27)", done: false},
-      {text: "Block Shreyas's calendar Jun 22â27", done: false},
+      {text: "Book Shreyas's flights SFO -> Nice (arrive Jun 21, depart Jun 27)", done: false},
+      {text: "Block Shreyas's calendar Jun 22-27", done: false},
       {text: "Clear / reschedule conflicts on Shreyas's calendar", done: false}
     ]
   }
 ];
 
 // ============================================================
-// PERSISTENCE â survive page refresh
+// PERSISTENCE  -  survive page refresh
 // ============================================================
 const STORAGE_KEY_MANUAL = 'sophie-dash-manual-tasks';
 const STORAGE_KEY_DONE = 'sophie-dash-done-ids';
@@ -2239,7 +2239,7 @@ function saveOffsiteDone(keys) {
   try { localStorage.setItem(STORAGE_KEY_OFFSITE, JSON.stringify(keys)); } catch(e) {}
 }
 
-// Normalize title for fuzzy matching â lowercase, strip brackets/tags, collapse whitespace
+// Normalize title for fuzzy matching  -  lowercase, strip brackets/tags, collapse whitespace
 function normalizeTitle(t) {
   return t.toLowerCase().replace(/\[.*?\]/g,'').replace(/\u2014/g,' ').replace(/[^a-z0-9 ]/g,'').replace(/\s+/g,' ').trim();
 }
@@ -2256,7 +2256,7 @@ function applyPersistedState() {
     }
   });
 
-  // 2. Apply done-state overrides â by ID and by normalized title
+  // 2. Apply done-state overrides  -  by ID and by normalized title
   const doneIds = loadDoneIds();
   const doneTitles = loadDoneTitles();
   const doneIdSet = new Set(doneIds);
@@ -2313,7 +2313,7 @@ function init() {
   });
 }
 
-// ââ KPI Strip ââ
+// -- KPI Strip --
 function renderKPIs() {
   const open = DATA.myTasks.filter(t=>!t.done).length;
   const urgent = DATA.actionItems.items.filter(i=>i.priority==='red').length;
@@ -2334,7 +2334,7 @@ function renderKPIs() {
   `;
 }
 
-// ââ Bento Layout ââ
+// -- Bento Layout --
 function renderBento() {
   const el = document.getElementById('bento');
   el.innerHTML = `
@@ -2374,7 +2374,7 @@ function renderBento() {
   });
 }
 
-// ââ My Tasks ââ
+// -- My Tasks --
 function renderMyTasks() {
   const prioOrder = {High:0, Medium:1, Low:2};
   const tasks = DATA.myTasks.slice().sort((a,b) => {
@@ -2667,7 +2667,7 @@ function addMyTask() {
   setTimeout(() => { newLi.style.background = ''; }, 600);
 }
 
-// ââ Action Items editing ââ
+// -- Action Items editing --
 function dismissActionItem(btn) {
   const row = btn.closest('.ai-row');
   row.style.transition = 'opacity .3s, transform .3s';
@@ -2704,7 +2704,7 @@ function updateActionItemKPI() {
   if(kpis[1]) kpis[1].querySelector('.num').textContent = urgent;
 }
 
-// ââ Open Loops editing ââ
+// -- Open Loops editing --
 function dismissOpenLoop(btn) {
   const row = btn.closest('.loop-row');
   row.style.transition = 'opacity .3s, transform .3s';
@@ -2749,7 +2749,7 @@ function updateOpenLoopKPI() {
   if(kpis[2]) kpis[2].querySelector('.num').textContent = hot;
 }
 
-// ââ Calendar (multi-day) ââ
+// -- Calendar (multi-day) --
 let calDayIdx = 0;
 
 function calToMin(t){const m=t.match(/(\d+):(\d+)\s*(AM|PM)/i);if(!m)return 0;let h=parseInt(m[1]);const mn=parseInt(m[2]),ap=m[3].toUpperCase();if(ap==='PM'&&h!==12)h+=12;if(ap==='AM'&&h===12)h=0;return h*60+mn;}
@@ -2831,7 +2831,7 @@ function renderCalendar() {
   return `<div class="card" style="height:100%" id="cal-card-container">${renderCalendarInner()}</div>`;
 }
 
-// ââ Upcoming Conflicts ââ
+// -- Upcoming Conflicts --
 function renderUpcomingConflicts() {
   const days = DATA.calendarDays;
   if(!days || !days.length) return '';
@@ -2900,10 +2900,10 @@ function renderUpcomingConflicts() {
           <span style="font-size:9px;color:var(--red);font-weight:600">OVERLAP</span>
         </div>
         <div style="font-size:11px;color:var(--text)">
-          <span style="color:var(--text-muted)">${c.ev1.time}â${c.ev1.end}</span> ${c.ev1.title}
+          <span style="color:var(--text-muted)">${c.ev1.time}-${c.ev1.end}</span> ${c.ev1.title}
         </div>
         <div style="font-size:11px;color:var(--text)">
-          <span style="color:var(--text-muted)">${c.ev2.time}â${c.ev2.end}</span> ${c.ev2.title}
+          <span style="color:var(--text-muted)">${c.ev2.time}-${c.ev2.end}</span> ${c.ev2.title}
         </div>
       </div>`;
     });
@@ -2922,7 +2922,7 @@ function renderUpcomingConflicts() {
   </div>`;
 }
 
-// ââ Leadership Offsite ââ
+// -- Leadership Offsite --
 function renderOffsite() {
   const o = DATA.leadershipOffsite;
   if(!o) return '';
@@ -2966,7 +2966,7 @@ function renderOffsite() {
       const taskId = 'offsite-'+pi+'-'+ti;
       phaseHtml += `
           <div class="offsite-task${t.done?' checked':''}" data-phase="${pi}" data-task="${ti}" onclick="toggleOffsiteTask(this)" style="display:flex;align-items:flex-start;gap:8px;padding:5px 4px;border-radius:5px;cursor:pointer;transition:background .15s;font-size:11px">
-            <span class="task-checkbox${t.done?' checked':''}" style="width:14px;height:14px;border-radius:3px;border:2px solid ${t.done?'var(--leaf)':'var(--border-light)'};flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;${t.done?'background:var(--forest)':''}"><span style="font-size:8px;color:#fff;font-weight:700">${t.done?'â':''}</span></span>
+            <span class="task-checkbox${t.done?' checked':''}" style="width:14px;height:14px;border-radius:3px;border:2px solid ${t.done?'var(--leaf)':'var(--border-light)'};flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;${t.done?'background:var(--forest)':''}"><span style="font-size:8px;color:#fff;font-weight:700">${t.done?'*':''}</span></span>
             <span style="color:${t.done?'var(--text-muted)':'var(--text-dim)'};${t.done?'text-decoration:line-through;opacity:.5':''};line-height:1.3">${t.text}</span>
           </div>`;
     });
@@ -3008,7 +3008,7 @@ function syncOffsiteToNotion() {
   const o = DATA.leadershipOffsite;
   if(!o) return;
 
-  // Build sync payload â JSON file with current states
+  // Build sync payload  -  JSON file with current states
   const state = {};
   o.phases.forEach((p, pi) => {
     p.tasks.forEach((t, ti) => {
@@ -3032,7 +3032,7 @@ function syncOffsiteToNotion() {
   URL.revokeObjectURL(url);
 
   // Visual feedback
-  btn.textContent = 'â Synced';
+  btn.textContent = '* Synced';
   btn.style.background = 'var(--green)';
   btn.style.color = 'var(--bg)';
   btn.style.borderColor = 'var(--green)';
@@ -3082,7 +3082,7 @@ function toggleOffsiteTask(el) {
     cb.classList.add('checked');
     cb.style.borderColor = 'var(--leaf)';
     cb.style.background = 'var(--forest)';
-    cb.querySelector('span').textContent = 'â';
+    cb.querySelector('span').textContent = '*';
     textSpan.style.textDecoration = 'line-through';
     textSpan.style.opacity = '.5';
     textSpan.style.color = 'var(--text-muted)';
@@ -3126,7 +3126,7 @@ function toggleOffsiteTask(el) {
   if(progressText) progressText.textContent = totalDone+'/'+totalAll+' tasks ('+pct+'%)';
 }
 
-// ââ Team Tasks ââ
+// -- Team Tasks --
 function renderTeamTasks() {
   const tasks = DATA.notionTasks;
   const high=tasks.filter(t=>t.priority==='High');
@@ -3185,7 +3185,7 @@ function filterTeamTasks(filter, btn) {
   });
 }
 
-// ââ Action Items ââ
+// -- Action Items --
 function renderActionItems() {
   const d = DATA.actionItems;
   const red=d.items.filter(i=>i.priority==='red');
@@ -3225,7 +3225,7 @@ function renderActionItems() {
   </div>`;
 }
 
-// ââ Daily Deliveries ââ
+// -- Daily Deliveries --
 function renderDeliveries() {
   const deliveries = [
     {name:"CEO Brief", icon:"&#9728;&#65039;", ...DATA.morningBrief},
@@ -3255,7 +3255,7 @@ function renderDeliveries() {
   </div>`;
 }
 
-// ââ Spam ââ
+// -- Spam --
 function renderSpam() {
   const d = DATA.spam;
   const items = d.items || [];
@@ -3301,7 +3301,7 @@ function renderTaskHealth() {
   </div>`;
 }
 
-// ââ Hack Week ââ
+// -- Hack Week --
 const STORAGE_KEY_HACKWEEK = 'sophie-dash-hackweek-done';
 function loadHackWeekDone() {
   try { return JSON.parse(localStorage.getItem(STORAGE_KEY_HACKWEEK)) || []; } catch(e) { return []; }
@@ -3339,7 +3339,7 @@ function renderHackWeek() {
     p.tasks.forEach((t, ti) => {
       phaseHtml += `
           <div class="hw-task${t.done?' checked':''}" data-hwphase="${pi}" data-hwtask="${ti}" onclick="toggleHWTask(this)" style="display:flex;align-items:flex-start;gap:8px;padding:5px 4px;border-radius:5px;cursor:pointer;transition:background .15s;font-size:11px">
-            <span class="task-checkbox${t.done?' checked':''}" style="width:14px;height:14px;border-radius:3px;border:2px solid ${t.done?'var(--leaf)':'var(--border-light)'};flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;${t.done?'background:var(--forest)':''}"><span style="font-size:8px;color:#fff;font-weight:700">${t.done?'â':''}</span></span>
+            <span class="task-checkbox${t.done?' checked':''}" style="width:14px;height:14px;border-radius:3px;border:2px solid ${t.done?'var(--leaf)':'var(--border-light)'};flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;${t.done?'background:var(--forest)':''}"><span style="font-size:8px;color:#fff;font-weight:700">${t.done?'*':''}</span></span>
             <span style="color:${t.done?'var(--text-muted)':'var(--text-dim)'};${t.done?'text-decoration:line-through;opacity:.5':''};line-height:1.3">${t.text}</span>
           </div>`;
     });
@@ -3409,7 +3409,7 @@ function toggleHWTask(el) {
     cb.classList.add('checked');
     cb.style.border = '2px solid var(--leaf)';
     cb.style.background = 'var(--forest)';
-    cb.querySelector('span').textContent = 'â';
+    cb.querySelector('span').textContent = '*';
     label.style.textDecoration = 'line-through';
     label.style.opacity = '.5';
     label.style.color = 'var(--text-muted)';
@@ -3552,7 +3552,7 @@ function renderReminders() {
   </div>`;
 }
 
-// ââ Open Loops ââ
+// -- Open Loops --
 function renderOpenLoops() {
   const loops = DATA.openLoops;
   const active = loops.filter(l => l.priority === 'red' || l.priority === 'yellow').length;
@@ -3591,7 +3591,7 @@ function renderOpenLoops() {
   </div>`;
 }
 
-// ââ News Feed Tab ââ
+// -- News Feed Tab --
 function renderNewsFeed() {
   const el = document.getElementById('news-content');
   const days = DATA.newsFeed;
@@ -3712,7 +3712,7 @@ function renderNewsFeed() {
     </div>`;
 }
 
-// ââ Weekly Pulse Tab ââ
+// -- Weekly Pulse Tab --
 function renderWeeklyPulse() {
   const el = document.getElementById('bento-pulse');
   const w = DATA.weeklyPulse;
@@ -3808,7 +3808,7 @@ function renderWeeklyPulse() {
   `;
 }
 
-// ââ Utilities Tab ââ
+// -- Utilities Tab --
 function renderUtilities() {
   const el = document.getElementById('bento-utilities');
   el.innerHTML = `
@@ -3838,7 +3838,7 @@ function renderMeetingSched() {
   </div>`;
 }
 
-// ââ Marketing Tab ââ
+// -- Marketing Tab --
 function renderMarketing() {
   const el = document.getElementById('marketing-content');
 
@@ -3857,12 +3857,12 @@ function renderMarketing() {
   el.innerHTML = `
     <!-- Summary cards -->
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-      <div style="font-size:11px;color:var(--text-muted)">Events from <a href="${FERMAT_EVENTS_CAL}" target="_blank" style="color:var(--gold)">FermÃ t Events Calendar &#8599;</a></div>
+      <div style="font-size:11px;color:var(--text-muted)">Events from <a href="${FERMAT_EVENTS_CAL}" target="_blank" style="color:var(--gold)">Fermat Events Calendar &#8599;</a></div>
     </div>
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px">
       <div class="card" style="padding:16px">
         <div style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--text-muted);font-weight:700">Next Event</div>
-        <div style="font-size:20px;font-weight:800;color:var(--gold);margin-top:4px">${daysUntil !== null ? daysUntil + 'd' : 'â'}</div>
+        <div style="font-size:20px;font-weight:800;color:var(--gold);margin-top:4px">${daysUntil !== null ? daysUntil + 'd' : ' - '}</div>
         <div style="font-size:11px;color:var(--text-dim);margin-top:2px">${nextEvent ? nextEvent.shortName : 'None'}</div>
       </div>
       <div class="card" style="padding:16px">
@@ -4106,7 +4106,7 @@ function renderEventPane(ev) {
               ${ev.rishabh ? '<span class="exec-badge rishabh"><span class="exec-dot rishabh"></span> Rishabh</span>' : ''}
               ${ev.shreyas ? '<span class="exec-badge shreyas"><span class="exec-dot shreyas"></span> Shreyas</span>' : ''}
               ${ev.team.map(t => `<span class="exec-badge team">${t}</span>`).join('')}
-              ${!ev.rishabh && !ev.shreyas && ev.team.length === 0 ? '<span style="font-size:12px;color:var(--text-muted)">TBD â no attendees confirmed</span>' : ''}
+              ${!ev.rishabh && !ev.shreyas && ev.team.length === 0 ? '<span style="font-size:12px;color:var(--text-muted)">TBD  -  no attendees confirmed</span>' : ''}
             </div>
             ${!ev.rishabh && !ev.shreyas ? `
               <div style="font-size:11px;padding:8px 10px;border-radius:6px;background:var(--surface);border:1px solid var(--border);color:var(--text-muted)">
@@ -4114,7 +4114,7 @@ function renderEventPane(ev) {
               </div>
             ` : `
               <div style="font-size:11px;padding:8px 10px;border-radius:6px;background:rgba(219,203,119,.06);border:1px solid rgba(219,203,119,.15);color:var(--gold)">
-                &#9888; Exec travel required â ${ev.rishabh && ev.shreyas ? 'both founders' : ev.rishabh ? 'Rishabh' : 'Shreyas'} attending
+                &#9888; Exec travel required  -  ${ev.rishabh && ev.shreyas ? 'both founders' : ev.rishabh ? 'Rishabh' : 'Shreyas'} attending
               </div>
             `}
             ${ev.details.travelIn ? `
