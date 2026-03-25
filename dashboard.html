@@ -2171,18 +2171,10 @@ async function fetchLiveOpenLoops() {
     // -- KPI Strip --
 function renderKPIs() {
   const open = DATA.myTasks.filter(t=>!t.done).length;
-  const urgent = DATA.actionItems.items.filter(i=>i.priority==='red').length;
-  const loops = DATA.openLoops.length;
-  const loopsHot = DATA.openLoops.filter(l=>l.priority==='red').length;
   const broken = DATA.tasks.filter(t=>t.status!=='ok' && t.status!=='off').length;
   const drafts = DATA.unreadDrafts;
   document.getElementById('kpi-strip').innerHTML = `
-    <div class="kpi ${open > 13 ? 'red' : open > 8 ? 'yellow' : 'gold'}"><div class="num">${open}</div><div class="lbl">My Tasks</div></div>
-    <div class="kpi-divider"></div>
-    <div class="kpi ${urgent > 4 ? 'red' : urgent > 2 ? 'yellow' : 'green'}"><div class="num">${DATA.actionItems.totalToday}</div><div class="lbl">Action Items</div></div>
-    <div class="kpi-divider"></div>
-    <div class="kpi ${loopsHot >= 7 ? 'red' : loopsHot >= 4 ? 'yellow' : 'green'}"><div class="num">${loops}</div><div class="lbl">Open Loops</div></div>
-    <div class="kpi-divider"></div>
+    <div class="kpi ${open > 13 ? 'red' : open > 8 ? 'yellow' : 'gold'}"><div class="num">${open}</div><div class="lbl">My Tasks</div></div>    <div class="kpi-divider"></div>
     <div class="kpi ${broken > 0 ? 'red' : 'green'}"><div class="num">${broken > 0 ? broken + ' &#9888;' : '&#10003;'}</div><div class="lbl">${broken > 0 ? 'Tasks Down' : 'All Healthy'}</div></div>
     <div class="kpi-divider"></div>
     <div class="kpi ${drafts >= 6 ? 'red' : drafts >= 3 ? 'yellow' : drafts >= 1 ? 'blue' : 'green'}"><div class="num">${drafts}</div><div class="lbl">Drafts</div></div>
@@ -2199,14 +2191,6 @@ function renderBento() {
     </div>
     <div style="grid-column:span 5">${renderMyTasks()}</div>
     <div style="grid-column:span 7">${renderCalendar()}</div>
-
-    <div class="bento-section" style="grid-column:span 12;display:flex;align-items:center;gap:8px;padding:4px 0 0">
-      <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted)">Attention Needed</span>
-      <span style="flex:1;height:1px;background:var(--border)"></span>
-    </div>
-    <div style="grid-column:span 4">${renderReminders()}</div>
-    <div style="grid-column:span 4">${renderActionItems()}</div>
-    <div style="grid-column:span 4">${renderOpenLoops()}</div>
 
     <div class="bento-section" style="grid-column:span 12;display:flex;align-items:center;gap:8px;padding:4px 0 0">
       <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted)">Team &amp; Projects</span>
