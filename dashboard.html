@@ -405,6 +405,7 @@ a.loop-row:hover .loop-source{color:var(--gold)}
     .cand-btn-approve { background: #28a745; color: white; }
     .cand-btn-reject { background: #dc3545; color: white; }
     .candidate-group-label { font-size: 13px; font-weight: 600; color: var(--text-secondary, #666); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 20px;color:var(--text-muted);font-size:12px;text-align:center;gap:8px;min-height:120px}
 </style>
 </head>
 <body>
@@ -2853,7 +2854,7 @@ function renderOffsite() {
       const taskId = 'offsite-'+pi+'-'+ti;
       phaseHtml += `
           <div class="offsite-task${t.done?' checked':''}" data-phase="${pi}" data-task="${ti}" onclick="toggleOffsiteTask(this)" style="display:flex;align-items:flex-start;gap:8px;padding:5px 4px;border-radius:5px;cursor:pointer;transition:background .15s;font-size:11px">
-            <span class="task-checkbox${t.done?' checked':''}" style="width:14px;height:14px;border-radius:3px;border:2px solid ${t.done?'var(--leaf)':'var(--border-light)'};flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;${t.done?'background:var(--forest)':''}"><span style="font-size:8px;color:#fff;font-weight:700">${t.done?'✓':''}</span></span>
+            <span class="task-checkbox${t.done?' checked':''}" style="width:14px;height:14px;border-radius:3px;border:2px solid ${t.done?'var(--leaf)':'var(--border-light)'};flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;${t.done?'background:var(--forest)':''}"><span style="font-size:8px;color:#fff;font-weight:700">${t.done?'â':''}</span></span>
             <span style="color:${t.done?'var(--text-muted)':'var(--text-dim)'};${t.done?'text-decoration:line-through;opacity:.5':''};line-height:1.3">${t.text}</span>
           </div>`;
     });
@@ -3226,7 +3227,7 @@ function renderHackWeek() {
     p.tasks.forEach((t, ti) => {
       phaseHtml += `
           <div class="hw-task${t.done?' checked':''}" data-hwphase="${pi}" data-hwtask="${ti}" onclick="toggleHWTask(this)" style="display:flex;align-items:flex-start;gap:8px;padding:5px 4px;border-radius:5px;cursor:pointer;transition:background .15s;font-size:11px">
-            <span class="task-checkbox${t.done?' checked':''}" style="width:14px;height:14px;border-radius:3px;border:2px solid ${t.done?'var(--leaf)':'var(--border-light)'};flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;${t.done?'background:var(--forest)':''}"><span style="font-size:8px;color:#fff;font-weight:700">${t.done?'✓':''}</span></span>
+            <span class="task-checkbox${t.done?' checked':''}" style="width:14px;height:14px;border-radius:3px;border:2px solid ${t.done?'var(--leaf)':'var(--border-light)'};flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;${t.done?'background:var(--forest)':''}"><span style="font-size:8px;color:#fff;font-weight:700">${t.done?'â':''}</span></span>
             <span style="color:${t.done?'var(--text-muted)':'var(--text-dim)'};${t.done?'text-decoration:line-through;opacity:.5':''};line-height:1.3">${t.text}</span>
           </div>`;
     });
@@ -3335,25 +3336,22 @@ function toggleHWTask(el) {
 }
 
 function renderSFBudget() {
-  const b = DATA.rampBudgets.sfSocial;
-  const pct = Math.round((b.spent / b.limit) * 100);
-  const barColor = pct >= 90 ? 'var(--red)' : pct >= 70 ? 'var(--yellow)' : 'var(--leaf)';
-  return `
-            <div style="grid-column:span 6">
-              <div class="card" style="height:100%">
-                <div class="card-head">
-                  <div class="card-title">📥 Inbound Candidates</div>
-                  <div class="card-badges">
-                    <span class="badge badge-blue">Email-to-Greenhouse Pipeline</span>
+        return `
+                  <div style="grid-column:span 6">
+                    <div class="card" style="height:100%">
+                      <div class="card-head">
+                        <div class="card-title">\u{1F4E5} Inbound Candidates</div>
+                        <div class="card-badges">
+                          <span class="badge tag-blue">Pipeline</span>
+                        </div>
+                      </div>
+                      <div class="card-body" id="candidates-body">
+                        <div class="empty-state">Loading candidates...</div>
+                      </div>
+                    </div>
                   </div>
-                </div>
-                <div id="candidates-body">
-                  <div class="empty-state">Loading candidates...</div>
-                </div>
-              </div>
-            </div>
-  `;
-}
+        `;
+      }
 
 function renderFPPC() {
   const events = DATA.fppcEvents || [];
@@ -4057,7 +4055,7 @@ function renderEventPane(ev) {
 init();
 
 
-  // —— Candidates (Email-to-Greenhouse) ——
+  // ââ Candidates (Email-to-Greenhouse) ââ
   function renderCandidates(data) {
     const el = document.getElementById('candidates-body');
     if (!el) return;
