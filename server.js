@@ -114,6 +114,35 @@ app.post('/api/tasks', (req, res) => {
   const authHeader = req.headers.authorization;
   if (!API_KEY || authHeader !== `Bearer ${API_KEY}`) {
     return res.status(401).json({ error: 'Invalid or missing API key' });
+
+// ── Manual Task Add (from dashboard UI → server → synced to Notion by Cowork) ──
+const MANUAL_TASKS_PATH = path.join(__dirname, 'data', 'manual-tasks.json');
+
+app.post('/api/tasks/add', ensureAuth, (req, res) => {
+  try {
+    const { title, priority } = req.body;
+    if (!title) return res.status(400).json({ error: 'title is required' });
+    const id = 'manual-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8);
+    const task = { id, title, text: title, done: false, priority: priority || 'Medium', due: null, context: 'Manual', owner: 'Sophie', notionSynced: false, addedAt: new Date().toISOString() };
+    // Append to manual-tasks queue for Notion sync
+    const dir = path.dirname(MANUAL_TASKS_PATH);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    const existing = fs.existsSync(MANUAL_TASKS_PATH) ? JSON.parse(fs.readFileSync(MANUAL_TASKS_PATH, 'utf8')) : [];
+    existing.push(task);
+    fs.writeFileSync(MANUAL_TASKS_PATH, JSON.stringify(existing, null, 2));
+    // Also append to the main tasks.json so it shows immediately
+    if (fs.existsSync(TASKS_PATH)) {
+      const data = JSON.parse(fs.readFileSync(TASKS_PATH, 'utf8'));
+      data.tasks.push(task);
+      data.lastUpdated = new Date().toISOString();
+      fs.writeFileSync(TASKS_PATH, JSON.stringify(data, null, 2));
+    }
+    res.json({ ok: true, task });
+  } catch (err) {
+    console.error('Error adding manual task:', err);
+    res.status(500).json({ error: 'Failed to add task' });
+  }
+});
   }
   try {
     const dir = path.dirname(TASKS_PATH);
