@@ -2268,36 +2268,36 @@ function renderBento() {
         });
         data = await syncRes.json();
       } catch (syncErr) {
-        // Fallback to read-only GET if sync endpoint fails
         console.warn('Sync endpoint failed, falling back to GET:', syncErr);
         const fallbackRes = await fetch('/api/tasks');
         data = await fallbackRes.json();
       }
-      if (data.tasks && data.tasks.length > 0) {
-        DATA.myTasks = data.tasks;
-        // Merge any localStorage manual tasks the server missed
-        const manual = loadManualTasks();
-        if (manual.length) {
-          const serverIds = new Set(DATA.myTasks.map(t => t.id));
-          const serverTitles = new Set(DATA.myTasks.map(t => (t.title||t.text||'').toLowerCase()));
-          manual.forEach(m => {
-            if (!serverIds.has(m.id) && !serverTitles.has((m.title||m.text||'').toLowerCase())) {
-              DATA.myTasks.unshift(m);
-            }
-          });
-        }
-        // Re-apply persisted done state from localStorage (belt + suspenders)
-        const doneIdSet = new Set(loadDoneIds());
-        const doneTitleSet = new Set(loadDoneTitles());
-        DATA.myTasks.forEach(t => {
-          if (doneIdSet.has(t.id) || doneTitleSet.has(normalizeTitle(t.title || t.text || ''))) t.done = true;
+      // Always start with server tasks (may be empty after deploy)
+      DATA.myTasks = (data.tasks && data.tasks.length > 0) ? data.tasks : [];
+      // Merge any localStorage manual tasks the server missed
+      const manual = loadManualTasks();
+      if (manual.length) {
+        const serverIds = new Set(DATA.myTasks.map(t => t.id));
+        const serverTitles = new Set(DATA.myTasks.map(t => (t.title||t.text||'').toLowerCase()));
+        manual.forEach(m => {
+          if (!serverIds.has(m.id) && !serverTitles.has((m.title||m.text||'').toLowerCase())) {
+            DATA.myTasks.unshift(m);
+          }
         });
-        // Recover tasks that vanished from server but were previously seen
-        const vanished = recoverVanishedTasks(DATA.myTasks);
-        vanished.forEach(t => DATA.myTasks.push(t));
-        // Snapshot all current tasks into the seen registry
-        snapshotSeenTasks(DATA.myTasks);
-        // Re-render the tasks card
+      }
+      // Re-apply persisted done state from localStorage
+      const doneIdSet = new Set(loadDoneIds());
+      const doneTitleSet = new Set(loadDoneTitles());
+      DATA.myTasks.forEach(t => {
+        if (doneIdSet.has(t.id) || doneTitleSet.has(normalizeTitle(t.title || t.text || ''))) t.done = true;
+      });
+      // ALWAYS recover tasks that vanished from server (critical after deploys)
+      const vanished = recoverVanishedTasks(DATA.myTasks);
+      vanished.forEach(t => DATA.myTasks.push(t));
+      // Snapshot all current tasks into the seen registry
+      snapshotSeenTasks(DATA.myTasks);
+      // Re-render the tasks card if we have any tasks
+      if (DATA.myTasks.length > 0) {
         const taskList = document.querySelector('#my-task-list');
         if (taskList) {
           const card = taskList.closest('.card');
