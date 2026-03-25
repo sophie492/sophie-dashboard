@@ -378,13 +378,15 @@ async function fetchGCalEvents(token, calendarId, timeMin, timeMax) {
     maxResults: '250',
     timeZone: 'America/New_York'
   });
-  const resp = await fetch(
-    `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?${params}`,
-    { headers: { Authorization: `Bearer ${token}` } }
-  );
-  if (!resp.ok) return [];
+  const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?${params}`;
+  const resp = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+  if (!resp.ok) {
+    const errText = await resp.text().catch(() => '');
+    console.error(`GCal API error for ${calendarId}: ${resp.status} ${errText.substring(0, 200)}`);
+    return { items: [], error: resp.status, calendarId };
+  }
   const data = await resp.json();
-  return data.items || [];
+  return { items: data.items || [], calendarId };
 }
 
 function fmtTime(dateTime) {
@@ -432,6 +434,8 @@ app.get('/api/calendar', ensureAuth, async (req, res) => {
       if (fresh) { token = fresh; user.accessToken = fresh; }
     }
 
+    console.log('Calendar auth:', { hasToken: !!token, hasRefresh: !!refresh, email: user?.email });
+
     if (!token) {
       // Fallback to static file
       if (fs.existsSync(CALENDAR_PATH)) {
@@ -449,6 +453,14 @@ app.get('/api/calendar', ensureAuth, async (req, res) => {
     const results = await Promise.all(
       CAL_IDS.map(id => fetchGCalEvents(token, id, now, end))
     );
+
+    // Collect debug info
+    const debug = results.map(r => ({
+      calendarId: r.calendarId,
+      error: r.error || null,
+      eventCount: r.items.length
+    }));
+    console.log('Calendar fetch results:', JSON.stringify(debug));
 
     // Group by date
     const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
@@ -470,7 +482,7 @@ app.get('/api/calendar', ensureAuth, async (req, res) => {
     }
 
     CAL_NAMES.forEach((name, idx) => {
-      const items = results[idx];
+      const items = results[idx].items;
       items.forEach(ev => {
         if (!ev.start?.dateTime) return;
         const key = ev.start.dateTime.slice(0, 10);
@@ -481,7 +493,7 @@ app.get('/api/calendar', ensureAuth, async (req, res) => {
     });
 
     const calendarDays = Object.values(dayMap).sort((a, b) => a.date.localeCompare(b.date));
-    const payload = { calendarDays, lastUpdated: new Date().toISOString() };
+    const payload = { calendarDays, lastUpdated: new Date().toISOString(), debug };
 
     // Cache to file for fallback
     const dir = path.dirname(CALENDAR_PATH);
