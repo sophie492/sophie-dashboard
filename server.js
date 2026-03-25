@@ -555,19 +555,179 @@ app.post('/api/calendar', (req, res) => {
   }
 });
 
-// ── Marketing Events API ──
+// ── Marketing Events API (live from Fermàt Events calendar) ──
 const EVENTS_PATH = path.join(__dirname, 'data', 'events.json');
+const FERMAT_EVENTS_CAL = 'c_e611ed498cde340f125c26be2ef1b329409ea41fe820481f13eacc332e7c0446@group.calendar.google.com';
 
-app.get('/api/events', ensureAuth, (req, res) => {
+function slugify(str) {
+  return str.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+}
+
+function shortName(name) {
+  // Abbreviate common event names
+  const abbrevs = {
+    'salesforce team kick off': 'Salesforce SKO',
+    'shoptalk spring': 'Shoptalk',
+    'cannes lions': 'Cannes Lions',
+    'dreamforce salesforce': 'Dreamforce',
+    'connections - salesforce': 'Connections',
+    'cab spring': 'CAB Spring',
+    'cab fall': 'CAB Fall',
+    'tinuiti live': 'Tinuiti Live',
+    'retail ai summit': 'Retail AI Summit'
+  };
+  const lower = name.toLowerCase().replace(/ - .*$/, '').trim();
+  for (const [key, val] of Object.entries(abbrevs)) {
+    if (lower.startsWith(key)) return val;
+  }
+  // Default: first 3 words, max 25 chars
+  const words = name.replace(/ - .*$/, '').trim().split(/\s+/).slice(0, 3).join(' ');
+  return words.length > 25 ? words.slice(0, 25) + '…' : words;
+}
+
+function fmtDateRange(startDate, endDate) {
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const s = new Date(startDate + 'T12:00:00');
+  const e = new Date(endDate + 'T12:00:00');
+  e.setDate(e.getDate() - 1); // GCal end dates are exclusive
+  if (s.getMonth() === e.getMonth()) {
+    return `${months[s.getMonth()]} ${s.getDate()}-${e.getDate()}, ${s.getFullYear()}`;
+  }
+  return `${months[s.getMonth()]} ${s.getDate()} - ${months[e.getMonth()]} ${e.getDate()}, ${s.getFullYear()}`;
+}
+
+function stripHtml(html) {
+  if (!html) return '';
+  return html.replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, '').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&nbsp;/g, ' ').replace(/&#39;/g, "'").replace(/&quot;/g, '"').trim();
+}
+
+function extractNotionLink(desc) {
+  if (!desc) return '';
+  const match = desc.match(/https:\/\/www\.notion\.so\/fermat-commerce\/[^\s"<)]+/);
+  return match ? match[0] : '';
+}
+
+function deriveEventStatus(startDate, endDate) {
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  const s = new Date(startDate + 'T00:00:00');
+  const e = new Date(endDate + 'T00:00:00');
+  if (now >= s && now < e) return 'In Progress';
+  if (now >= e) return 'Completed';
+  return 'Confirmed';
+}
+
+function extractCity(location) {
+  if (!location) return '';
+  // Try to get city from "Venue, Address, City, State ZIP, Country"
+  const parts = location.split(',').map(p => p.trim());
+  if (parts.length >= 3) return parts[parts.length - 3] + ', ' + parts[parts.length - 2].replace(/\s+\d{5}.*/, '');
+  if (parts.length >= 2) return parts[1];
+  return location;
+}
+
+function transformToMktEvents(calItems) {
+  // Filter to all-day events only (multi-day conferences, not individual sessions)
+  const allDay = calItems.filter(ev => ev.start?.date && ev.end?.date);
+
+  return allDay.map(ev => {
+    const startDate = ev.start.date;
+    const endDateExclusive = ev.end.date;
+    // Compute inclusive endDate
+    const endD = new Date(endDateExclusive + 'T12:00:00');
+    endD.setDate(endD.getDate() - 1);
+    const endDate = endD.toISOString().slice(0, 10);
+
+    const desc = ev.description || '';
+    const plainDesc = stripHtml(desc);
+    const attendees = ev.attendees || [];
+    const fermatTeam = attendees
+      .filter(a => a.email?.endsWith('@fermatcommerce.com'))
+      .map(a => a.displayName || a.email.split('@')[0]);
+
+    const hasRishabh = attendees.some(a => a.email === 'rishabh@fermatcommerce.com');
+    const hasShreyas = attendees.some(a => a.email === 'shreyas@fermatcommerce.com');
+    const teamNames = fermatTeam.filter(n =>
+      !['rishabh', 'shreyas', 'Rishabh Jain', 'Shreyas Kulkarni'].includes(n)
+    );
+
+    // Try to determine if virtual
+    const isVirtual = !ev.location && (desc.includes('zoom') || desc.includes('luma.com') || desc.includes('webinar'));
+    const locStr = ev.location || '';
+
+    return {
+      id: slugify(ev.summary || 'event-' + startDate),
+      name: ev.summary || 'Untitled Event',
+      shortName: shortName(ev.summary || 'Event'),
+      dates: fmtDateRange(startDate, endDateExclusive),
+      startDate,
+      endDate,
+      location: extractCity(locStr),
+      venue: locStr.split(',')[0] || '',
+      type: isVirtual ? 'Event: Virtual' : 'Event: IRL',
+      status: deriveEventStatus(startDate, endDateExclusive),
+      description: plainDesc.slice(0, 500),
+      rishabh: hasRishabh,
+      shreyas: hasShreyas,
+      team: teamNames,
+      todos: [],
+      calendarLink: ev.htmlLink || '',
+      notionLink: extractNotionLink(desc),
+      details: {
+        attendees: attendees.length > 0
+          ? `${attendees.length} attendee${attendees.length > 1 ? 's' : ''}`
+          : '',
+        fermatTeam: fermatTeam.join(', ')
+      }
+    };
+  }).sort((a, b) => a.startDate.localeCompare(b.startDate));
+}
+
+app.get('/api/events', ensureAuth, async (req, res) => {
   try {
-    if (fs.existsSync(EVENTS_PATH)) {
-      res.json(JSON.parse(fs.readFileSync(EVENTS_PATH, 'utf8')));
-    } else {
-      res.json({ events: [], lastUpdated: null });
+    const user = req.user;
+    let token = user?.accessToken;
+    const refresh = user?.refreshToken;
+
+    if (refresh) {
+      const fresh = await refreshGoogleToken(refresh);
+      if (fresh) { token = fresh; user.accessToken = fresh; }
     }
+
+    if (token) {
+      const now = new Date();
+      // Look back 30 days and forward 12 months
+      const timeMin = new Date(now);
+      timeMin.setDate(timeMin.getDate() - 30);
+      const timeMax = new Date(now);
+      timeMax.setMonth(timeMax.getMonth() + 12);
+
+      const result = await fetchGCalEvents(token, FERMAT_EVENTS_CAL, timeMin, timeMax);
+
+      if (result.items && result.items.length > 0 && !result.error) {
+        const events = transformToMktEvents(result.items);
+        const payload = { events, lastUpdated: new Date().toISOString(), source: 'live' };
+
+        // Cache for fallback
+        const dir = path.dirname(EVENTS_PATH);
+        if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+        fs.writeFileSync(EVENTS_PATH, JSON.stringify(payload, null, 2));
+
+        return res.json(payload);
+      }
+    }
+
+    // Fallback: cached file
+    if (fs.existsSync(EVENTS_PATH)) {
+      return res.json(JSON.parse(fs.readFileSync(EVENTS_PATH, 'utf8')));
+    }
+    res.json({ events: [], lastUpdated: null });
   } catch (err) {
-    console.error('Error reading marketing events:', err);
-    res.status(500).json({ error: 'Failed to read marketing events' });
+    console.error('Error in events endpoint:', err);
+    if (fs.existsSync(EVENTS_PATH)) {
+      return res.json(JSON.parse(fs.readFileSync(EVENTS_PATH, 'utf8')));
+    }
+    res.status(500).json({ error: 'Failed to fetch events' });
   }
 });
 
