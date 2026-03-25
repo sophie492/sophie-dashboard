@@ -2101,6 +2101,9 @@ function init() {
   renderWeeklyPulse();
   renderUtilities();
 
+  // Fetch live action items from CEO daily brief API
+  fetchLiveActionItems();
+
   // Top nav tab switching
   document.querySelectorAll('.top-nav-tab').forEach(tab => {
     tab.addEventListener('click', () => {
@@ -2110,6 +2113,36 @@ function init() {
       document.getElementById(tab.dataset.page).classList.add('active');
     });
   });
+}
+
+async function fetchLiveActionItems() {
+  try {
+    const res = await fetch('/api/action-items');
+    if (!res.ok) return;
+    const data = await res.json();
+    if (!data.items || data.items.length === 0) return;
+
+    DATA.actionItems.items = data.items;
+    DATA.actionItems.totalToday = data.items.length;
+    if (data.lastUpdated) {
+      const d = new Date(data.lastUpdated);
+      DATA.actionItems.lastUpdated = d.toLocaleString('en-US', {
+        timeZone: 'America/Los_Angeles', weekday: 'short', hour: 'numeric', minute: '2-digit', hour12: true
+      });
+    }
+    if (data.briefDate) DATA.actionItems.briefDate = data.briefDate;
+
+    const aiBody = document.getElementById('action-items-body');
+    if (aiBody) {
+      const card = aiBody.closest('.card');
+      if (card && card.parentElement) {
+        card.parentElement.innerHTML = renderActionItems();
+      }
+    }
+    renderKPIs();
+  } catch (e) {
+    console.log('Action items API not available, using hardcoded data');
+  }
 }
 
 // -- KPI Strip --
