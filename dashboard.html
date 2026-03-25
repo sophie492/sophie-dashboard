@@ -1967,6 +1967,7 @@ const STORAGE_KEY_DONE = 'sophie-dash-done-ids';
 const STORAGE_KEY_DONE_TITLES = 'sophie-dash-done-titles';
 const STORAGE_KEY_OFFSITE = 'sophie-dash-offsite-done';
 const STORAGE_KEY_EVENT_TODOS = 'sophie-dash-event-todos';
+const STORAGE_KEY_SEEN = 'sophie-dash-seen-tasks';
 
 function loadManualTasks() {
   try { return JSON.parse(localStorage.getItem(STORAGE_KEY_MANUAL)) || []; } catch(e) { return []; }
@@ -2012,6 +2013,48 @@ function persistEventTodosFromDOM() {
   saveEventTodos(saved);
 }
 
+// ── Seen-tasks registry: once a task appears, it's remembered forever ──
+function loadSeenTasks() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY_SEEN)) || {}; } catch(e) { return {}; }
+}
+function saveSeenTasks(map) {
+  try { localStorage.setItem(STORAGE_KEY_SEEN, JSON.stringify(map)); } catch(e) {}
+}
+// Snapshot current tasks into the seen registry (call after every data load)
+function snapshotSeenTasks(tasks) {
+  const seen = loadSeenTasks();
+  let changed = false;
+  tasks.forEach(t => {
+    const key = t.id || normalizeTitle(t.title || t.text || '');
+    if (!key) return;
+    if (!seen[key]) {
+      seen[key] = { id: t.id, title: t.title || t.text, priority: t.priority || 'Medium', due: t.due || t.dueDate || null, context: t.context || t.source || 'Synced', owner: t.owner || 'Sophie', firstSeen: new Date().toISOString() };
+      changed = true;
+    }
+  });
+  if (changed) saveSeenTasks(seen);
+}
+// Recover tasks that were previously seen but are no longer in the current list
+function recoverVanishedTasks(currentTasks) {
+  const seen = loadSeenTasks();
+  const doneIdSet = new Set(loadDoneIds());
+  const doneTitleSet = new Set(loadDoneTitles());
+  const currentIds = new Set(currentTasks.map(t => t.id));
+  const currentNorms = new Set(currentTasks.map(t => normalizeTitle(t.title || t.text || '')));
+  const recovered = [];
+  Object.entries(seen).forEach(([key, t]) => {
+    // Skip if already present
+    if (currentIds.has(t.id) || currentNorms.has(normalizeTitle(t.title || ''))) return;
+    // Skip if user already marked it done
+    if (doneIdSet.has(t.id) || doneTitleSet.has(normalizeTitle(t.title || ''))) return;
+    // Skip manual tasks (they have their own persistence)
+    if (t.id && t.id.startsWith('manual-')) return;
+    // This task vanished — recover it
+    recovered.push({ id: t.id, title: t.title, text: t.title, done: false, priority: t.priority || 'Medium', due: t.due, dueDate: t.due, context: t.context || 'Synced', source: t.context || 'Synced', owner: t.owner || 'Sophie', recovered: true });
+  });
+  return recovered;
+}
+
 // Normalize title for fuzzy matching  -  lowercase, strip brackets/tags, collapse whitespace
 function normalizeTitle(t) {
   return t.toLowerCase().replace(/\[.*?\]/g,'').replace(/\u2014/g,' ').replace(/[^a-z0-9 ]/g,'').replace(/\s+/g,' ').trim();
@@ -2037,6 +2080,13 @@ function applyPersistedState() {
   DATA.myTasks.forEach(t => {
     if (doneIdSet.has(t.id) || doneTitleSet.has(normalizeTitle(t.title))) t.done = true;
   });
+
+  // 2b. Recover tasks that previously appeared but vanished from server
+  const vanished = recoverVanishedTasks(DATA.myTasks);
+  vanished.forEach(t => DATA.myTasks.push(t));
+
+  // 2c. Snapshot all current tasks into the seen registry
+  snapshotSeenTasks(DATA.myTasks);
 
   // 3. Apply offsite task done-states
   if (DATA.leadershipOffsite) {
@@ -2223,6 +2273,11 @@ function renderBento() {
         DATA.myTasks.forEach(t => {
           if (doneIdSet.has(t.id) || doneTitleSet.has(normalizeTitle(t.title || t.text || ''))) t.done = true;
         });
+        // Recover tasks that vanished from server but were previously seen
+        const vanished = recoverVanishedTasks(DATA.myTasks);
+        vanished.forEach(t => DATA.myTasks.push(t));
+        // Snapshot all current tasks into the seen registry
+        snapshotSeenTasks(DATA.myTasks);
         // Re-render the tasks card
         const taskList = document.querySelector('#my-task-list');
         if (taskList) {
@@ -2299,7 +2354,8 @@ function renderTaskItem(t, section) {
   const dueClass = !t.due ? 'none' : t.due < today ? 'overdue' : t.due === today ? 'today' : 'upcoming';
   const dueLabel = !t.due ? '' : t.due < today ? 'Overdue' : t.due === today ? 'Due today' : 'Due ' + new Date(t.due+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'});
   const prioColor = t.priority==='High' ? 'var(--red)' : t.priority==='Medium' ? 'var(--yellow)' : 'var(--green)';
-  const ctx = t.context ? `<div style="font-size:10px;color:var(--text-muted);margin-top:2px;line-height:1.3">${t.context}</div>` : '';
+    const recoveredBadge = t.recovered ? ' <span style="font-size:9px;color:var(--yellow);font-weight:600;letter-spacing:0.5px" title="This task disappeared from Notion but was preserved locally">⚠ KEPT</span>' : '';
+  const ctx = t.context ? `<div style="font-size:10px;color:var(--text-muted);margin-top:2px;line-height:1.3">${t.context}${recoveredBadge}</div>` : (recoveredBadge ? `<div style="font-size:10px;margin-top:2px">${recoveredBadge}</div>` : '');
   const ownerHtml = t.owner ? `<span class="task-owner">${t.owner}</span>` : '';
   const onclick = section === 'my' ? 'toggleMyTask(this)' : 'toggleTeamTask(this)';
 
