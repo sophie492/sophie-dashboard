@@ -2217,12 +2217,11 @@ function renderBento() {
             });
           }
         // Re-apply persisted done state from localStorage
-        const doneState = JSON.parse(localStorage.getItem('sophie-task-done') || '{}');
-        DATA.myTasks.forEach(t => { if (doneState[t.id] !== undefined) t.done = doneState[t.id]; });
-        // Merge any manually added tasks from localStorage
-        const manualTasks = JSON.parse(localStorage.getItem('sophie-manual-tasks') || '[]');
-        manualTasks.forEach(mt => {
-          if (!DATA.myTasks.find(t => t.id === mt.id)) DATA.myTasks.push(mt);
+        // Re-apply done state using the canonical localStorage keys
+        const doneIdSet = new Set(loadDoneIds());
+        const doneTitleSet = new Set(loadDoneTitles());
+        DATA.myTasks.forEach(t => {
+          if (doneIdSet.has(t.id) || doneTitleSet.has(normalizeTitle(t.title || t.text || ''))) t.done = true;
         });
         // Re-render the tasks card
         const taskList = document.querySelector('#my-task-list');
