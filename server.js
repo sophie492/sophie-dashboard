@@ -8,7 +8,7 @@ const fs = require('fs');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ── Config ──
+// ââ Config ââ
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
 const SESSION_SECRET = process.env.SESSION_SECRET || 'sophie-dashboard-secret-change-me';
@@ -16,10 +16,10 @@ const BASE_URL = process.env.RAILWAY_PUBLIC_DOMAIN
   ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`
   : process.env.BASE_URL || `http://localhost:${PORT}`;
 
-// Allowed email domain — only @fermatcommerce.com can access
+// Allowed email domain â only @fermatcommerce.com can access
 const ALLOWED_DOMAIN = 'fermatcommerce.com';
 
-// ── Session ──
+// ââ Session ââ
 app.set('trust proxy', 1);
 app.use(session({
   secret: SESSION_SECRET,
@@ -31,7 +31,7 @@ app.use(session({
   }
 }));
 
-// ── Passport ──
+// ââ Passport ââ
 app.use(passport.initialize());
 app.use(passport.session());
 
@@ -60,7 +60,7 @@ if (GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET) {
   }));
 }
 
-// ── Auth routes ──
+// ââ Auth routes ââ
 app.get('/auth/google', passport.authenticate('google', {
   scope: ['profile', 'email'],
   hd: ALLOWED_DOMAIN // Hint to Google to show only Workspace accounts
@@ -85,7 +85,7 @@ app.get('/auth/logout', (req, res) => {
   req.logout(() => res.redirect('/'));
 });
 
-// ── Auth middleware ──
+// ââ Auth middleware ââ
 function ensureAuth(req, res, next) {
   // If Google OAuth isn't configured, let everyone through (local dev)
   if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
@@ -95,13 +95,13 @@ function ensureAuth(req, res, next) {
   res.redirect('/auth/google');
 }
 
-// ── JSON body parsing (for action-items API) ──
+// ââ JSON body parsing (for action-items API) ââ
 app.use(express.json({ limit: '1mb' }));
 
-// ── Health check (no auth needed) ──
+// ââ Health check (no auth needed) ââ
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
 
-// ── Action Items API ──
+// ââ Action Items API ââ
 const ACTION_ITEMS_PATH = path.join(__dirname, 'data', 'action-items.json');
 
 // GET - serve current action items (protected by auth)
@@ -138,7 +138,40 @@ app.post('/api/action-items', (req, res) => {
   }
 });
 
-// ── Protected dashboard ──
+// ââ Open Loops API ââ
+const OPEN_LOOPS_PATH = path.join(__dirname, 'data', 'open-loops.json');
+
+app.get('/api/open-loops', ensureAuth, (req, res) => {
+  try {
+    if (fs.existsSync(OPEN_LOOPS_PATH)) {
+      const data = JSON.parse(fs.readFileSync(OPEN_LOOPS_PATH, 'utf8'));
+      res.json(data);
+    } else {
+      res.json({ loops: [], lastUpdated: null });
+    }
+  } catch (err) {
+    console.error('Error reading open loops:', err);
+    res.status(500).json({ error: 'Failed to read open loops' });
+  }
+});
+
+app.post('/api/open-loops', (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (!API_KEY || authHeader !== `Bearer ${API_KEY}`) {
+    return res.status(401).json({ error: 'Invalid or missing API key' });
+  }
+  try {
+    const dir = path.dirname(OPEN_LOOPS_PATH);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(OPEN_LOOPS_PATH, JSON.stringify(req.body, null, 2));
+    res.json({ ok: true, savedAt: new Date().toISOString() });
+  } catch (err) {
+    console.error('Error writing open loops:', err);
+    res.status(500).json({ error: 'Failed to write open loops' });
+  }
+});
+
+// ââ Protected dashboard ââ
 app.get('/', ensureAuth, (req, res) => {
   res.sendFile(path.join(__dirname, 'dashboard.html'));
 });
@@ -146,7 +179,7 @@ app.get('/', ensureAuth, (req, res) => {
 // Serve static assets (CSS/JS/images if any) behind auth
 app.use(ensureAuth, express.static(__dirname));
 
-// ── Start ──
+// ââ Start ââ
 app.listen(PORT, () => {
   console.log(`Dashboard running on ${BASE_URL}`);
   if (!GOOGLE_CLIENT_ID) {
