@@ -4140,6 +4140,8 @@ init();
 
   // Load candidates on page ready
   loadCandidates();
+    // Auto-refresh candidates every 30 seconds so scheduled scans appear automatically
+    setInterval(loadCandidates, 30000);
 </script>
 </body>
 </html>
