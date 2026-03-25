@@ -2319,8 +2319,12 @@ function renderTaskItem(t, section) {
       </div>
       <a class="notion-link" href="https://notion.so/${t.id.replace(/-/g,'')}" target="_blank" onclick="event.stopPropagation()">Open &#8599;</a>
     </li>
-      <!-- Candidates Tile -->
-      <div class="bento-section" style="grid-column: span 2;">
+      
+`;
+
+    // Append Candidates tile as separate section (outside bento template)
+    document.getElementById('bento').insertAdjacentHTML('beforeend', `
+      <div class="bento-section" style="grid-column: span 6;">
         <div class="section-header">
           <h2>Inbound Candidates</h2>
           <span class="section-subtitle">Email-to-Greenhouse Pipeline</span>
@@ -2329,7 +2333,7 @@ function renderTaskItem(t, section) {
           <div class="empty-state">Loading candidates...</div>
         </div>
       </div>
-`;
+    `);
 }
 
 function toggleMyTask(el) {
