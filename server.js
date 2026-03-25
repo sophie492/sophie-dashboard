@@ -502,6 +502,43 @@ app.get('/api/calendar', ensureAuth, async (req, res) => {
   }
 });
 
+app.get('/api/calendar/debug', ensureAuth, async (req, res) => {
+  try {
+    const user = req.user;
+    let token = user?.accessToken;
+    const refresh = user?.refreshToken;
+    if (refresh) {
+      const fresh = await refreshGoogleToken(refresh);
+      if (fresh) { token = fresh; user.accessToken = fresh; }
+    }
+    if (!token) return res.json({ error: 'no token', hasRefresh: !!refresh });
+
+    const tests = ['primary', 'rishabh@fermatcommerce.com', 'shreyas@fermatcommerce.com'];
+    const results = [];
+    const now = new Date();
+    now.setHours(0,0,0,0);
+    const end = new Date(now); end.setDate(end.getDate() + 1);
+    for (const calId of tests) {
+      const params = new URLSearchParams({
+        timeMin: now.toISOString(),
+        timeMax: end.toISOString(),
+        singleEvents: 'true',
+        maxResults: '5',
+        timeZone: 'America/New_York'
+      });
+      const resp = await fetch(
+        `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calId)}/events?${params}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      const body = await resp.text();
+      results.push({ calId, status: resp.status, body: body.substring(0, 300) });
+    }
+    res.json({ email: user?.email, hasToken: !!token, hasRefresh: !!refresh, results });
+  } catch (err) {
+    res.json({ error: err.message });
+  }
+});
+
 app.post('/api/calendar', (req, res) => {
   const authHeader = req.headers.authorization;
   if (!API_KEY || authHeader !== `Bearer ${API_KEY}`) {
