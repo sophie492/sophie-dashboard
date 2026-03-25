@@ -169,6 +169,60 @@ app.post('/api/tasks/add', ensureAuth, (req, res) => {
   }
 })
 
+// ── Bidirectional Sync (dashboard refresh pushes local state, gets merged result) ──
+app.post('/api/tasks/sync', ensureAuth, (req, res) => {
+  try {
+    const { doneIds = [], doneTitles = [], manualTasks = [] } = req.body;
+    const dir = path.dirname(TASKS_PATH);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+
+    // 1. Merge incoming manual tasks into manual-tasks.json
+    const existingManual = fs.existsSync(MANUAL_TASKS_PATH)
+      ? JSON.parse(fs.readFileSync(MANUAL_TASKS_PATH, 'utf8')) : [];
+    const manualIdSet = new Set(existingManual.map(m => m.id));
+    const manualTitleSet = new Set(existingManual.map(m => (m.title || m.text || '').toLowerCase()));
+    manualTasks.forEach(m => {
+      if (!manualIdSet.has(m.id) && !manualTitleSet.has((m.title || m.text || '').toLowerCase())) {
+        existingManual.push(m);
+        manualIdSet.add(m.id);
+      }
+    });
+    fs.writeFileSync(MANUAL_TASKS_PATH, JSON.stringify(existingManual, null, 2));
+
+    // 2. Load current tasks.json (populated by hourly Notion sync)
+    let data = fs.existsSync(TASKS_PATH)
+      ? JSON.parse(fs.readFileSync(TASKS_PATH, 'utf8'))
+      : { tasks: [], lastUpdated: null, source: 'none' };
+
+    // 3. Merge manual tasks into main task list
+    const taskIdSet = new Set(data.tasks.map(t => t.id));
+    const taskTitleSet = new Set(data.tasks.map(t => (t.title || t.text || '').toLowerCase()));
+    existingManual.forEach(m => {
+      if (!taskIdSet.has(m.id) && !taskTitleSet.has((m.title || m.text || '').toLowerCase())) {
+        data.tasks.push(m);
+      }
+    });
+
+    // 4. Apply done states from dashboard localStorage
+    const doneIdSet = new Set(doneIds);
+    const doneTitleSet = new Set(doneTitles);
+    data.tasks.forEach(t => {
+      const norm = (t.title || t.text || '').trim().toLowerCase().replace(/\s+/g, ' ');
+      if (doneIdSet.has(t.id) || doneTitleSet.has(norm)) {
+        t.done = true;
+      }
+    });
+
+    // 5. Save updated tasks.json and return merged list
+    data.lastUpdated = new Date().toISOString();
+    fs.writeFileSync(TASKS_PATH, JSON.stringify(data, null, 2));
+    res.json(data);
+  } catch (err) {
+    console.error('Error in bidirectional sync:', err);
+    res.status(500).json({ error: 'Sync failed' });
+  }
+});
+
 // ── Action Items API ──
 const ACTION_ITEMS_PATH = path.join(__dirname, 'data', 'action-items.json');
 
