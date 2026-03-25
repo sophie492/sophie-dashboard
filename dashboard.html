@@ -2136,6 +2136,11 @@ function init() {
   // Fetch live action items from CEO daily brief API
   fetchLiveActionItems();
     fetchLiveOpenLoops();
+  fetchLiveCalendar();
+  fetchLiveEvents();
+  fetchLiveUtilities();
+  fetchLiveWeeklyPulse();
+  fetchLiveFPPC();
 
   // Top nav tab switching
   document.querySelectorAll('.top-nav-tab').forEach(tab => {
@@ -2199,6 +2204,88 @@ async function fetchLiveOpenLoops() {
         console.log('Open loops API not available, using hardcoded data');
       }
     }
+
+async function fetchLiveCalendar() {
+  try {
+    const res = await fetch('/api/calendar');
+    if (!res.ok) return;
+    const data = await res.json();
+    if (!data.calendarDays || data.calendarDays.length === 0) return;
+    DATA.calendarDays = data.calendarDays;
+    const calCard = document.getElementById('cal-card-container');
+    if (calCard) calCard.innerHTML = renderCalendarInner();
+  } catch (e) {
+    console.log('Calendar API not available, using hardcoded data');
+  }
+}
+
+async function fetchLiveEvents() {
+  try {
+    const res = await fetch('/api/events');
+    if (!res.ok) return;
+    const data = await res.json();
+    if (!data.events || data.events.length === 0) return;
+    MKT_EVENTS.length = 0;
+    data.events.forEach(e => MKT_EVENTS.push(e));
+    const savedEventTodos = loadEventTodos();
+    MKT_EVENTS.forEach(ev => {
+      if (savedEventTodos[ev.id]) ev.todos = savedEventTodos[ev.id];
+    });
+    const mktContent = document.getElementById('marketing-content');
+    if (mktContent) mktContent.innerHTML = renderMarketing();
+  } catch (e) {
+    console.log('Events API not available, using hardcoded data');
+  }
+}
+
+async function fetchLiveUtilities() {
+  try {
+    const res = await fetch('/api/utilities');
+    if (!res.ok) return;
+    const data = await res.json();
+    if (!data.lastUpdated) return;
+    if (data.spam) DATA.spam = data.spam;
+    if (data.spamCleanup) DATA.spamCleanup = data.spamCleanup;
+    if (data.meetingScheduler) DATA.meetingScheduler = data.meetingScheduler;
+    if (data.eodCheckin) DATA.eodCheckin = data.eodCheckin;
+    if (data.morningBrief) DATA.morningBrief = data.morningBrief;
+    if (data.morningDigest) DATA.morningDigest = data.morningDigest;
+    if (data.newsDigest) DATA.newsDigest = data.newsDigest;
+    if (data.colorCoding) DATA.colorCoding = data.colorCoding;
+    if (data.tasks) DATA.tasks = data.tasks;
+    if (typeof data.unreadDrafts === 'number') DATA.unreadDrafts = data.unreadDrafts;
+    renderUtilities();
+    renderKPIs();
+  } catch (e) {
+    console.log('Utilities API not available, using hardcoded data');
+  }
+}
+
+async function fetchLiveWeeklyPulse() {
+  try {
+    const res = await fetch('/api/weekly-pulse');
+    if (!res.ok) return;
+    const data = await res.json();
+    if (!data.weekNumber && !data.weekLabel) return;
+    DATA.weeklyPulse = data;
+    renderWeeklyPulse();
+  } catch (e) {
+    console.log('Weekly pulse API not available, using hardcoded data');
+  }
+}
+
+async function fetchLiveFPPC() {
+  try {
+    const res = await fetch('/api/fppc');
+    if (!res.ok) return;
+    const data = await res.json();
+    if (!data.fppcEvents) return;
+    DATA.fppcEvents = data.fppcEvents;
+    renderBento();
+  } catch (e) {
+    console.log('FPPC API not available, using hardcoded data');
+  }
+}
 
     // -- KPI Strip --
 function renderKPIs() {
