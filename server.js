@@ -110,27 +110,52 @@ app.get('/api/tasks', ensureAuth, (req, res) => {
   }
 });
 
+// ── Manual Task file path ──
+const MANUAL_TASKS_PATH = path.join(__dirname, 'data', 'manual-tasks.json');
+
 app.post('/api/tasks', (req, res) => {
   const authHeader = req.headers.authorization;
   if (!API_KEY || authHeader !== `Bearer ${API_KEY}`) {
     return res.status(401).json({ error: 'Invalid or missing API key' });
+  }
+  try {
+    const dir = path.dirname(TASKS_PATH);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 
-// ── Manual Task Add (from dashboard UI → server → synced to Notion by Cowork) ──
-const MANUAL_TASKS_PATH = path.join(__dirname, 'data', 'manual-tasks.json');
+    // Merge manual tasks that haven't synced to Notion yet
+    const incomingTasks = req.body.tasks || [];
+    const incomingIds = new Set(incomingTasks.map(t => t.id));
+    const incomingTitles = new Set(incomingTasks.map(t => (t.title || t.text || '').toLowerCase()));
+    const manualTasks = fs.existsSync(MANUAL_TASKS_PATH) ? JSON.parse(fs.readFileSync(MANUAL_TASKS_PATH, 'utf8')) : [];
+    const merged = [...incomingTasks];
+    manualTasks.forEach(m => {
+      if (!incomingIds.has(m.id) && !incomingTitles.has((m.title || m.text || '').toLowerCase())) {
+        merged.push(m);
+      }
+    });
 
+    const data = { ...req.body, tasks: merged, lastUpdated: new Date().toISOString() };
+    fs.writeFileSync(TASKS_PATH, JSON.stringify(data, null, 2));
+    res.json({ ok: true, savedAt: data.lastUpdated });
+  } catch (err) {
+    console.error('Error writing tasks:', err);
+    res.status(500).json({ error: 'Failed to write tasks' });
+  }
+});
+
+// ── Manual Task Add (from dashboard UI) ──
 app.post('/api/tasks/add', ensureAuth, (req, res) => {
   try {
     const { title, priority } = req.body;
     if (!title) return res.status(400).json({ error: 'title is required' });
     const id = 'manual-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8);
     const task = { id, title, text: title, done: false, priority: priority || 'Medium', due: null, context: 'Manual', owner: 'Sophie', notionSynced: false, addedAt: new Date().toISOString() };
-    // Append to manual-tasks queue for Notion sync
     const dir = path.dirname(MANUAL_TASKS_PATH);
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
     const existing = fs.existsSync(MANUAL_TASKS_PATH) ? JSON.parse(fs.readFileSync(MANUAL_TASKS_PATH, 'utf8')) : [];
     existing.push(task);
     fs.writeFileSync(MANUAL_TASKS_PATH, JSON.stringify(existing, null, 2));
-    // Also append to the main tasks.json so it shows immediately
+    // Also append to main tasks.json so it shows immediately
     if (fs.existsSync(TASKS_PATH)) {
       const data = JSON.parse(fs.readFileSync(TASKS_PATH, 'utf8'));
       data.tasks.push(task);
@@ -142,18 +167,7 @@ app.post('/api/tasks/add', ensureAuth, (req, res) => {
     console.error('Error adding manual task:', err);
     res.status(500).json({ error: 'Failed to add task' });
   }
-});
-  }
-  try {
-    const dir = path.dirname(TASKS_PATH);
-    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-    fs.writeFileSync(TASKS_PATH, JSON.stringify(req.body, null, 2));
-    res.json({ ok: true, savedAt: new Date().toISOString() });
-  } catch (err) {
-    console.error('Error writing tasks:', err);
-    res.status(500).json({ error: 'Failed to write tasks' });
-  }
-});
+})
 
 // ── Action Items API ──
 const ACTION_ITEMS_PATH = path.join(__dirname, 'data', 'action-items.json');
