@@ -4,7 +4,6 @@ const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const path = require('path');
 const fs = require('fs');
-const { Client } = require('@notionhq/client');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -17,13 +16,7 @@ const BASE_URL = process.env.RAILWAY_PUBLIC_DOMAIN
   ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`
   : process.env.BASE_URL || `http://localhost:${PORT}`;
 
-// Allowed email domain
 const ALLOWED_DOMAIN = 'fermatcommerce.com';
-
-// ── Notion Config ──
-const NOTION_API_KEY     = process.env.NOTION_API_KEY;
-const NOTION_TASKS_DB_ID = process.env.NOTION_TASKS_DB_ID || 'ec04c3e35f534ee487592c1fb304991e';
-const notion = NOTION_API_KEY ? new Client({ auth: NOTION_API_KEY }) : null;
 
 // ── Session ──
 app.set('trust proxy', 1);
@@ -33,7 +26,7 @@ app.use(session({
   saveUninitialized: false,
   cookie: {
     secure: process.env.NODE_ENV === 'production',
-    maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    maxAge: 7 * 24 * 60 * 60 * 1000
   }
 }));
 
@@ -98,66 +91,38 @@ app.use(express.json({ limit: '1mb' }));
 // ── Health check ──
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
 
-// ── Notion Tasks API ──
-app.get('/api/tasks', ensureAuth, async (req, res) => {
-  if (!notion) {
-    return res.json({ tasks: [], error: 'Notion not configured', source: 'none' });
+const API_KEY = process.env.DASHBOARD_API_KEY;
+
+// ── Tasks API (Notion-synced via Cowork) ──
+const TASKS_PATH = path.join(__dirname, 'data', 'tasks.json');
+
+app.get('/api/tasks', ensureAuth, (req, res) => {
+  try {
+    if (fs.existsSync(TASKS_PATH)) {
+      const data = JSON.parse(fs.readFileSync(TASKS_PATH, 'utf8'));
+      res.json(data);
+    } else {
+      res.json({ tasks: [], lastUpdated: null, source: 'none' });
+    }
+  } catch (err) {
+    console.error('Error reading tasks:', err);
+    res.status(500).json({ error: 'Failed to read tasks' });
+  }
+});
+
+app.post('/api/tasks', (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (!API_KEY || authHeader !== `Bearer ${API_KEY}`) {
+    return res.status(401).json({ error: 'Invalid or missing API key' });
   }
   try {
-    const response = await notion.databases.query({
-      database_id: NOTION_TASKS_DB_ID,
-      filter: {
-        and: [
-          { property: 'Done', checkbox: { equals: false } },
-          {
-            or: [
-              { property: 'Task', title: { does_not_contain: '[ARCHIVED]' } }
-            ]
-          }
-        ]
-      },
-      sorts: [
-        { property: 'Priority', direction: 'ascending' },
-        { property: 'Due Date', direction: 'ascending' }
-      ]
-    });
-
-    const priorityOrder = { 'High': 0, 'Medium': 1, 'Low': 2 };
-
-    const tasks = response.results.map(page => {
-      const props = page.properties;
-      const title = props['Task']?.title?.map(t => t.plain_text).join('') || '';
-      const done = props['Done']?.checkbox || false;
-      const priority = props['Priority']?.select?.name || 'Medium';
-      const dueDate = props['Due Date']?.date?.start || null;
-      const source = props['Source']?.rich_text?.map(t => t.plain_text).join('') || '';
-      const sourceLink = props['Source Link']?.url || '';
-
-      return {
-        id: page.id,
-        title,
-        done,
-        priority,
-        due: dueDate,
-        context: source || (sourceLink ? `Source: ${sourceLink}` : 'From Notion Task Tracker')
-      };
-    });
-
-    // Sort: High > Medium > Low, then by due date
-    tasks.sort((a, b) => {
-      const pa = priorityOrder[a.priority] ?? 1;
-      const pb = priorityOrder[b.priority] ?? 1;
-      if (pa !== pb) return pa - pb;
-      if (a.due && b.due) return a.due.localeCompare(b.due);
-      if (a.due) return -1;
-      if (b.due) return 1;
-      return 0;
-    });
-
-    res.json({ tasks, lastUpdated: new Date().toISOString(), source: 'notion' });
+    const dir = path.dirname(TASKS_PATH);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(TASKS_PATH, JSON.stringify(req.body, null, 2));
+    res.json({ ok: true, savedAt: new Date().toISOString() });
   } catch (err) {
-    console.error('Error fetching Notion tasks:', err);
-    res.status(500).json({ tasks: [], error: 'Failed to fetch tasks from Notion' });
+    console.error('Error writing tasks:', err);
+    res.status(500).json({ error: 'Failed to write tasks' });
   }
 });
 
@@ -177,8 +142,6 @@ app.get('/api/action-items', ensureAuth, (req, res) => {
     res.status(500).json({ error: 'Failed to read action items' });
   }
 });
-
-const API_KEY = process.env.DASHBOARD_API_KEY;
 
 app.post('/api/action-items', (req, res) => {
   const authHeader = req.headers.authorization;
@@ -292,7 +255,5 @@ app.use(ensureAuth, express.static(__dirname));
 // ── Start ──
 app.listen(PORT, () => {
   console.log(`Dashboard running on ${BASE_URL}`);
-  if (!GOOGLE_CLIENT_ID) console.log('\u26a0\ufe0f GOOGLE_CLIENT_ID not set — auth disabled (dev mode)');
-  if (!NOTION_API_KEY) console.log('\u26a0\ufe0f NOTION_API_KEY not set — /api/tasks will return empty');
-  else console.log('\u2705 Notion integration active — DB: ' + NOTION_TASKS_DB_ID);
+  if (!GOOGLE_CLIENT_ID) console.log('\u26a0\ufe0f GOOGLE_CLIENT_ID not set - auth disabled (dev mode)');
 });
