@@ -2040,6 +2040,7 @@ const STORAGE_KEY_MANUAL = 'sophie-dash-manual-tasks';
 const STORAGE_KEY_DONE = 'sophie-dash-done-ids';
 const STORAGE_KEY_DONE_TITLES = 'sophie-dash-done-titles';
 const STORAGE_KEY_OFFSITE = 'sophie-dash-offsite-done';
+const STORAGE_KEY_EVENT_TODOS = 'sophie-dash-event-todos';
 
 function loadManualTasks() {
   try { return JSON.parse(localStorage.getItem(STORAGE_KEY_MANUAL)) || []; } catch(e) { return []; }
@@ -2064,6 +2065,25 @@ function loadOffsiteDone() {
 }
 function saveOffsiteDone(keys) {
   try { localStorage.setItem(STORAGE_KEY_OFFSITE, JSON.stringify(keys)); } catch(e) {}
+}
+function loadEventTodos() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY_EVENT_TODOS)) || {}; } catch(e) { return {}; }
+}
+function saveEventTodos(data) {
+  try { localStorage.setItem(STORAGE_KEY_EVENT_TODOS, JSON.stringify(data)); } catch(e) {}
+}
+function persistEventTodosFromDOM() {
+  const saved = {};
+  document.querySelectorAll('.task-checklist[data-event-id]').forEach(list => {
+    const evId = list.dataset.eventId;
+    const items = [];
+    list.querySelectorAll('.mkt-todo-item').forEach(li => {
+      const input = li.querySelector('.todo-text-edit');
+      if(input) items.push({text: input.value, done: li.classList.contains('checked')});
+    });
+    saved[evId] = items;
+  });
+  saveEventTodos(saved);
 }
 
 // Normalize title for fuzzy matching  -  lowercase, strip brackets/tags, collapse whitespace
@@ -2111,6 +2131,14 @@ function applyPersistedState() {
       });
     });
   }
+
+  // 4. Apply event todo persistence  -  restore saved todos into MKT_EVENTS
+  const savedEventTodos = loadEventTodos();
+  MKT_EVENTS.forEach(ev => {
+    if (savedEventTodos[ev.id]) {
+      ev.todos = savedEventTodos[ev.id];
+    }
+  });
 }
 
 // ============================================================
@@ -3807,6 +3835,7 @@ function renderMarketing() {
         input.style.color = '';
       }
       updateTodoProgress(item.closest('[data-event-id]').dataset.eventId);
+      persistEventTodosFromDOM();
     });
   });
 
@@ -3822,7 +3851,7 @@ function renderMarketing() {
       item.style.overflow = 'hidden';
       item.style.padding = '0';
       item.style.margin = '0';
-      setTimeout(() => { item.remove(); updateTodoProgress(evId); }, 200);
+      setTimeout(() => { item.remove(); updateTodoProgress(evId); persistEventTodosFromDOM(); }, 200);
     });
   });
 
@@ -3851,26 +3880,30 @@ function renderMarketing() {
         if(isChecked) { li.style.opacity='0.45'; input.style.textDecoration='line-through'; input.style.color='var(--text-muted)'; }
         else { li.style.opacity=''; input.style.textDecoration=''; input.style.color=''; }
         updateTodoProgress(evId);
+        persistEventTodosFromDOM();
       });
 
       // Wire up delete
       li.querySelector('.todo-delete').addEventListener('click', (e) => {
         e.stopPropagation();
         li.style.transition='opacity .2s,height .2s'; li.style.opacity='0'; li.style.height='0'; li.style.overflow='hidden'; li.style.padding='0'; li.style.margin='0';
-        setTimeout(() => { li.remove(); updateTodoProgress(evId); }, 200);
+        setTimeout(() => { li.remove(); updateTodoProgress(evId); persistEventTodosFromDOM(); }, 200);
       });
 
-      // Focus the input
+      // Focus the input, persist on blur
       const input = li.querySelector('.todo-text-edit');
       input.focus();
+      input.addEventListener('blur', () => persistEventTodosFromDOM());
 
       updateTodoProgress(evId);
+      persistEventTodosFromDOM();
     });
   });
 
-  // Prevent text input clicks from bubbling
+  // Prevent text input clicks from bubbling, persist on blur
   document.querySelectorAll('.todo-text-edit').forEach(input => {
     input.addEventListener('click', (e) => e.stopPropagation());
+    input.addEventListener('blur', () => persistEventTodosFromDOM());
   });
 }
 
@@ -4014,13 +4047,13 @@ function renderEventPane(ev) {
         <div class="card">
           <div class="card-head">
             <div class="card-title">&#128200; Progress</div>
-            <span class="badge ${todoPercent >= 75 ? 'tag-green' : todoPercent >= 40 ? 'tag-yellow' : 'tag-red'}">${todoPercent}%</span>
+            <span class="badge ${ev.todos.length === 0 ? 'tag-gray' : todoPercent >= 75 ? 'tag-green' : todoPercent >= 40 ? 'tag-yellow' : 'tag-red'}">${ev.todos.length === 0 ? '--' : todoPercent + '%'}</span>
           </div>
           <div class="card-body compact">
             <div style="height:6px;background:var(--surface);border-radius:3px;overflow:hidden;margin-bottom:10px">
               <div style="height:100%;width:${todoPercent}%;background:${todoPercent >= 75 ? 'var(--green)' : todoPercent >= 40 ? 'var(--yellow)' : 'var(--red)'};border-radius:3px;transition:width .3s"></div>
             </div>
-            <div style="font-size:11px;color:var(--text-muted)">${doneTodos} of ${ev.todos.length} tasks done</div>
+            <div style="font-size:11px;color:var(--text-muted)">${ev.todos.length > 0 ? doneTodos + ' of ' + ev.todos.length + ' tasks done' : 'No tasks yet \u2014 add some below'}</div>
           </div>
         </div>
       </div>
@@ -4031,7 +4064,7 @@ function renderEventPane(ev) {
       <div class="card-head">
         <div class="card-title">&#9745; EA To-Dos</div>
         <div class="card-badges">
-          <span class="badge ${doneTodos === ev.todos.length ? 'tag-green' : 'tag-yellow'}">${doneTodos}/${ev.todos.length}</span>
+          <span class="badge ${ev.todos.length === 0 ? 'tag-gray' : doneTodos === ev.todos.length ? 'tag-green' : 'tag-yellow'}">${doneTodos}/${ev.todos.length}</span>
         </div>
       </div>
       <div class="card-body" style="padding:10px 14px">
