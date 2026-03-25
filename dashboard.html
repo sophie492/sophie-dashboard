@@ -2205,6 +2205,17 @@ function renderBento() {
       const data = await res.json();
       if (data.tasks && data.tasks.length > 0) {
         DATA.myTasks = data.tasks;
+          // Merge localStorage manual tasks that haven't synced to Notion yet
+          const manual = loadManualTasks();
+          if (manual.length) {
+            const serverIds = new Set(DATA.myTasks.map(t => t.id));
+            const serverTitles = new Set(DATA.myTasks.map(t => (t.title||t.text||'').toLowerCase()));
+            manual.forEach(m => {
+              if (!serverIds.has(m.id) && !serverTitles.has((m.title||m.text||'').toLowerCase())) {
+                DATA.myTasks.unshift(m);
+              }
+            });
+          }
         // Re-apply persisted done state from localStorage
         const doneState = JSON.parse(localStorage.getItem('sophie-task-done') || '{}');
         DATA.myTasks.forEach(t => { if (doneState[t.id] !== undefined) t.done = doneState[t.id]; });
