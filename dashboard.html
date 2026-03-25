@@ -2214,17 +2214,10 @@ function renderBento() {
           if (!DATA.myTasks.find(t => t.id === mt.id)) DATA.myTasks.push(mt);
         });
         // Re-render the tasks card
-        const tasksCard = document.querySelector('[data-tasks-container]');
-        if (tasksCard) {
-          tasksCard.innerHTML = renderMyTasks();
-        } else {
-          // Fallback: find the grid cell containing tasks
-          const cells = document.querySelectorAll('.grid-main > div');
-          cells.forEach(cell => {
-            if (cell.innerHTML.includes('My Tasks') || cell.innerHTML.includes('task-item')) {
-              cell.innerHTML = renderMyTasks();
-            }
-          });
+        const taskList = document.querySelector('#my-task-list');
+        if (taskList) {
+          const card = taskList.closest('.card');
+          if (card) card.innerHTML = renderMyTasks();
         }
       }
     } catch (err) {
