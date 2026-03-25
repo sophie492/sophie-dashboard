@@ -378,6 +378,32 @@ a.loop-row:hover .loop-source{color:var(--gold)}
 .pick-meta{font-size:10px;color:var(--text-muted);display:flex;gap:10px;text-transform:uppercase;letter-spacing:.3px}
 .pick-meta a{color:var(--text-muted);text-decoration:none}
 .pick-meta a:hover{color:var(--gold)}
+
+
+    /* Candidates Tile Styles */
+    .candidate-card { background: var(--card-bg, #f8f9fa); border: 1px solid var(--border, #e0e0e0); border-radius: 10px; padding: 14px; margin-bottom: 10px; }
+    .cand-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+    .cand-badge { font-size: 11px; padding: 2px 8px; border-radius: 12px; font-weight: 600; }
+    .cand-pending { background: #fff3cd; color: #856404; }
+    .cand-approved { background: #d4edda; color: #155724; }
+    .cand-role { font-size: 13px; color: var(--text-secondary, #666); margin-bottom: 6px; }
+    .cand-conf { font-size: 11px; padding: 1px 6px; border-radius: 8px; }
+    .cand-conf-high { background: #d4edda; color: #155724; }
+    .cand-conf-medium { background: #fff3cd; color: #856404; }
+    .cand-conf-low { background: #f8d7da; color: #721c24; }
+    .cand-meta { font-size: 12px; color: var(--text-secondary, #666); margin-bottom: 4px; }
+    .cand-link { color: #0077b5; text-decoration: none; }
+    .cand-link:hover { text-decoration: underline; }
+    .cand-resume { font-style: italic; }
+    .cand-source { font-size: 12px; color: var(--text-secondary, #888); margin-bottom: 4px; }
+    .cand-context { font-size: 12px; color: var(--text-secondary, #555); background: var(--hover-bg, #f0f0f0); padding: 6px 8px; border-radius: 6px; margin: 6px 0; font-style: italic; }
+    .cand-date { font-size: 11px; color: var(--text-secondary, #999); margin-bottom: 8px; }
+    .cand-actions { display: flex; gap: 8px; }
+    .cand-btn { border: none; padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; transition: opacity 0.2s; }
+    .cand-btn:hover { opacity: 0.85; }
+    .cand-btn-approve { background: #28a745; color: white; }
+    .cand-btn-reject { background: #dc3545; color: white; }
+    .candidate-group-label { font-size: 13px; font-weight: 600; color: var(--text-secondary, #666); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
 </style>
 </head>
 <body>
@@ -2292,7 +2318,18 @@ function renderTaskItem(t, section) {
         ${ctx}
       </div>
       <a class="notion-link" href="https://notion.so/${t.id.replace(/-/g,'')}" target="_blank" onclick="event.stopPropagation()">Open &#8599;</a>
-    </li>`;
+    </li>
+      <!-- Candidates Tile -->
+      <div class="bento-section" style="grid-column: span 2;">
+        <div class="section-header">
+          <h2>Inbound Candidates</h2>
+          <span class="section-subtitle">Email-to-Greenhouse Pipeline</span>
+        </div>
+        <div id="candidates-body">
+          <div class="empty-state">Loading candidates...</div>
+        </div>
+      </div>
+`;
 }
 
 function toggleMyTask(el) {
@@ -4018,6 +4055,91 @@ function renderEventPane(ev) {
 }
 
 init();
+
+
+  // —— Candidates (Email-to-Greenhouse) ——
+  function renderCandidates(data) {
+    const el = document.getElementById('candidates-body');
+    if (!el) return;
+    const candidates = (data.candidates || []).filter(c => c.status !== 'rejected');
+    if (candidates.length === 0) {
+      el.innerHTML = '<div class="empty-state">No pending candidates. Run the email-to-greenhouse scan to find new ones.</div>';
+      return;
+    }
+    const pending = candidates.filter(c => c.status === 'pending' || !c.status);
+    const approved = candidates.filter(c => c.status === 'approved');
+    let html = '';
+    if (pending.length > 0) {
+      html += '<div class="candidate-group-label">Pending Review (' + pending.length + ')</div>';
+      pending.forEach(c => { html += candidateCard(c); });
+    }
+    if (approved.length > 0) {
+      html += '<div class="candidate-group-label" style="margin-top:12px;">Approved (' + approved.length + ')</div>';
+      approved.forEach(c => { html += candidateCard(c); });
+    }
+    el.innerHTML = html;
+  }
+
+  function candidateCard(c) {
+    const confidence = c.confidence || 'Medium';
+    const confClass = confidence.toLowerCase();
+    const statusBadge = c.status === 'approved'
+      ? '<span class="cand-badge cand-approved">Approved</span>'
+      : '<span class="cand-badge cand-pending">Pending</span>';
+    const linkedIn = c.linkedin && c.linkedin !== 'not found'
+      ? '<a href="' + c.linkedin + '" target="_blank" class="cand-link">LinkedIn</a>'
+      : '';
+    const resume = c.resume
+      ? '<span class="cand-resume">' + c.resume + '</span>'
+      : '';
+    const buttons = c.status !== 'approved'
+      ? '<div class="cand-actions"><button class="cand-btn cand-btn-approve" onclick="approveCandidate(\'' + c.id + '\')">Approve</button><button class="cand-btn cand-btn-reject" onclick="rejectCandidate(\'' + c.id + '\')">Reject</button></div>'
+      : '<div class="cand-actions"><button class="cand-btn cand-btn-reject" onclick="rejectCandidate(\'' + c.id + '\')">Remove</button></div>';
+    return '<div class="candidate-card">' +
+      '<div class="cand-header"><strong>' + (c.name || 'Unknown') + '</strong>' + statusBadge + '</div>' +
+      '<div class="cand-role">' + (c.role || 'General') + ' <span class="cand-conf cand-conf-' + confClass + '">' + confidence + '</span></div>' +
+      '<div class="cand-meta">' + (c.email || '') + (linkedIn ? ' | ' + linkedIn : '') + (resume ? ' | ' + resume : '') + '</div>' +
+      '<div class="cand-source">Source: ' + (c.source || 'Unknown') + (c.referrer ? ' (' + c.referrer + ')' : '') + '</div>' +
+      (c.context ? '<div class="cand-context">' + c.context + '</div>' : '') +
+      '<div class="cand-date">Received: ' + (c.emailDate || 'Unknown') + '</div>' +
+      buttons +
+      '</div>';
+  }
+
+  async function approveCandidate(id) {
+    try {
+      const res = await fetch('/api/candidates/' + id, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'approved' })
+      });
+      if (res.ok) { loadCandidates(); }
+    } catch (e) { console.error('Approve failed:', e); }
+  }
+
+  async function rejectCandidate(id) {
+    try {
+      const res = await fetch('/api/candidates/' + id, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'rejected' })
+      });
+      if (res.ok) { loadCandidates(); }
+    } catch (e) { console.error('Reject failed:', e); }
+  }
+
+  function loadCandidates() {
+    fetch('/api/candidates')
+      .then(r => r.json())
+      .then(data => renderCandidates(data))
+      .catch(e => {
+        const el = document.getElementById('candidates-body');
+        if (el) el.innerHTML = '<div class="empty-state">Failed to load candidates.</div>';
+      });
+  }
+
+  // Load candidates on page ready
+  loadCandidates();
 </script>
 </body>
 </html>
