@@ -7,7 +7,7 @@
 <meta http-equiv="refresh" content="900">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+<link href="https://fonts.googeapis.com/css2?family=Hanken+Grotesk:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
 <style> 
 *{margin:0;padding:0;box-sizing:borderox}
 :root{
@@ -2231,8 +2231,7 @@ async function fetchLiveEvents() {
     MKT_EVENTS.forEach(ev => {
       if (savedEventTodos[ev.id]) ev.todos = savedEventTodos[ev.id];
     });
-    const mktContent = document.getElementById('marketing-content');
-    if (mktContent) mktContent.innerHTML = renderMarketing();
+    renderMarketing();
   } catch (e) {
     console.log('Events API not available, using hardcoded data');
   }
