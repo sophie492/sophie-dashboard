@@ -608,83 +608,9 @@ const DATA = {
 
   unreadDrafts: 0,
 
-  myTasks: [
-    {id:"new-vmg-consolidate",title:"Consolidate VMG scheduling drafts \u2014 remove stale Tue 3/24 slot, send single reply",done:false,priority:"High",due:"2026-03-20",context:"From task sync \u2014 3 proposals, one conflicts with Shreyas interview prep. VMG draft still has stale Tue slot."},
-    {id:"new-move-leadership-mtg",title:"Move leadership team meeting from Tuesday to Monday next week \u2014 Evelyn",done:false,priority:"High",due:"2026-03-23",context:"From Evelyn DM today \u2014 move Tue meeting to Mon"},
-    {id:"new-shreyas-mukul-bharat",title:"Schedule Shreyas manager review 1:1s with Mukul & Bharat",done:false,priority:"High",due:"2026-03-23",context:"From task sync today \u2014 manager reviews needed next week"},
-    {id:"new-gillian-review",title:"Flag Gillian\u2019s manager review to Shreyas \u2014 Rippling form needed",done:false,priority:"High",due:"2026-03-23",context:"From task sync today \u2014 Rippling form required"},
-    {id:"new-jess-ooo",title:"Coordinate Jess McDaid OOO coverage for Monday meetings",done:false,priority:"High",due:"2026-03-23",context:"From EOD check-in \u2014 Jess OOO Monday"},
-    {id:"new-luis-ac",title:"Reach out to Luis re: SF office A/C issue \u2014 from Ranjit",done:false,priority:"Medium",due:null,context:"From task sync today \u2014 Ranjit reported A/C outage"},
-    {id:"new-bharat-dev-mtg",title:"Sync with Bharat before Dev Meeting Wed 3/25",done:false,priority:"Medium",due:"2026-03-24",context:"From task sync today \u2014 coordinate on technical priorities"},
-    {id:"new-ny-venues",title:"Research NY venues for April 20-21 leadership offsite",done:false,priority:"Medium",due:null,context:"From task sync today \u2014 offsite logistics"},
-    {id:"new-vp-sales-tracker",title:"Build VP Sales candidate tracker \u2014 LinkedIn, outreach status, responses, next steps",done:false,priority:"High",due:null,context:"From Sophie / Rishabh 1:1 \u2014 track candidates, outreach, responses"},
-    {id:"new-ale-ayestaran",title:"Schedule Ale Ayestar\u00e1n meeting Thu/Fri for Rishabh",done:true,priority:"High",due:"2026-03-20",context:"Confirmed: Fri Mar 20, 1\u20131:30 PM PT at 594 Howard St"},
-    {id:"new-town-hall-demo",title:"Schedule Town Hall demo run-through this week",done:true,priority:"High",due:null,context:"Done! Tue Mar 17 12:30\u20131:00 PM \u2014 Shreyas, Rhea, Bharat, Sophie, Aditi, Rahul, Romain"},
-    {id:"3231ad76-fd2a-815d-9fb7-cfc15ddda626",title:"Coordinate with Evelyn on TeamLink invite follow-ups",done:false,priority:"High",due:"2026-03-14",context:"Sarah said Evelyn is expecting to coordinate with you"},
-    {id:"3231ad76-fd2a-8148-8a10-c72dda2428ff",title:"Schedule Christian Limon meeting for Rishabh",done:true,priority:"High",due:"2026-03-14",context:"Done! Tue Mar 17 10:30\u201311:00 AM on Zoom"},
-    {id:"new-mondo-interview",title:"Fix Mondo candidate interview draft \u2014 STALE, Courtney already sent invites",done:true,priority:"High",due:"2026-03-17",context:"Courtney sent calendar invites for Amin (Wed 10:30 AM) & Hansraj (Wed 2:30 PM). Draft obsolete."},
-    {id:"new-shreyas-reviews",title:"Schedule Shreyas manager review 1:1s with Mukul and Bharat next week",done:false,priority:"High",due:"2026-03-23",context:"From Shreyas DM \u2014 manager reviews needed"},
-    {id:"new-albertsons-poc",title:"Check Albertsons POC plan \u2014 confirm approval to send",done:false,priority:"Medium",due:"2026-03-16",context:"From task sync \u2014 overdue"},
-    {id:"3221ad76-fd2a-81e1-80a1-d0862bd73ba9",title:"Reach out to Bharat before Town Hall (Mar 19)",done:false,priority:"Medium",due:"2026-03-18",context:"Town Hall is Thursday. Coordinate beforehand."},
-    {id:"new-jillian-moma",title:"Coordinate Jillian (MoMA) intro meeting for Rishabh",done:true,priority:"Medium",due:null,context:"Rishabh emailed Jillian directly \u2014 Tue 3/24 at 10 AM PT confirmed"},
-    {id:"new-on-fermat-intro",title:"Schedule On x FERM\u00c0T intro call early AM next week",done:false,priority:"Medium",due:null,context:"Laura Mason & Guillaume Epitaux (CEST timezone)"},
-    {id:"new-whit-cannes",title:"Reschedule Whit Harwood / Cannes planning call \u2014 drafts stale",done:false,priority:"Medium",due:"2026-03-18",context:"Two stale drafts; Thu 3/19 1pm conflicts with Rishabh hold. Need fresh proposals."},
-    {id:"new-jake-bailey",title:"Schedule Jake Bailey / Meta meeting Thu instead of Shoptalk week",done:true,priority:"Medium",due:"2026-03-19",context:"Confirmed: Thu Mar 19, 1:00 PM PT on Zoom"},
-    {id:"new-gtm-kickoff",title:"Schedule Fermat GTM Leader Search Kickoff with VMG Partners",done:true,priority:"Medium",due:null,context:"Confirmed: Wed Apr 1 1pm PT \u2014 Karina confirmed via email"},
-    {id:"3231ad76-fd2a-8196-8c4b-f8ff31911b7c",title:"Ghostwrite investor follow-up emails",done:false,priority:"Medium",due:null,context:"Waiting on Rishabh to decide strategy \u2014 then execute with Evelyn"},
-    {id:"3231ad76-fd2a-818c-abe2-d32d6f98d34e",title:"Confirm Rishabh ShopTalk travel plans",done:false,priority:"Medium",due:"2026-03-17",context:"Mar 23-26, Shreyas not going \u2014 confirm Rishabh\u2019s plans \u2014 OVERDUE"},
-    {id:"3231ad76-fd2a-8106-a4f9-c4e1a2e65e2b",title:"FPPC Happy Hour \u2014 finalize date, venue, invite",done:false,priority:"Medium",due:null,context:"Committee meeting agenda drafted \u2014 need to execute"},
-    {id:"3231ad76-fd2a-81e8-974f-cf90f4c9bb19",title:"Finish BOD scheduling tool",done:false,priority:"Medium",due:null,context:"Google Apps Script project \u2014 in progress"},
-    {id:"new-fppc-reexport",title:"Re-export FPPC vote tracker spreadsheet to outputs folder",done:false,priority:"Medium",due:null,context:"From task sync \u2014 FPPC monitor can\u2019t find file"},
-    {id:"new-h1b-registration",title:"Remind Rishabh to complete H-1B registration \u2014 deadline Mar 19",done:true,priority:"High",due:"2026-03-19",context:"Erika flagged urgent \u2014 registration period closed the 19th"},
-    {id:"new-evelyn-reply",title:"Reply to Evelyn \u2014 confirm status of invite bump emails",done:false,priority:"Medium",due:null,context:"From task sync \u2014 Evelyn waiting on status update"},
-    {id:"new-connor-reschedule",title:"Send Salesforce/Connor Marsden reschedule draft \u2014 3 slots Thu 3/19",done:false,priority:"Medium",due:"2026-03-17",context:"Draft ready in Gmail \u2014 9am, 10:30am, 12pm PT all free"},
-    {id:"new-ranjit-ac",title:"Handle Ranjit\u2019s A/C outage report at SF office \u2014 reach out to Luis",done:false,priority:"Medium",due:null,context:"From task sync \u2014 Ranjit reported A/C issue, reach out to Luis. Also added as new-luis-ac task."},
-    {id:"new-snack-order",title:"Order office snacks this week",done:false,priority:"Low",due:null,context:"Monday reminder sent \u2014 check if anything is running low"},
-    {id:"3231ad76-fd2a-8183-92e5-df9caaa49f28",title:"Coordinate with Maya on event scheduling process",done:false,priority:"Low",due:null,context:"Asked Maya to email event details when R/S needed"},
-    {id:"3231ad76-fd2a-8129-a949-de794bd86cb5",title:"Clean up duplicate action item email drafts in Gmail",done:false,priority:"Low",due:"2026-03-14",context:"Old drafts cleared \u2014 action items task fixed to always create fresh draft"}
-  ],
+  myTasks: [],
 
-  notionTasks: [
-    {id:"new-criteo-partnership",title:"[Rishabh] Respond to Criteo partnership email \u2014 Mehdi Atoui (NEW today)",owner:"Rishabh",done:false,priority:"High",due:"2026-03-20"},
-    {id:"new-rhea-bike-quiz",title:"[Rhea] Design Backcountry bike quiz + bundle builder experience next week",owner:"Rhea",done:false,priority:"Medium",due:null},
-    {id:"new-talia-tapestry-microsite",title:"[Talia] Create Tapestry microsite with running to-do list",owner:"Talia",done:false,priority:"High",due:null},
-    {id:"new-alec-jennifer-bottlenecks",title:"[Alec/Jennifer] Map conversion bottlenecks",owner:"Alec/Jennifer",done:false,priority:"High",due:"2026-03-20"},
-    {id:"new-james-deck-addie",title:"[James] Send deck draft to Addie",owner:"James",done:false,priority:"High",due:"2026-03-20"},
-    {id:"new-rhea-tapestry-followup",title:"[Rhea] Send Tapestry follow-up email & pre-call agendas",owner:"Rhea",done:false,priority:"High",due:"2026-03-20"},
-    {id:"new-sakara-pause",title:"[Sakara] Contract pause \u2014 Talia managing cancellation, connecting Theresa with Isabel",owner:"Talia",done:false,priority:"High",due:null},
-    {id:"new-away-reset",title:"[Away] 90-day POC reset agreed \u2014 legal reviewing session recording + new contracts",owner:"James",done:false,priority:"High",due:null},
-    {id:"3221ad76-fd2a-8133-9a6f-c6be5466d4ae",title:"[Omaha] Updated POC due",owner:"Team",done:false,priority:"High",due:"2026-03-13"},
-    {id:"3221ad76-fd2a-8120-a2be-e6e1d5aac5ea",title:"[Albertsons] POC doc ready",owner:"Isabel",done:false,priority:"High",due:"2026-03-13"},
-    {id:"3221ad76-fd2a-81d7-8ec5-e9598b14a120",title:"[Tapestry] Close paperwork this week",owner:"Gillian",done:false,priority:"High",due:null},
-    {id:"3221ad76-fd2a-8199-95d2-c14f2ef12ada",title:"[Shop Talk] Finalize logistics (March 23\u201326)",owner:"Maya",done:false,priority:"High",due:"2026-03-23"},
-    {id:"3221ad76-fd2a-81c3-88a7-d91d607d6b64",title:"[Rhea] Run point on Town Hall dry run + demo Sam",owner:"Rhea",done:false,priority:"High",due:null},
-    {id:"new-perry-ellis",title:"[Perry Ellis] Exec-level reengagement strategy post-board meeting",owner:"Gillian",done:false,priority:"High",due:null},
-    {id:"new-bissell",title:"[Bissell] Pricing discussion alignment before Apr 30 renewal",owner:"Alec & James",done:false,priority:"High",due:"2026-03-20"},
-    {id:"new-james-away",title:"[James] Share Away deck with Jess by EOD",owner:"James",done:false,priority:"High",due:"2026-03-16"},
-    {id:"new-murad-contract",title:"[Murad] Follow up on contract signing \u2014 champion too busy to review",owner:"Team",done:false,priority:"High",due:null},
-    {id:"new-rishabh-laura",title:"[Rishabh] Email Laura action items from Khushy 1:1",owner:"Rishabh",done:false,priority:"Medium",due:null},
-    {id:"new-jjill-backcountry",title:"[J.Jill] Shreyas to email Joe (Backcountry) re: Viv Rettke reference call",owner:"Shreyas",done:false,priority:"Medium",due:null},
-    {id:"new-gnc-cdo",title:"[GNC] Rishabh to get intro to new CDO",owner:"Rishabh",done:false,priority:"Medium",due:null},
-    {id:"new-daniel-handoff",title:"[Daniel] Hand off Scotts + Bissell accounts to James before paternity leave",owner:"Daniel",done:false,priority:"Medium",due:"2026-04-01"},
-    {id:"3221ad76-fd2a-810a-be42-fb89ad93b257",title:"[Atlanta Salesforce Event] Confirm second attendee",owner:"Jessica",done:false,priority:"Medium",due:null},
-    {id:"3221ad76-fd2a-81bb-965e-ea6fee4a134f",title:"Update blogs with readiness-focused messaging",owner:"Jennifer",done:false,priority:"Medium",due:"2026-03-17"},
-    {id:"3221ad76-fd2a-8107-a210-d2bb8b11af34",title:"[Kohl\u2019s] Executive-level reengagement strategy",owner:null,done:false,priority:"Medium",due:"2026-03-17"},
-    {id:"3221ad76-fd2a-819f-8388-c4486acecb9f",title:"[Alec] Pull syndication lead data + build nurturing workflow",owner:"Alec",done:false,priority:"Medium",due:"2026-03-17"},
-    {id:"3221ad76-fd2a-816c-adc6-d287a117f962",title:"[Rishabh] Create Liquid Death analysis content",owner:"Rishabh",done:false,priority:"Medium",due:null},
-    {id:"3221ad76-fd2a-816c-adc6-d287a117f962-2",title:"[Team] Cannes \u2014 finalize affiliate partnership terms",owner:null,done:false,priority:"Medium",due:null},
-    {id:"3221ad76-fd2a-810c-b2ba-cfed9e67c1df",title:"Campaign outline mapping \u2014 channels, content types, CTAs",owner:null,done:false,priority:"Medium",due:null},
-    {id:"new-ashley-barth",title:"[Ashley] Connect with Barth on releases channel standardization",owner:"Ashley",done:false,priority:"Medium",due:null},
-    {id:"new-daniel-coverage",title:"[Daniel] Coverage plan for paternity leave starting Apr 1",owner:"Daniel",done:false,priority:"Medium",due:"2026-04-01"},
-    {id:"new-scotts-amazon",title:"[Scotts] Prep for Amazon joint meeting Thu 8:30am PT",owner:"Daniel & Shreyas",done:true,priority:"Medium",due:"2026-03-19"},
-    {id:"new-glossier-ga",title:"[Glossier] GA reauthorization to unblock pixel tracking",owner:null,done:false,priority:"Medium",due:null},
-    {id:"new-spanx-envive",title:"[Spanx] Schedule Envive call re: fees/paperwork",owner:"Jess",done:false,priority:"Medium",due:null},
-    {id:"3221ad76-fd2a-8188-8617-c4c85250908c",title:"[Ashley] Coordinate ebook CTA addition to AI search blogs",owner:"Ashley",done:false,priority:"Medium",due:null},
-    {id:"3221ad76-fd2a-8198-8658-dfcd83f21f0b",title:"Share report template & improve narrative clarity",owner:"Saunder",done:false,priority:"Medium",due:null},
-    {id:"3221ad76-fd2a-8136-aa58-fca897ffef3b",title:"[GNC] Geo IP analysis for cart abandonment patterns",owner:null,done:false,priority:"Medium",due:null},
-    {id:"3221ad76-fd2a-816f-bbe0-d020906b9a15",title:"[Rishabh] Send syndication questions to industry contacts",owner:"Rishabh",done:false,priority:"Medium",due:null},
-    {id:"3221ad76-fd2a-8176-b741-ee12d2e60d8a",title:"Email warming for Shreyas/Rishabh sender addresses",owner:null,done:false,priority:"Low",due:null}
-  ],
+  notionTasks: [],
 
   calendarDays: [
         {
@@ -2272,7 +2198,44 @@ function renderBento() {
 }
 
 // -- My Tasks --
-function renderMyTasks() {
+// ── Fetch tasks from Notion API ──
+  async function fetchNotionTasks() {
+    try {
+      const res = await fetch('/api/tasks');
+      const data = await res.json();
+      if (data.tasks && data.tasks.length > 0) {
+        DATA.myTasks = data.tasks;
+        // Re-apply persisted done state from localStorage
+        const doneState = JSON.parse(localStorage.getItem('sophie-task-done') || '{}');
+        DATA.myTasks.forEach(t => { if (doneState[t.id] !== undefined) t.done = doneState[t.id]; });
+        // Merge any manually added tasks from localStorage
+        const manualTasks = JSON.parse(localStorage.getItem('sophie-manual-tasks') || '[]');
+        manualTasks.forEach(mt => {
+          if (!DATA.myTasks.find(t => t.id === mt.id)) DATA.myTasks.push(mt);
+        });
+        // Re-render the tasks card
+        const tasksCard = document.querySelector('[data-tasks-container]');
+        if (tasksCard) {
+          tasksCard.innerHTML = renderMyTasks();
+        } else {
+          // Fallback: find the grid cell containing tasks
+          const cells = document.querySelectorAll('.grid-main > div');
+          cells.forEach(cell => {
+            if (cell.innerHTML.includes('My Tasks') || cell.innerHTML.includes('task-item')) {
+              cell.innerHTML = renderMyTasks();
+            }
+          });
+        }
+      }
+    } catch (err) {
+      console.warn('Failed to fetch Notion tasks:', err);
+    }
+  }
+
+  // Load tasks from API after initial render
+  fetchNotionTasks();
+
+  function renderMyTasks() {
   const prioOrder = {High:0, Medium:1, Low:2};
   const tasks = DATA.myTasks.slice().sort((a,b) => {
     if(a.done !== b.done) return a.done ? 1 : -1;
