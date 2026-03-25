@@ -49,14 +49,19 @@ if (GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET) {
     }
     return done(null, {
       id: profile.id, email, name: profile.displayName,
-      photo: profile.photos?.[0]?.value
+      photo: profile.photos?.[0]?.value,
+      accessToken,
+      refreshToken
     });
   }));
 }
 
 // ── Auth routes ──
 app.get('/auth/google', passport.authenticate('google', {
-  scope: ['profile', 'email'], hd: ALLOWED_DOMAIN
+  scope: ['profile', 'email', 'https://www.googleapis.com/auth/calendar.readonly'],
+  hd: ALLOWED_DOMAIN,
+  accessType: 'offline',
+  prompt: 'consent'
 }));
 
 app.get('/auth/google/callback',
@@ -345,16 +350,152 @@ app.patch('/api/candidates/:id', ensureAuth, (req, res) => {
 // ── Calendar API ──
 const CALENDAR_PATH = path.join(__dirname, 'data', 'calendar.json');
 
-app.get('/api/calendar', ensureAuth, (req, res) => {
+// ── Live Google Calendar helpers ──
+const CAL_IDS = ['rishabh@fermatcommerce.com', 'shreyas@fermatcommerce.com'];
+const CAL_NAMES = ['rishabh', 'shreyas'];
+
+async function refreshGoogleToken(refreshToken) {
+  const resp = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      client_id: GOOGLE_CLIENT_ID,
+      client_secret: GOOGLE_CLIENT_SECRET,
+      refresh_token: refreshToken,
+      grant_type: 'refresh_token'
+    })
+  });
+  const data = await resp.json();
+  return data.access_token || null;
+}
+
+async function fetchGCalEvents(token, calendarId, timeMin, timeMax) {
+  const params = new URLSearchParams({
+    timeMin: timeMin.toISOString(),
+    timeMax: timeMax.toISOString(),
+    singleEvents: 'true',
+    orderBy: 'startTime',
+    maxResults: '250',
+    timeZone: 'America/New_York'
+  });
+  const resp = await fetch(
+    `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?${params}`,
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  if (!resp.ok) return [];
+  const data = await resp.json();
+  return data.items || [];
+}
+
+function fmtTime(dateTime) {
+  if (!dateTime) return '';
+  const d = new Date(dateTime);
+  let h = d.getHours(); const m = d.getMinutes();
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  h = h % 12 || 12;
+  return m === 0 ? `${h}:00 ${ampm}` : `${h}:${String(m).padStart(2, '0')} ${ampm}`;
+}
+
+function classifyEvent(ev) {
+  const s = (ev.summary || '').toLowerCase();
+  if (s.includes('external') || s.includes('demo') || s.includes('intro')) return 'external';
+  return 'internal';
+}
+
+function transformEvents(items) {
+  return items
+    .filter(ev => ev.start?.dateTime)
+    .map(ev => ({
+      time: fmtTime(ev.start.dateTime),
+      end: fmtTime(ev.end?.dateTime),
+      title: ev.summary || '(No title)',
+      type: classifyEvent(ev),
+      rsvp: (ev.attendees || []).find(a => a.self)?.responseStatus || 'accepted',
+      link: ev.htmlLink || ''
+    }))
+    .sort((a, b) => {
+      const ta = new Date('2026-01-01 ' + a.time);
+      const tb = new Date('2026-01-01 ' + b.time);
+      return ta - tb;
+    });
+}
+
+app.get('/api/calendar', ensureAuth, async (req, res) => {
   try {
-    if (fs.existsSync(CALENDAR_PATH)) {
-      res.json(JSON.parse(fs.readFileSync(CALENDAR_PATH, 'utf8')));
-    } else {
-      res.json({ calendarDays: [], lastUpdated: null });
+    const user = req.user;
+    let token = user?.accessToken;
+    const refresh = user?.refreshToken;
+
+    // Try refresh if we have a refresh token
+    if (refresh) {
+      const fresh = await refreshGoogleToken(refresh);
+      if (fresh) { token = fresh; user.accessToken = fresh; }
     }
+
+    if (!token) {
+      // Fallback to static file
+      if (fs.existsSync(CALENDAR_PATH)) {
+        return res.json(JSON.parse(fs.readFileSync(CALENDAR_PATH, 'utf8')));
+      }
+      return res.json({ calendarDays: [], lastUpdated: null });
+    }
+
+    // Fetch next 7 days
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    const end = new Date(now);
+    end.setDate(end.getDate() + 7);
+
+    const results = await Promise.all(
+      CAL_IDS.map(id => fetchGCalEvents(token, id, now, end))
+    );
+
+    // Group by date
+    const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const dayMap = {};
+
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(now);
+      d.setDate(d.getDate() + i);
+      const key = d.toISOString().slice(0, 10);
+      const dow = d.getDay();
+      dayMap[key] = {
+        date: key,
+        label: `${dayNames[dow]}, ${monthNames[d.getMonth()]} ${d.getDate()}`,
+        isWeekend: dow === 0 || dow === 6,
+        rishabh: [],
+        shreyas: []
+      };
+    }
+
+    CAL_NAMES.forEach((name, idx) => {
+      const items = results[idx];
+      items.forEach(ev => {
+        if (!ev.start?.dateTime) return;
+        const key = ev.start.dateTime.slice(0, 10);
+        if (dayMap[key]) {
+          dayMap[key][name].push(...transformEvents([ev]));
+        }
+      });
+    });
+
+    const calendarDays = Object.values(dayMap).sort((a, b) => a.date.localeCompare(b.date));
+    const payload = { calendarDays, lastUpdated: new Date().toISOString() };
+
+    // Cache to file for fallback
+    const dir = path.dirname(CALENDAR_PATH);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(CALENDAR_PATH, JSON.stringify(payload, null, 2));
+
+    res.json(payload);
   } catch (err) {
-    console.error('Error reading calendar:', err);
-    res.status(500).json({ error: 'Failed to read calendar' });
+    console.error('Error fetching live calendar:', err);
+    // Fallback to cached file
+    if (fs.existsSync(CALENDAR_PATH)) {
+      return res.json(JSON.parse(fs.readFileSync(CALENDAR_PATH, 'utf8')));
+    }
+    res.status(500).json({ error: 'Failed to fetch calendar' });
   }
 });
 
