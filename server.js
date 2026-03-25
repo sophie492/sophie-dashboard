@@ -342,6 +342,166 @@ app.patch('/api/candidates/:id', ensureAuth, (req, res) => {
   }
 });
 
+// ── Calendar API ──
+const CALENDAR_PATH = path.join(__dirname, 'data', 'calendar.json');
+
+app.get('/api/calendar', ensureAuth, (req, res) => {
+  try {
+    if (fs.existsSync(CALENDAR_PATH)) {
+      res.json(JSON.parse(fs.readFileSync(CALENDAR_PATH, 'utf8')));
+    } else {
+      res.json({ calendarDays: [], lastUpdated: null });
+    }
+  } catch (err) {
+    console.error('Error reading calendar:', err);
+    res.status(500).json({ error: 'Failed to read calendar' });
+  }
+});
+
+app.post('/api/calendar', (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (!API_KEY || authHeader !== `Bearer ${API_KEY}`) {
+    return res.status(401).json({ error: 'Invalid or missing API key' });
+  }
+  try {
+    const dir = path.dirname(CALENDAR_PATH);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(CALENDAR_PATH, JSON.stringify(req.body, null, 2));
+    res.json({ ok: true, savedAt: new Date().toISOString() });
+  } catch (err) {
+    console.error('Error writing calendar:', err);
+    res.status(500).json({ error: 'Failed to write calendar' });
+  }
+});
+
+// ── Marketing Events API ──
+const EVENTS_PATH = path.join(__dirname, 'data', 'events.json');
+
+app.get('/api/events', ensureAuth, (req, res) => {
+  try {
+    if (fs.existsSync(EVENTS_PATH)) {
+      res.json(JSON.parse(fs.readFileSync(EVENTS_PATH, 'utf8')));
+    } else {
+      res.json({ events: [], lastUpdated: null });
+    }
+  } catch (err) {
+    console.error('Error reading marketing events:', err);
+    res.status(500).json({ error: 'Failed to read marketing events' });
+  }
+});
+
+app.post('/api/events', (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (!API_KEY || authHeader !== `Bearer ${API_KEY}`) {
+    return res.status(401).json({ error: 'Invalid or missing API key' });
+  }
+  try {
+    const dir = path.dirname(EVENTS_PATH);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(EVENTS_PATH, JSON.stringify(req.body, null, 2));
+    res.json({ ok: true, savedAt: new Date().toISOString() });
+  } catch (err) {
+    console.error('Error writing marketing events:', err);
+    res.status(500).json({ error: 'Failed to write marketing events' });
+  }
+});
+
+// ── Utilities API ──
+const UTILITIES_PATH = path.join(__dirname, 'data', 'utilities.json');
+
+app.get('/api/utilities', ensureAuth, (req, res) => {
+  try {
+    if (fs.existsSync(UTILITIES_PATH)) {
+      res.json(JSON.parse(fs.readFileSync(UTILITIES_PATH, 'utf8')));
+    } else {
+      res.json({ lastUpdated: null });
+    }
+  } catch (err) {
+    console.error('Error reading utilities:', err);
+    res.status(500).json({ error: 'Failed to read utilities' });
+  }
+});
+
+app.post('/api/utilities', (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (!API_KEY || authHeader !== `Bearer ${API_KEY}`) {
+    return res.status(401).json({ error: 'Invalid or missing API key' });
+  }
+  try {
+    const dir = path.dirname(UTILITIES_PATH);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(UTILITIES_PATH, JSON.stringify(req.body, null, 2));
+    res.json({ ok: true, savedAt: new Date().toISOString() });
+  } catch (err) {
+    console.error('Error writing utilities:', err);
+    res.status(500).json({ error: 'Failed to write utilities' });
+  }
+});
+
+// ── Weekly Pulse API ──
+const WEEKLY_PULSE_PATH = path.join(__dirname, 'data', 'weekly-pulse.json');
+
+app.get('/api/weekly-pulse', ensureAuth, (req, res) => {
+  try {
+    if (fs.existsSync(WEEKLY_PULSE_PATH)) {
+      res.json(JSON.parse(fs.readFileSync(WEEKLY_PULSE_PATH, 'utf8')));
+    } else {
+      res.json({ lastUpdated: null });
+    }
+  } catch (err) {
+    console.error('Error reading weekly pulse:', err);
+    res.status(500).json({ error: 'Failed to read weekly pulse' });
+  }
+});
+
+app.post('/api/weekly-pulse', (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (!API_KEY || authHeader !== `Bearer ${API_KEY}`) {
+    return res.status(401).json({ error: 'Invalid or missing API key' });
+  }
+  try {
+    const dir = path.dirname(WEEKLY_PULSE_PATH);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(WEEKLY_PULSE_PATH, JSON.stringify(req.body, null, 2));
+    res.json({ ok: true, savedAt: new Date().toISOString() });
+  } catch (err) {
+    console.error('Error writing weekly pulse:', err);
+    res.status(500).json({ error: 'Failed to write weekly pulse' });
+  }
+});
+
+// ── FPPC Events API ──
+const FPPC_PATH = path.join(__dirname, 'data', 'fppc.json');
+
+app.get('/api/fppc', ensureAuth, (req, res) => {
+  try {
+    if (fs.existsSync(FPPC_PATH)) {
+      res.json(JSON.parse(fs.readFileSync(FPPC_PATH, 'utf8')));
+    } else {
+      res.json({ fppcEvents: [], lastUpdated: null });
+    }
+  } catch (err) {
+    console.error('Error reading fppc events:', err);
+    res.status(500).json({ error: 'Failed to read fppc events' });
+  }
+});
+
+app.post('/api/fppc', (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (!API_KEY || authHeader !== `Bearer ${API_KEY}`) {
+    return res.status(401).json({ error: 'Invalid or missing API key' });
+  }
+  try {
+    const dir = path.dirname(FPPC_PATH);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(FPPC_PATH, JSON.stringify(req.body, null, 2));
+    res.json({ ok: true, savedAt: new Date().toISOString() });
+  } catch (err) {
+    console.error('Error writing fppc events:', err);
+    res.status(500).json({ error: 'Failed to write fppc events' });
+  }
+});
+
 // ── Protected dashboard ──
 app.get('/', ensureAuth, (req, res) => {
   res.sendFile(path.join(__dirname, 'dashboard.html'));
