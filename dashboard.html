@@ -2237,6 +2237,10 @@ function renderBento() {
       group.querySelector('#' + t.dataset.target).classList.add('active');
     });
   });
+
+  // Append candidates tile to Dashboard view
+  document.getElementById('bento').insertAdjacentHTML('beforeend', '<div class="bento-section" style="grid-column: span 6;"><div class="section-header"><h2>Inbound Candidates</h2><span class="section-subtitle">Email-to-Greenhouse Pipeline</span></div><div id="candidates-body"><div class="empty-state">Loading candidates...</div></div></div>');
+  loadCandidates();
 }
 
 // -- My Tasks --
