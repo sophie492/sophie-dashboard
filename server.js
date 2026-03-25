@@ -4,22 +4,28 @@ const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const path = require('path');
 const fs = require('fs');
+const { Client } = require('@notionhq/client');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ââ Config ââ
-const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+// ── Config ──
+const GOOGLE_CLIENT_ID     = process.env.GOOGLE_CLIENT_ID;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
-const SESSION_SECRET = process.env.SESSION_SECRET || 'sophie-dashboard-secret-change-me';
+const SESSION_SECRET       = process.env.SESSION_SECRET || 'sophie-dashboard-secret-change-me';
 const BASE_URL = process.env.RAILWAY_PUBLIC_DOMAIN
   ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`
   : process.env.BASE_URL || `http://localhost:${PORT}`;
 
-// Allowed email domain â only @fermatcommerce.com can access
+// Allowed email domain
 const ALLOWED_DOMAIN = 'fermatcommerce.com';
 
-// ââ Session ââ
+// ── Notion Config ──
+const NOTION_API_KEY     = process.env.NOTION_API_KEY;
+const NOTION_TASKS_DB_ID = process.env.NOTION_TASKS_DB_ID || 'ec04c3e35f534ee487592c1fb304991e';
+const notion = NOTION_API_KEY ? new Client({ auth: NOTION_API_KEY }) : null;
+
+// ── Session ──
 app.set('trust proxy', 1);
 app.use(session({
   secret: SESSION_SECRET,
@@ -31,10 +37,9 @@ app.use(session({
   }
 }));
 
-// ââ Passport ââ
+// ── Passport ──
 app.use(passport.initialize());
 app.use(passport.session());
-
 passport.serializeUser((user, done) => done(null, user));
 passport.deserializeUser((user, done) => done(null, user));
 
@@ -46,24 +51,19 @@ if (GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET) {
   }, (accessToken, refreshToken, profile, done) => {
     const email = profile.emails?.[0]?.value || '';
     const domain = email.split('@')[1];
-
     if (domain !== ALLOWED_DOMAIN) {
       return done(null, false, { message: `Only @${ALLOWED_DOMAIN} accounts allowed.` });
     }
-
     return done(null, {
-      id: profile.id,
-      email,
-      name: profile.displayName,
+      id: profile.id, email, name: profile.displayName,
       photo: profile.photos?.[0]?.value
     });
   }));
 }
 
-// ââ Auth routes ââ
+// ── Auth routes ──
 app.get('/auth/google', passport.authenticate('google', {
-  scope: ['profile', 'email'],
-  hd: ALLOWED_DOMAIN // Hint to Google to show only Workspace accounts
+  scope: ['profile', 'email'], hd: ALLOWED_DOMAIN
 }));
 
 app.get('/auth/google/callback',
@@ -85,26 +85,85 @@ app.get('/auth/logout', (req, res) => {
   req.logout(() => res.redirect('/'));
 });
 
-// ââ Auth middleware ââ
+// ── Auth middleware ──
 function ensureAuth(req, res, next) {
-  // If Google OAuth isn't configured, let everyone through (local dev)
-  if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
-    return next();
-  }
+  if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) return next();
   if (req.isAuthenticated()) return next();
   res.redirect('/auth/google');
 }
 
-// ââ JSON body parsing (for action-items API) ââ
+// ── JSON body parsing ──
 app.use(express.json({ limit: '1mb' }));
 
-// ââ Health check (no auth needed) ââ
+// ── Health check ──
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
 
-// ââ Action Items API ââ
+// ── Notion Tasks API ──
+app.get('/api/tasks', ensureAuth, async (req, res) => {
+  if (!notion) {
+    return res.json({ tasks: [], error: 'Notion not configured', source: 'none' });
+  }
+  try {
+    const response = await notion.databases.query({
+      database_id: NOTION_TASKS_DB_ID,
+      filter: {
+        and: [
+          { property: 'Done', checkbox: { equals: false } },
+          {
+            or: [
+              { property: 'Task', title: { does_not_contain: '[ARCHIVED]' } }
+            ]
+          }
+        ]
+      },
+      sorts: [
+        { property: 'Priority', direction: 'ascending' },
+        { property: 'Due Date', direction: 'ascending' }
+      ]
+    });
+
+    const priorityOrder = { 'High': 0, 'Medium': 1, 'Low': 2 };
+
+    const tasks = response.results.map(page => {
+      const props = page.properties;
+      const title = props['Task']?.title?.map(t => t.plain_text).join('') || '';
+      const done = props['Done']?.checkbox || false;
+      const priority = props['Priority']?.select?.name || 'Medium';
+      const dueDate = props['Due Date']?.date?.start || null;
+      const source = props['Source']?.rich_text?.map(t => t.plain_text).join('') || '';
+      const sourceLink = props['Source Link']?.url || '';
+
+      return {
+        id: page.id,
+        title,
+        done,
+        priority,
+        due: dueDate,
+        context: source || (sourceLink ? `Source: ${sourceLink}` : 'From Notion Task Tracker')
+      };
+    });
+
+    // Sort: High > Medium > Low, then by due date
+    tasks.sort((a, b) => {
+      const pa = priorityOrder[a.priority] ?? 1;
+      const pb = priorityOrder[b.priority] ?? 1;
+      if (pa !== pb) return pa - pb;
+      if (a.due && b.due) return a.due.localeCompare(b.due);
+      if (a.due) return -1;
+      if (b.due) return 1;
+      return 0;
+    });
+
+    res.json({ tasks, lastUpdated: new Date().toISOString(), source: 'notion' });
+  } catch (err) {
+    console.error('Error fetching Notion tasks:', err);
+    res.status(500).json({ tasks: [], error: 'Failed to fetch tasks from Notion' });
+  }
+});
+
+// ── Action Items API ──
 const ACTION_ITEMS_PATH = path.join(__dirname, 'data', 'action-items.json');
 
-// GET - serve current action items (protected by auth)
 app.get('/api/action-items', ensureAuth, (req, res) => {
   try {
     if (fs.existsSync(ACTION_ITEMS_PATH)) {
@@ -119,10 +178,9 @@ app.get('/api/action-items', ensureAuth, (req, res) => {
   }
 });
 
-// POST - update action items (requires API key)
 const API_KEY = process.env.DASHBOARD_API_KEY;
+
 app.post('/api/action-items', (req, res) => {
-  // Authenticate via API key (used by CEO daily brief skill)
   const authHeader = req.headers.authorization;
   if (!API_KEY || authHeader !== `Bearer ${API_KEY}`) {
     return res.status(401).json({ error: 'Invalid or missing API key' });
@@ -138,7 +196,7 @@ app.post('/api/action-items', (req, res) => {
   }
 });
 
-// ââ Open Loops API ââ
+// ── Open Loops API ──
 const OPEN_LOOPS_PATH = path.join(__dirname, 'data', 'open-loops.json');
 
 app.get('/api/open-loops', ensureAuth, (req, res) => {
@@ -171,7 +229,7 @@ app.post('/api/open-loops', (req, res) => {
   }
 });
 
-// —— Candidates API ——
+// ── Candidates API ──
 const CANDIDATES_PATH = path.join(__dirname, 'data', 'candidates.json');
 
 app.get('/api/candidates', ensureAuth, (req, res) => {
@@ -224,18 +282,17 @@ app.patch('/api/candidates/:id', ensureAuth, (req, res) => {
   }
 });
 
-// ââ Protected dashboard ââ
+// ── Protected dashboard ──
 app.get('/', ensureAuth, (req, res) => {
   res.sendFile(path.join(__dirname, 'dashboard.html'));
 });
 
-// Serve static assets (CSS/JS/images if any) behind auth
 app.use(ensureAuth, express.static(__dirname));
 
-// ââ Start ââ
+// ── Start ──
 app.listen(PORT, () => {
   console.log(`Dashboard running on ${BASE_URL}`);
-  if (!GOOGLE_CLIENT_ID) {
-    console.log('\u26a0\ufe0f  GOOGLE_CLIENT_ID not set \u2014 auth disabled (dev mode)');
-  }
+  if (!GOOGLE_CLIENT_ID) console.log('\u26a0\ufe0f GOOGLE_CLIENT_ID not set — auth disabled (dev mode)');
+  if (!NOTION_API_KEY) console.log('\u26a0\ufe0f NOTION_API_KEY not set — /api/tasks will return empty');
+  else console.log('\u2705 Notion integration active — DB: ' + NOTION_TASKS_DB_ID);
 });
