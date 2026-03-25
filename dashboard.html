@@ -2251,23 +2251,42 @@ function renderBento() {
 // ── Fetch tasks from Notion API ──
   async function fetchNotionTasks() {
     try {
-      const res = await fetch('/api/tasks');
-      const data = await res.json();
+      // Bidirectional sync: push local state to server, get merged result back
+      const localDoneIds = loadDoneIds();
+      const localDoneTitles = loadDoneTitles();
+      const localManual = loadManualTasks();
+      let data;
+      try {
+        const syncRes = await fetch('/api/tasks/sync', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            doneIds: localDoneIds,
+            doneTitles: localDoneTitles,
+            manualTasks: localManual
+          })
+        });
+        data = await syncRes.json();
+      } catch (syncErr) {
+        // Fallback to read-only GET if sync endpoint fails
+        console.warn('Sync endpoint failed, falling back to GET:', syncErr);
+        const fallbackRes = await fetch('/api/tasks');
+        data = await fallbackRes.json();
+      }
       if (data.tasks && data.tasks.length > 0) {
         DATA.myTasks = data.tasks;
-          // Merge localStorage manual tasks that haven't synced to Notion yet
-          const manual = loadManualTasks();
-          if (manual.length) {
-            const serverIds = new Set(DATA.myTasks.map(t => t.id));
-            const serverTitles = new Set(DATA.myTasks.map(t => (t.title||t.text||'').toLowerCase()));
-            manual.forEach(m => {
-              if (!serverIds.has(m.id) && !serverTitles.has((m.title||m.text||'').toLowerCase())) {
-                DATA.myTasks.unshift(m);
-              }
-            });
-          }
-        // Re-apply persisted done state from localStorage
-        // Re-apply done state using the canonical localStorage keys
+        // Merge any localStorage manual tasks the server missed
+        const manual = loadManualTasks();
+        if (manual.length) {
+          const serverIds = new Set(DATA.myTasks.map(t => t.id));
+          const serverTitles = new Set(DATA.myTasks.map(t => (t.title||t.text||'').toLowerCase()));
+          manual.forEach(m => {
+            if (!serverIds.has(m.id) && !serverTitles.has((m.title||m.text||'').toLowerCase())) {
+              DATA.myTasks.unshift(m);
+            }
+          });
+        }
+        // Re-apply persisted done state from localStorage (belt + suspenders)
         const doneIdSet = new Set(loadDoneIds());
         const doneTitleSet = new Set(loadDoneTitles());
         DATA.myTasks.forEach(t => {
@@ -2286,7 +2305,7 @@ function renderBento() {
         }
       }
     } catch (err) {
-      console.warn('Failed to fetch Notion tasks:', err);
+      console.warn('Failed to fetch/sync tasks:', err);
     }
   }
 
