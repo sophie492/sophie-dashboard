@@ -171,6 +171,59 @@ app.post('/api/open-loops', (req, res) => {
   }
 });
 
+// —— Candidates API ——
+const CANDIDATES_PATH = path.join(__dirname, 'data', 'candidates.json');
+
+app.get('/api/candidates', ensureAuth, (req, res) => {
+  try {
+    if (fs.existsSync(CANDIDATES_PATH)) {
+      const data = JSON.parse(fs.readFileSync(CANDIDATES_PATH, 'utf8'));
+      res.json(data);
+    } else {
+      res.json({ candidates: [], lastUpdated: null });
+    }
+  } catch (err) {
+    console.error('Error reading candidates:', err);
+    res.status(500).json({ error: 'Failed to read candidates' });
+  }
+});
+
+app.post('/api/candidates', (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (!API_KEY || authHeader !== `Bearer ${API_KEY}`) {
+    return res.status(401).json({ error: 'Invalid or missing API key' });
+  }
+  try {
+    const dir = path.dirname(CANDIDATES_PATH);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(CANDIDATES_PATH, JSON.stringify(req.body, null, 2));
+    res.json({ ok: true, savedAt: new Date().toISOString() });
+  } catch (err) {
+    console.error('Error writing candidates:', err);
+    res.status(500).json({ error: 'Failed to write candidates' });
+  }
+});
+
+app.patch('/api/candidates/:id', ensureAuth, (req, res) => {
+  try {
+    if (!fs.existsSync(CANDIDATES_PATH)) {
+      return res.status(404).json({ error: 'No candidates data' });
+    }
+    const data = JSON.parse(fs.readFileSync(CANDIDATES_PATH, 'utf8'));
+    const candidate = data.candidates.find(c => c.id === req.params.id);
+    if (!candidate) {
+      return res.status(404).json({ error: 'Candidate not found' });
+    }
+    Object.assign(candidate, req.body);
+    data.lastUpdated = new Date().toISOString();
+    fs.writeFileSync(CANDIDATES_PATH, JSON.stringify(data, null, 2));
+    res.json({ ok: true, candidate });
+  } catch (err) {
+    console.error('Error updating candidate:', err);
+    res.status(500).json({ error: 'Failed to update candidate' });
+  }
+});
+
 // ââ Protected dashboard ââ
 app.get('/', ensureAuth, (req, res) => {
   res.sendFile(path.join(__dirname, 'dashboard.html'));
