@@ -2514,6 +2514,12 @@ function addMyTask() {
   const manual = loadManualTasks();
   manual.unshift(task);
   saveManualTasks(manual);
+      // Persist to server for Notion sync
+      fetch('/api/tasks/add', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ title, priority })
+      }).catch(err => console.warn('Server task sync failed:', err));
   const list = document.getElementById('my-task-list');
   const li = document.createElement('div');
   li.innerHTML = renderTaskItem(task, 'my');
