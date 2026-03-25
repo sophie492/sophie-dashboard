@@ -2238,9 +2238,7 @@ function renderBento() {
     });
   });
 
-  // Append candidates tile to Dashboard view
-  document.getElementById('bento').insertAdjacentHTML('beforeend', '<div class="bento-section" style="grid-column: span 6;"><div class="section-header"><h2>Inbound Candidates</h2><span class="section-subtitle">Email-to-Greenhouse Pipeline</span></div><div id="candidates-body"><div class="empty-state">Loading candidates...</div></div></div>');
-  loadCandidates();
+        loadCandidates();
 }
 
 // -- My Tasks --
@@ -3340,27 +3338,19 @@ function renderSFBudget() {
   const pct = Math.round((b.spent / b.limit) * 100);
   const barColor = pct >= 90 ? 'var(--red)' : pct >= 70 ? 'var(--yellow)' : 'var(--leaf)';
   return `
-  <div class="card" style="height:100%">
-    <div class="card-head">
-      <div class="card-title">&#128179; SF Social Budget</div>
-      <div class="card-badges">
-        <a href="https://app.ramp.com" target="_blank" style="font-size:10px;color:var(--gold)">Ramp &#8599;</a>
-      </div>
-    </div>
-    <div class="card-body" style="padding:14px">
-      <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:600;margin-bottom:8px">
-        <span style="color:var(--text)">\$${b.remaining.toLocaleString('en-US',{minimumFractionDigits:2})} remaining</span>
-        <span style="color:var(--text-muted)">\$${b.limit.toLocaleString('en-US',{minimumFractionDigits:2})} total</span>
-      </div>
-      <div style="height:10px;background:var(--surface);border-radius:5px;overflow:hidden;border:1px solid var(--border)">
-        <div style="height:100%;width:${pct}%;background:${barColor};border-radius:5px;transition:width .5s"></div>
-      </div>
-      <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:10px;color:var(--text-muted)">
-        <span>\$${b.spent.toLocaleString('en-US',{minimumFractionDigits:2})} spent (${pct}%)</span>
-        <span>${b.name}</span>
-      </div>
-    </div>
-  </div>`;
+            <div style="grid-column:span 6">
+              <div class="card" style="height:100%">
+                <div class="card-head">
+                  <div class="card-title">📥 Inbound Candidates</div>
+                  <div class="card-badges">
+                    <span class="badge badge-blue">Email-to-Greenhouse Pipeline</span>
+                  </div>
+                </div>
+                <div id="candidates-body">
+                  <div class="empty-state">Loading candidates...</div>
+                </div>
+              </div>
+            </div>
 }
 
 function renderFPPC() {
