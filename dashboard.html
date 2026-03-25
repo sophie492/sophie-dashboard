@@ -2103,6 +2103,7 @@ function init() {
 
   // Fetch live action items from CEO daily brief API
   fetchLiveActionItems();
+    fetchLiveOpenLoops();
 
   // Top nav tab switching
   document.querySelectorAll('.top-nav-tab').forEach(tab => {
@@ -2145,7 +2146,29 @@ async function fetchLiveActionItems() {
   }
 }
 
-// -- KPI Strip --
+async function fetchLiveOpenLoops() {
+      try {
+        const res = await fetch('/api/open-loops');
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!data.loops || data.loops.length === 0) return;
+
+        DATA.openLoops = data.loops;
+
+        const loopBody = document.getElementById('open-loops-body');
+        if (loopBody) {
+          const card = loopBody.closest('.card');
+          if (card && card.parentElement) {
+            card.parentElement.innerHTML = renderOpenLoops();
+          }
+        }
+        renderKPIs();
+      } catch (e) {
+        console.log('Open loops API not available, using hardcoded data');
+      }
+    }
+
+    // -- KPI Strip --
 function renderKPIs() {
   const open = DATA.myTasks.filter(t=>!t.done).length;
   const urgent = DATA.actionItems.items.filter(i=>i.priority==='red').length;
