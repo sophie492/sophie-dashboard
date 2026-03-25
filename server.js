@@ -140,11 +140,11 @@ app.post('/api/action-items', (req, res) => {
 
 // ── Protected dashboard ──
 app.get('/', ensureAuth, (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
+  res.sendFile(path.join(__dirname, 'dashboard.html'));
 });
 
 // Serve static assets (CSS/JS/images if any) behind auth
-app.use(ensureAuth, express.static(path.join(__dirname, 'public')));
+app.use(ensureAuth, express.static(__dirname));
 
 // ── Start ──
 app.listen(PORT, () => {
