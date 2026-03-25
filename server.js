@@ -428,82 +428,73 @@ app.get('/api/calendar', ensureAuth, async (req, res) => {
     let token = user?.accessToken;
     const refresh = user?.refreshToken;
 
-    // Try refresh if we have a refresh token
+    // Try refresh token
     if (refresh) {
       const fresh = await refreshGoogleToken(refresh);
       if (fresh) { token = fresh; user.accessToken = fresh; }
     }
 
-    console.log('Calendar auth:', { hasToken: !!token, hasRefresh: !!refresh, email: user?.email });
+    if (token) {
+      const now = new Date();
+      now.setHours(0, 0, 0, 0);
+      const end = new Date(now);
+      end.setDate(end.getDate() + 7);
 
-    if (!token) {
-      // Fallback to static file
-      if (fs.existsSync(CALENDAR_PATH)) {
-        return res.json(JSON.parse(fs.readFileSync(CALENDAR_PATH, 'utf8')));
-      }
-      return res.json({ calendarDays: [], lastUpdated: null });
-    }
+      const results = await Promise.all(
+        CAL_IDS.map(id => fetchGCalEvents(token, id, now, end))
+      );
 
-    // Fetch next 7 days
-    const now = new Date();
-    now.setHours(0, 0, 0, 0);
-    const end = new Date(now);
-    end.setDate(end.getDate() + 7);
+      // Check if we actually got events (no 403s)
+      const totalEvents = results.reduce((sum, r) => sum + r.items.length, 0);
 
-    const results = await Promise.all(
-      CAL_IDS.map(id => fetchGCalEvents(token, id, now, end))
-    );
+      if (totalEvents > 0) {
+        const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+        const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        const dayMap = {};
 
-    // Collect debug info
-    const debug = results.map(r => ({
-      calendarId: r.calendarId,
-      error: r.error || null,
-      eventCount: r.items.length
-    }));
-    console.log('Calendar fetch results:', JSON.stringify(debug));
-
-    // Group by date
-    const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-    const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    const dayMap = {};
-
-    for (let i = 0; i < 7; i++) {
-      const d = new Date(now);
-      d.setDate(d.getDate() + i);
-      const key = d.toISOString().slice(0, 10);
-      const dow = d.getDay();
-      dayMap[key] = {
-        date: key,
-        label: `${dayNames[dow]}, ${monthNames[d.getMonth()]} ${d.getDate()}`,
-        isWeekend: dow === 0 || dow === 6,
-        rishabh: [],
-        shreyas: []
-      };
-    }
-
-    CAL_NAMES.forEach((name, idx) => {
-      const items = results[idx].items;
-      items.forEach(ev => {
-        if (!ev.start?.dateTime) return;
-        const key = ev.start.dateTime.slice(0, 10);
-        if (dayMap[key]) {
-          dayMap[key][name].push(...transformEvents([ev]));
+        for (let i = 0; i < 7; i++) {
+          const d = new Date(now);
+          d.setDate(d.getDate() + i);
+          const key = d.toISOString().slice(0, 10);
+          const dow = d.getDay();
+          dayMap[key] = {
+            date: key,
+            label: `${dayNames[dow]}, ${monthNames[d.getMonth()]} ${d.getDate()}`,
+            isWeekend: dow === 0 || dow === 6,
+            rishabh: [],
+            shreyas: []
+          };
         }
-      });
-    });
 
-    const calendarDays = Object.values(dayMap).sort((a, b) => a.date.localeCompare(b.date));
-    const payload = { calendarDays, lastUpdated: new Date().toISOString(), debug };
+        CAL_NAMES.forEach((name, idx) => {
+          results[idx].items.forEach(ev => {
+            if (!ev.start?.dateTime) return;
+            const key = ev.start.dateTime.slice(0, 10);
+            if (dayMap[key]) {
+              dayMap[key][name].push(...transformEvents([ev]));
+            }
+          });
+        });
 
-    // Cache to file for fallback
-    const dir = path.dirname(CALENDAR_PATH);
-    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-    fs.writeFileSync(CALENDAR_PATH, JSON.stringify(payload, null, 2));
+        const calendarDays = Object.values(dayMap).sort((a, b) => a.date.localeCompare(b.date));
+        const payload = { calendarDays, lastUpdated: new Date().toISOString(), source: 'live' };
 
-    res.json(payload);
+        // Cache successful live data
+        const dir = path.dirname(CALENDAR_PATH);
+        if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+        fs.writeFileSync(CALENDAR_PATH, JSON.stringify(payload, null, 2));
+
+        return res.json(payload);
+      }
+    }
+
+    // Fallback: serve cached file (kept fresh by scheduled task)
+    if (fs.existsSync(CALENDAR_PATH)) {
+      return res.json(JSON.parse(fs.readFileSync(CALENDAR_PATH, 'utf8')));
+    }
+    res.json({ calendarDays: [], lastUpdated: null });
   } catch (err) {
-    console.error('Error fetching live calendar:', err);
-    // Fallback to cached file
+    console.error('Error in calendar endpoint:', err);
     if (fs.existsSync(CALENDAR_PATH)) {
       return res.json(JSON.parse(fs.readFileSync(CALENDAR_PATH, 'utf8')));
     }
