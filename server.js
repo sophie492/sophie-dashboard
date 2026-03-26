@@ -203,6 +203,58 @@ app.post('/api/tasks', (req, res) => {
 });
 
 // ââ Manual Task Add (from dashboard UI) ââ
+// -- GET manual tasks + done states via Bearer token (for scheduled task sync) --
+app.get('/api/tasks/manual', (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (!API_KEY || authHeader !== `Bearer ${API_KEY}`) {
+    return res.status(401).json({ error: 'Invalid or missing API key' });
+  }
+  try {
+    const manual = fs.existsSync(MANUAL_TASKS_PATH) ? JSON.parse(fs.readFileSync(MANUAL_TASKS_PATH, 'utf8')) : [];
+    const tasks = fs.existsSync(TASKS_PATH) ? JSON.parse(fs.readFileSync(TASKS_PATH, 'utf8')) : { tasks: [] };
+    res.json({ manualTasks: manual, allTasks: tasks.tasks || [], lastUpdated: tasks.lastUpdated });
+  } catch (err) {
+    console.error('Error reading manual tasks:', err);
+    res.status(500).json({ error: 'Failed to read manual tasks' });
+  }
+});
+
+// -- Mark manual tasks as synced to Notion (for scheduled task) --
+app.post('/api/tasks/mark-synced', (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (!API_KEY || authHeader !== `Bearer ${API_KEY}`) {
+    return res.status(401).json({ error: 'Invalid or missing API key' });
+  }
+  try {
+    const { syncedTasks = [] } = req.body;
+    if (!syncedTasks.length) return res.json({ ok: true, updated: 0 });
+    const titleToPageId = {};
+    syncedTasks.forEach(s => { titleToPageId[s.title.toLowerCase()] = s.notionPageId; });
+    // Update manual-tasks.json
+    if (fs.existsSync(MANUAL_TASKS_PATH)) {
+      const manual = JSON.parse(fs.readFileSync(MANUAL_TASKS_PATH, 'utf8'));
+      manual.forEach(t => {
+        const key = (t.title || t.text || '').toLowerCase();
+        if (titleToPageId[key]) { t.notionSynced = true; t.notionPageId = titleToPageId[key]; }
+      });
+      fs.writeFileSync(MANUAL_TASKS_PATH, JSON.stringify(manual, null, 2));
+    }
+    // Update tasks.json
+    if (fs.existsSync(TASKS_PATH)) {
+      const data = JSON.parse(fs.readFileSync(TASKS_PATH, 'utf8'));
+      (data.tasks || []).forEach(t => {
+        const key = (t.title || t.text || '').toLowerCase();
+        if (titleToPageId[key]) { t.notionSynced = true; t.notionPageId = titleToPageId[key]; }
+      });
+      fs.writeFileSync(TASKS_PATH, JSON.stringify(data, null, 2));
+    }
+    res.json({ ok: true, updated: syncedTasks.length });
+  } catch (err) {
+    console.error('Error marking tasks synced:', err);
+    res.status(500).json({ error: 'Failed to mark tasks synced' });
+  }
+});
+
 app.post('/api/tasks/add', ensureAuth, (req, res) => {
   try {
     const { title, priority } = req.body;
