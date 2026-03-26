@@ -4,6 +4,7 @@ const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const path = require('path');
 const fs = require('fs');
+const { Client } = require('@notionhq/client');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -98,6 +99,59 @@ app.get('/health', (req, res) => res.json({ status: 'ok' }));
 
 const API_KEY = process.env.DASHBOARD_API_KEY;
 
+// -- Notion integration (bidirectional sync) --
+const NOTION_TOKEN = process.env.NOTION_TOKEN;
+const NOTION_DB_ID = process.env.NOTION_DB_ID;
+const notion = NOTION_TOKEN ? new Client({ auth: NOTION_TOKEN }) : null;
+if (notion) console.log('[Notion] Integration enabled, DB:', NOTION_DB_ID);
+else console.log('[Notion] No NOTION_TOKEN set - write-back disabled');
+
+async function createNotionTask({ title, priority, due, source }) {
+  if (!notion || !NOTION_DB_ID) return null;
+  try {
+    const properties = {
+      Task: { title: [{ text: { content: title } }] },
+      Priority: { select: { name: priority || 'Medium' } },
+      Source: { rich_text: [{ text: { content: source || 'Dashboard' } }] },
+      Done: { checkbox: false }
+    };
+    if (due) properties['Due Date'] = { date: { start: due } };
+    const page = await notion.pages.create({ parent: { database_id: NOTION_DB_ID }, properties });
+    console.log(`[Notion] Created task "${title}" -> ${page.id}`);
+    return page.id;
+  } catch (err) {
+    console.error('[Notion] Failed to create task:', err.message);
+    return null;
+  }
+}
+
+async function updateNotionTaskDone(notionPageId, done) {
+  if (!notion || !notionPageId) return false;
+  try {
+    await notion.pages.update({ page_id: notionPageId, properties: { Done: { checkbox: done } } });
+    console.log(`[Notion] Updated ${notionPageId} done=${done}`);
+    return true;
+  } catch (err) {
+    console.error('[Notion] Failed to update done:', err.message);
+    return false;
+  }
+}
+
+async function findNotionTaskByTitle(title) {
+  if (!notion || !NOTION_DB_ID) return null;
+  try {
+    const resp = await notion.databases.query({
+      database_id: NOTION_DB_ID,
+      filter: { property: 'Task', title: { equals: title } },
+      page_size: 1
+    });
+    return resp.results[0]?.id || null;
+  } catch (err) {
+    console.error('[Notion] Failed to find task by title:', err.message);
+    return null;
+  }
+}
+
 // ââ Tasks API (Notion-synced via Cowork) ââ
 const TASKS_PATH = path.join(__dirname, 'data', 'tasks.json');
 
@@ -167,12 +221,80 @@ app.post('/api/tasks/add', ensureAuth, (req, res) => {
       data.lastUpdated = new Date().toISOString();
       fs.writeFileSync(TASKS_PATH, JSON.stringify(data, null, 2));
     }
+    // Write-back to Notion (async, don't block response)
+    createNotionTask({ title, priority: priority || 'Medium', source: 'Dashboard' }).then(notionId => {
+      if (notionId) {
+        task.notionPageId = notionId;
+        task.notionSynced = true;
+        // Update the saved files with the Notion ID
+        try {
+          const manual = fs.existsSync(MANUAL_TASKS_PATH) ? JSON.parse(fs.readFileSync(MANUAL_TASKS_PATH, 'utf8')) : [];
+          const mt = manual.find(m => m.id === task.id);
+          if (mt) { mt.notionPageId = notionId; mt.notionSynced = true; }
+          fs.writeFileSync(MANUAL_TASKS_PATH, JSON.stringify(manual, null, 2));
+          if (fs.existsSync(TASKS_PATH)) {
+            const data = JSON.parse(fs.readFileSync(TASKS_PATH, 'utf8'));
+            const t = data.tasks.find(t => t.id === task.id);
+            if (t) { t.notionPageId = notionId; t.notionSynced = true; }
+            fs.writeFileSync(TASKS_PATH, JSON.stringify(data, null, 2));
+          }
+        } catch(e) { console.error('[Notion] Failed to save notionId:', e.message); }
+      }
+    });
     res.json({ ok: true, task });
   } catch (err) {
     console.error('Error adding manual task:', err);
     res.status(500).json({ error: 'Failed to add task' });
   }
 })
+
+
+// -- Task completion write-back to Notion --
+app.post('/api/tasks/complete', ensureAuth, async (req, res) => {
+  try {
+    const { taskId, title, done } = req.body;
+    if (!taskId && !title) return res.status(400).json({ error: 'taskId or title required' });
+
+    // 1. Find the Notion page ID - check tasks.json first, then query Notion by title
+    let notionPageId = null;
+    if (fs.existsSync(TASKS_PATH)) {
+      const data = JSON.parse(fs.readFileSync(TASKS_PATH, 'utf8'));
+      const task = data.tasks.find(t => t.id === taskId || t.notionPageId === taskId);
+      if (task) notionPageId = task.notionPageId;
+    }
+    if (!notionPageId && fs.existsSync(MANUAL_TASKS_PATH)) {
+      const manual = JSON.parse(fs.readFileSync(MANUAL_TASKS_PATH, 'utf8'));
+      const task = manual.find(t => t.id === taskId);
+      if (task) notionPageId = task.notionPageId;
+    }
+    // If still no Notion ID, try finding by title in Notion
+    if (!notionPageId && title) {
+      notionPageId = await findNotionTaskByTitle(title);
+    }
+
+    // 2. Update Notion
+    let notionUpdated = false;
+    if (notionPageId) {
+      notionUpdated = await updateNotionTaskDone(notionPageId, done !== false);
+    }
+
+    // 3. Update local JSON files
+    if (fs.existsSync(TASKS_PATH)) {
+      const data = JSON.parse(fs.readFileSync(TASKS_PATH, 'utf8'));
+      const task = data.tasks.find(t => t.id === taskId);
+      if (task) {
+        task.done = done !== false;
+        data.lastUpdated = new Date().toISOString();
+        fs.writeFileSync(TASKS_PATH, JSON.stringify(data, null, 2));
+      }
+    }
+
+    res.json({ ok: true, notionUpdated, notionPageId });
+  } catch (err) {
+    console.error('Error completing task:', err);
+    res.status(500).json({ error: 'Failed to complete task' });
+  }
+});
 
 // ââ Bidirectional Sync (dashboard refresh pushes local state, gets merged result) ââ
 app.post('/api/tasks/sync', ensureAuth, (req, res) => {

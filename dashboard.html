@@ -2312,6 +2312,11 @@ function toggleMyTask(el) {
   }
   saveDoneIds(doneIds);
   saveDoneTitles(doneTitles);
+  // Sync completion to server + Notion
+  fetch('/api/tasks/complete', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ taskId, title: titleText, done: isChecked })
+  }).catch(e => console.warn('Task completion sync failed:', e));
 
   const openList = document.getElementById('my-task-list');
   const doneList = document.getElementById('my-done-list');
@@ -2484,6 +2489,11 @@ function addMyTask() {
   const manual = loadManualTasks();
   manual.unshift(task);
   saveManualTasks(manual);
+  // Sync to server + Notion
+  fetch('/api/tasks/add', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ title, priority })
+  }).catch(e => console.warn('Task server sync failed:', e));
   const list = document.getElementById('my-task-list');
   const li = document.createElement('div');
   li.innerHTML = renderTaskItem(task, 'my');
