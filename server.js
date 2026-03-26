@@ -8,7 +8,7 @@ const fs = require('fs');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ── Config ──
+// ââ Config ââ
 const GOOGLE_CLIENT_ID     = process.env.GOOGLE_CLIENT_ID;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
 const SESSION_SECRET       = process.env.SESSION_SECRET || 'sophie-dashboard-secret-change-me';
@@ -18,7 +18,7 @@ const BASE_URL = process.env.RAILWAY_PUBLIC_DOMAIN
 
 const ALLOWED_DOMAIN = 'fermatcommerce.com';
 
-// ── Session ──
+// ââ Session ââ
 app.set('trust proxy', 1);
 app.use(session({
   secret: SESSION_SECRET,
@@ -30,7 +30,7 @@ app.use(session({
   }
 }));
 
-// ── Passport ──
+// ââ Passport ââ
 app.use(passport.initialize());
 app.use(passport.session());
 passport.serializeUser((user, done) => done(null, user));
@@ -56,7 +56,7 @@ if (GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET) {
   }));
 }
 
-// ── Auth routes ──
+// ââ Auth routes ââ
 app.get('/auth/google', passport.authenticate('google', {
   scope: ['profile', 'email', 'https://www.googleapis.com/auth/calendar.readonly'],
   hd: ALLOWED_DOMAIN,
@@ -83,22 +83,22 @@ app.get('/auth/logout', (req, res) => {
   req.logout(() => res.redirect('/'));
 });
 
-// ── Auth middleware ──
+// ââ Auth middleware ââ
 function ensureAuth(req, res, next) {
   if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) return next();
   if (req.isAuthenticated()) return next();
   res.redirect('/auth/google');
 }
 
-// ── JSON body parsing ──
+// ââ JSON body parsing ââ
 app.use(express.json({ limit: '1mb' }));
 
-// ── Health check ──
+// ââ Health check ââ
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
 
 const API_KEY = process.env.DASHBOARD_API_KEY;
 
-// ── Tasks API (Notion-synced via Cowork) ──
+// ââ Tasks API (Notion-synced via Cowork) ââ
 const TASKS_PATH = path.join(__dirname, 'data', 'tasks.json');
 
 app.get('/api/tasks', ensureAuth, (req, res) => {
@@ -115,7 +115,7 @@ app.get('/api/tasks', ensureAuth, (req, res) => {
   }
 });
 
-// ── Manual Task file path ──
+// ââ Manual Task file path ââ
 const MANUAL_TASKS_PATH = path.join(__dirname, 'data', 'manual-tasks.json');
 
 app.post('/api/tasks', (req, res) => {
@@ -148,7 +148,7 @@ app.post('/api/tasks', (req, res) => {
   }
 });
 
-// ── Manual Task Add (from dashboard UI) ──
+// ââ Manual Task Add (from dashboard UI) ââ
 app.post('/api/tasks/add', ensureAuth, (req, res) => {
   try {
     const { title, priority } = req.body;
@@ -174,7 +174,7 @@ app.post('/api/tasks/add', ensureAuth, (req, res) => {
   }
 })
 
-// ── Bidirectional Sync (dashboard refresh pushes local state, gets merged result) ──
+// ââ Bidirectional Sync (dashboard refresh pushes local state, gets merged result) ââ
 app.post('/api/tasks/sync', ensureAuth, (req, res) => {
   try {
     const { doneIds = [], doneTitles = [], manualTasks = [] } = req.body;
@@ -228,7 +228,7 @@ app.post('/api/tasks/sync', ensureAuth, (req, res) => {
   }
 });
 
-// ── Action Items API ──
+// ââ Action Items API ââ
 const ACTION_ITEMS_PATH = path.join(__dirname, 'data', 'action-items.json');
 
 app.get('/api/action-items', ensureAuth, (req, res) => {
@@ -261,7 +261,7 @@ app.post('/api/action-items', (req, res) => {
   }
 });
 
-// ── Open Loops API ──
+// ââ Open Loops API ââ
 const OPEN_LOOPS_PATH = path.join(__dirname, 'data', 'open-loops.json');
 
 app.get('/api/open-loops', ensureAuth, (req, res) => {
@@ -294,7 +294,7 @@ app.post('/api/open-loops', (req, res) => {
   }
 });
 
-// ── Candidates API ──
+// ââ Candidates API ââ
 const CANDIDATES_PATH = path.join(__dirname, 'data', 'candidates.json');
 
 app.get('/api/candidates', ensureAuth, (req, res) => {
@@ -347,10 +347,10 @@ app.patch('/api/candidates/:id', ensureAuth, (req, res) => {
   }
 });
 
-// ── Calendar API ──
+// ââ Calendar API ââ
 const CALENDAR_PATH = path.join(__dirname, 'data', 'calendar.json');
 
-// ── Live Google Calendar helpers ──
+// ââ Live Google Calendar helpers ââ
 const CAL_IDS = ['rishabh@fermatcommerce.com', 'shreyas@fermatcommerce.com'];
 const CAL_NAMES = ['rishabh', 'shreyas'];
 
@@ -555,7 +555,7 @@ app.post('/api/calendar', (req, res) => {
   }
 });
 
-// ── Marketing Events API (live from Fermàt Events calendar) ──
+// ââ Marketing Events API (live from FermÃ t Events calendar) ââ
 const EVENTS_PATH = path.join(__dirname, 'data', 'events.json');
 const FERMAT_EVENTS_CAL = 'c_e611ed498cde340f125c26be2ef1b329409ea41fe820481f13eacc332e7c0446@group.calendar.google.com';
 
@@ -582,7 +582,7 @@ function shortName(name) {
   }
   // Default: first 3 words, max 25 chars
   const words = name.replace(/ - .*$/, '').trim().split(/\s+/).slice(0, 3).join(' ');
-  return words.length > 25 ? words.slice(0, 25) + '…' : words;
+  return words.length > 25 ? words.slice(0, 25) + 'â¦' : words;
 }
 
 function fmtDateRange(startDate, endDate) {
@@ -683,6 +683,175 @@ function transformToMktEvents(calItems) {
   }).sort((a, b) => a.startDate.localeCompare(b.startDate));
 }
 
+// ââ Event Enrichment Data (from Notion, Slack, Granola, Gmail) ââ
+const EVENT_ENRICHMENT = {
+  'shoptalk': {
+    notionLink: 'https://www.notion.so/fermat-commerce/3121ad76fd2a804c9027f08c6025a87f',
+    venue: 'Mandalay Bay Convention Center',
+    location: 'Las Vegas, NV',
+    type: 'Event: IRL',
+    description: 'GlamSuite activation at Mandalay Bay â 30 controlled appointment slots targeting 20-24 enterprise retailers ($100M+ GMV). U Beauty case study ready for showcase. Lead list negotiated with Shoptalk team. 700-attendee CommerceNext party co-hosting.',
+    team: ['Maya Juchtman', 'Gillian', 'Jess', 'Stephen'],
+    details: {
+      goal: 'Influenced pipeline target: $600K-$1.2M',
+      format: '30 controlled appointment slots over 2 days',
+      targetAccounts: 'Gap (CTO Sven Gerjets), Macy\'s (Max Magni), American Eagle (Craig Brommers), ELC, Lululemon (CAITO Ranju Das)',
+      activationType: 'GlamSuite â branded activation booth + exec meetings',
+      keyIntel: 'Gillian targeting Gap CTO + Macy\'s + AE. Jess targeting Lululemon CAITO. Stephen monitoring Walmart. ELC executive dinner planned.',
+      owner: 'Maya Juchtman',
+      successMetrics: '20-24 qualified meetings with enterprise retailers ($100M+ GMV)'
+    }
+  },
+  'cannes': {
+    notionLink: 'https://www.notion.so/fermat-commerce/2231ad76fd2a8010b171fe03d6d26e4c',
+    venue: 'Coco Loco',
+    location: 'Cannes, France',
+    type: 'Event: IRL',
+    description: '"The Oasis at Cannes Lions 2026" â two-day lounge activation June 22-23 at Coco Loco. Partners: FERMÃT, VMG, Attentive. Fireside chats, Caribbean food & cocktails. Adweek sponsorship confirmed. Affiliate partnership with Attentive approved.',
+    team: ['Maya Juchtman', 'Alice Zhao'],
+    details: {
+      goal: 'Brand presence at premier advertising festival; executive relationship building',
+      format: 'Two-day lounge activation with fireside chats, Caribbean theme',
+      partners: 'VMG (co-host), Attentive (affiliate partner), Adweek (media sponsor)',
+      activationType: 'The Oasis â branded lounge with programming',
+      keyIntel: 'VMG workshop confirmed. Attentive joining as partner. Villa being booked via Fora Travel (Alice Zhao coordinating). Adweek sponsorship secured.',
+      owner: 'Maya Juchtman',
+      travelNote: 'Villa arrangements via Fora Travel agent Alice Zhao'
+    }
+  },
+  'cab spring': {
+    notionLink: 'https://www.notion.so/fermat-commerce/2f01ad76fd2a80158e3ede34eb6b3a11',
+    description: '2nd Customer Advisory Board â customer retention and strategic feedback event. Focus on deepening relationships with existing enterprise customers and gathering product feedback.',
+    details: {
+      goal: 'Customer retention + strategic product feedback',
+      format: 'Customer Advisory Board meeting',
+      activationType: 'CAB â intimate executive roundtable',
+      keyIntel: 'Second CAB session. Bissell has expressed interest in participating.',
+      owner: 'Sophie'
+    }
+  },
+  'tinuiti live': {
+    notionLink: 'https://www.notion.so/fermat-commerce/3221ad76fd2a80f9bd79c22377c63a21',
+    venue: 'Civic Hall',
+    location: 'New York, NY',
+    type: 'Event: IRL',
+    description: 'Tinuiti Live at Civic Hall NYC â Travel Sponsor ($7,500 investment). 250+ in-person attendees, 10 travel stipends included. Positioning: "From Performance Ads to Performance Experiences."',
+    details: {
+      goal: 'Brand positioning as performance experience leader; lead generation',
+      format: '250+ in-person conference',
+      sponsorshipTier: 'Travel Sponsor â $7,500',
+      perks: '10 travel stipends, brand presence',
+      activationType: 'Sponsored conference with speaking opportunity',
+      keyIntel: 'Messaging theme: "From Performance Ads to Performance Experiences." Strong DTC and retail audience.',
+      owner: 'Maya Juchtman'
+    }
+  },
+  'beyond the buy box': {
+    notionLink: 'https://www.notion.so/fermat-commerce/31f1ad76fd2a80078868e0a8fb1df1a7',
+    venue: 'Amazon Studios',
+    location: 'Culver City, CA',
+    type: 'Event: IRL',
+    description: 'Tinuiti x Amazon symposium at Amazon Studios â ~40-45 attendees, intimate executive format. Jess McDaid attending. Targets: Sony, Skechers, Carter\'s, NÃ©cessaire.',
+    team: ['Jess McDaid'],
+    details: {
+      goal: 'Executive-level relationship building with Amazon-focused brands',
+      format: 'Intimate symposium, ~40-45 attendees',
+      targetAccounts: 'Sony, Skechers, Carter\'s, NÃ©cessaire',
+      activationType: 'Tinuiti/Amazon co-hosted executive symposium',
+      keyIntel: 'Jess McDaid is primary attendee. High-value networking with Amazon-centric enterprise brands.',
+      owner: 'Marketing'
+    }
+  },
+  'salesforce': {
+    notionLink: '',
+    description: 'Salesforce Team Kick Off in Atlanta â 200 Salesforce org attendees. Studio Science co-sponsoring. Strong partner alignment opportunity.',
+    details: {
+      goal: 'Partner ecosystem alignment with Salesforce',
+      format: 'Team kickoff event, 200 attendees',
+      keyIntel: 'Studio Science co-sponsoring. Good opportunity for Salesforce Commerce Cloud integration positioning.',
+      owner: 'Marketing'
+    }
+  },
+  'etail': {
+    description: 'eTail West â completed successfully. Storm King dinner held. Met with HP, Sephora, Bose, Bombas. Strong brand engagement.',
+    details: {
+      keyIntel: 'Successful event. Storm King dinner highlight. Key meetings: HP, Sephora, Bose, Bombas.',
+      owner: 'Marketing'
+    }
+  },
+  'c-suite': {
+    description: 'C-Suite Webinar â 20-person peer-to-peer format. Intimate executive digital event for senior leadership.',
+    type: 'Event: Virtual',
+    details: {
+      goal: 'Executive thought leadership and relationship building',
+      format: '20-person peer-to-peer webinar',
+      activationType: 'Virtual executive roundtable',
+      keyIntel: 'Small, curated format designed for high engagement with C-level prospects.',
+      owner: 'Marketing'
+    }
+  },
+  'millennium': {
+    description: 'Millennium Alliance meetings â executive networking series. Ongoing relationship building with enterprise decision-makers.',
+    details: {
+      goal: 'Enterprise executive pipeline development',
+      format: 'Curated executive meetings',
+      owner: 'Marketing'
+    }
+  },
+  'retail ai': {
+    description: 'Retail AI Summit â industry conference focused on AI applications in retail and commerce.',
+    details: {
+      goal: 'Position FERMÃT as AI-forward commerce platform',
+      format: 'Industry conference',
+      owner: 'Marketing'
+    }
+  }
+};
+
+function enrichEvents(events) {
+  return events.map(ev => {
+    const nameLower = (ev.name || '').toLowerCase();
+    let enrichment = null;
+
+    // Match event to enrichment data by keyword
+    for (const [key, data] of Object.entries(EVENT_ENRICHMENT)) {
+      if (nameLower.includes(key)) {
+        enrichment = data;
+        break;
+      }
+    }
+
+    if (!enrichment) return ev;
+
+    // Merge enrichment â only override empty/default fields
+    const enriched = { ...ev };
+
+    if (enrichment.notionLink && !enriched.notionLink) {
+      enriched.notionLink = enrichment.notionLink;
+    }
+    if (enrichment.venue && (!enriched.venue || enriched.venue === '')) {
+      enriched.venue = enrichment.venue;
+    }
+    if (enrichment.location && (!enriched.location || enriched.location === '')) {
+      enriched.location = enrichment.location;
+    }
+    if (enrichment.type) {
+      enriched.type = enrichment.type;
+    }
+    if (enrichment.description && (!enriched.description || enriched.description.length < 50)) {
+      enriched.description = enrichment.description;
+    }
+    if (enrichment.team && enriched.team.length === 0) {
+      enriched.team = enrichment.team;
+    }
+
+    // Deep-merge details
+    enriched.details = { ...enriched.details, ...(enrichment.details || {}) };
+
+    return enriched;
+  });
+}
+
 app.get('/api/events', ensureAuth, async (req, res) => {
   try {
     const user = req.user;
@@ -705,7 +874,8 @@ app.get('/api/events', ensureAuth, async (req, res) => {
       const result = await fetchGCalEvents(token, FERMAT_EVENTS_CAL, timeMin, timeMax);
 
       if (result.items && result.items.length > 0 && !result.error) {
-        const events = transformToMktEvents(result.items);
+        const rawEvents = transformToMktEvents(result.items);
+        const events = enrichEvents(rawEvents);
         const payload = { events, lastUpdated: new Date().toISOString(), source: 'live' };
 
         // Cache for fallback
@@ -747,7 +917,7 @@ app.post('/api/events', (req, res) => {
   }
 });
 
-// ── Utilities API ──
+// ââ Utilities API ââ
 const UTILITIES_PATH = path.join(__dirname, 'data', 'utilities.json');
 
 app.get('/api/utilities', ensureAuth, (req, res) => {
@@ -779,7 +949,7 @@ app.post('/api/utilities', (req, res) => {
   }
 });
 
-// ── Weekly Pulse API ──
+// ââ Weekly Pulse API ââ
 const WEEKLY_PULSE_PATH = path.join(__dirname, 'data', 'weekly-pulse.json');
 
 app.get('/api/weekly-pulse', ensureAuth, (req, res) => {
@@ -811,7 +981,7 @@ app.post('/api/weekly-pulse', (req, res) => {
   }
 });
 
-// ── FPPC Events API ──
+// ââ FPPC Events API ââ
 const FPPC_PATH = path.join(__dirname, 'data', 'fppc.json');
 
 app.get('/api/fppc', ensureAuth, (req, res) => {
@@ -843,14 +1013,14 @@ app.post('/api/fppc', (req, res) => {
   }
 });
 
-// ── Protected dashboard ──
+// ââ Protected dashboard ââ
 app.get('/', ensureAuth, (req, res) => {
   res.sendFile(path.join(__dirname, 'dashboard.html'));
 });
 
 app.use(ensureAuth, express.static(__dirname));
 
-// ── Start ──
+// ââ Start ââ
 app.listen(PORT, () => {
   console.log(`Dashboard running on ${BASE_URL}`);
   if (!GOOGLE_CLIENT_ID) console.log('\u26a0\ufe0f GOOGLE_CLIENT_ID not set - auth disabled (dev mode)');
