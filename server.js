@@ -203,6 +203,26 @@ app.post('/api/tasks', (req, res) => {
 });
 
 // ââ Manual Task Add (from dashboard UI) ââ
+// -- GET authoritative done states from Notion-synced tasks --
+app.get('/api/tasks/done-states', (req, res) => {
+  const authHeader = req.headers.authorization;
+  const isBearer = API_KEY && authHeader === `Bearer ${API_KEY}`;
+  const isAuthed = isBearer || (req.isAuthenticated && req.isAuthenticated());
+  if (!isAuthed) return res.status(401).json({ error: 'Unauthorized' });
+  try {
+    const tasks = fs.existsSync(TASKS_PATH) ? JSON.parse(fs.readFileSync(TASKS_PATH, 'utf8')) : { tasks: [] };
+    // Return map of task IDs and normalized titles to their Notion-authoritative done state
+    const doneStates = {};
+    (tasks.tasks || []).forEach(t => {
+      if (t.id) doneStates[t.id] = { done: !!t.done, title: t.title || t.text || '' };
+    });
+    res.json({ doneStates, lastUpdated: tasks.lastUpdated });
+  } catch (err) {
+    console.error('Error reading done states:', err);
+    res.status(500).json({ error: 'Failed to read done states' });
+  }
+});
+
 // -- GET manual tasks + done states via Bearer token (for scheduled task sync) --
 app.get('/api/tasks/manual', (req, res) => {
   const authHeader = req.headers.authorization;

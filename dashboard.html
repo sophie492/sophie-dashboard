@@ -2055,14 +2055,28 @@ function applyPersistedState() {
     }
   });
 
-  // 2. Apply done-state overrides  -  by ID and by normalized title
+  // 2. Apply done-state overrides
+  // Notion-synced tasks: server done state is AUTHORITATIVE (don't let localStorage un-check them)
+  // Manual/local tasks: localStorage done state applies as before
   const doneIds = loadDoneIds();
   const doneTitles = loadDoneTitles();
   const doneIdSet = new Set(doneIds);
   const doneTitleSet = new Set(doneTitles);
   DATA.myTasks.forEach(t => {
-    if (doneIdSet.has(t.id) || doneTitleSet.has(normalizeTitle(t.title))) t.done = true;
+    const hasNotionId = t.notionPageId || (t.id && !t.id.startsWith('manual-'));
+    if (hasNotionId && t.done) {
+      // Notion says done — keep it done regardless of localStorage
+      // Also sync to localStorage so UI stays consistent
+      if (!doneIdSet.has(t.id)) { doneIds.push(t.id); doneIdSet.add(t.id); }
+      const norm = normalizeTitle(t.title);
+      if (norm && !doneTitleSet.has(norm)) { doneTitles.push(norm); doneTitleSet.add(norm); }
+    } else if (doneIdSet.has(t.id) || doneTitleSet.has(normalizeTitle(t.title))) {
+      // localStorage says done — apply (this covers manual tasks and optimistic UI)
+      t.done = true;
+    }
   });
+  saveDoneIds(doneIds);
+  saveDoneTitles(doneTitles);
 
   // 3. Apply offsite task done-states
   if (DATA.leadershipOffsite) {
@@ -2290,6 +2304,7 @@ function renderTaskItem(t, section) {
         </div>
         ${ctx}
       </div>
+      ${t.sourceLink ? `<a class="source-link" href="${t.sourceLink}" target="_blank" onclick="event.stopPropagation()" title="View original source" style="font-size:10px;color:var(--text-muted);margin-right:6px;text-decoration:none;opacity:0.6">src</a>` : ''}
       <a class="notion-link" href="https://notion.so/${t.id.replace(/-/g,'')}" target="_blank" onclick="event.stopPropagation()">Open &#8599;</a>
     </li>`;
 }
@@ -2476,11 +2491,47 @@ function editDueDate(span) {
   }, 10);
 }
 
-function addMyTask() {
+function findSimilarTask(newTitle) {
+  const norm = normalizeTitle(newTitle);
+  const words = norm.split(' ').filter(w => w.length > 2);
+  // Extract likely names (capitalized words from original) and key verbs
+  const actionVerbs = ['schedule','follow','reply','send','confirm','coordinate','reach','draft','check','fix','set','book','cancel','reschedule','prepare','review','update','create','organize','plan'];
+  const newVerb = actionVerbs.find(v => norm.includes(v)) || '';
+  // Check each existing task for overlap
+  for (const t of DATA.myTasks) {
+    if (t.done) continue;
+    const existNorm = normalizeTitle(t.title);
+    // Exact normalized match
+    if (existNorm === norm) return t;
+    // Check for shared words (at least 3 significant words in common)
+    const existWords = existNorm.split(' ').filter(w => w.length > 2);
+    const shared = words.filter(w => existWords.includes(w));
+    if (shared.length >= 3) return t;
+    // Check for shared name + same action verb
+    const existVerb = actionVerbs.find(v => existNorm.includes(v)) || '';
+    if (newVerb && existVerb && shared.length >= 1) {
+      // At least one significant word in common + both have action verbs
+      const verbMatch = newVerb === existVerb || (newVerb === 'follow' && existVerb === 'reply') || (newVerb === 'reply' && existVerb === 'follow') || (newVerb === 'schedule' && existVerb === 'book') || (newVerb === 'book' && existVerb === 'schedule');
+      if (verbMatch && shared.length >= 2) return t;
+    }
+  }
+  return null;
+}
+
+function addMyTask(forceAdd) {
   const input = document.getElementById('new-task-input');
   const prioSelect = document.getElementById('new-task-priority');
   const title = input.value.trim();
   if (!title) return;
+  // Check for similar existing task (unless user already confirmed)
+  if (!forceAdd) {
+    const similar = findSimilarTask(title);
+    if (similar) {
+      const existingSnippet = similar.title.length > 60 ? similar.title.slice(0,57)+'...' : similar.title;
+      const msg = `Similar task already exists:\n\n"${existingSnippet}"\n\nAdd anyway?`;
+      if (!confirm(msg)) { input.focus(); return; }
+    }
+  }
   const priority = prioSelect.value;
   const id = 'manual-' + crypto.randomUUID();
   const task = {id, title, done:false, priority, due:null, context:'Added manually'};
