@@ -109,6 +109,38 @@ else console.log('[Notion] No NOTION_TOKEN set - write-back disabled');
 async function createNotionTask({ title, priority, due, source }) {
   if (!notion || !NOTION_DB_ID) return null;
   try {
+    // Dedup check: search Notion for similar tasks before creating
+    const existing = await notion.databases.query({
+      database_id: NOTION_DB_ID,
+      filter: {
+        and: [
+          { property: 'Task', title: { does_not_contain: '[ARCHIVED]' } },
+          { property: 'Done', checkbox: { equals: false } }
+        ]
+      },
+      page_size: 100
+    });
+    const newTitle = title.replace(/^\[Sophie\]\s*/i, '').toLowerCase();
+    for (const page of existing.results) {
+      const existingTitle = (page.properties.Task?.title?.[0]?.plain_text || '').replace(/^\[Sophie\]\s*/i, '').toLowerCase();
+      // Check similarity using the dedup engine
+      if (typeof taskSimilarity === 'function') {
+        const score = taskSimilarity(newTitle, existingTitle);
+        if (score >= DEDUP_THRESHOLD) {
+          console.log(`[Notion] Skipped duplicate: "${title}" matches "${existingTitle}" (score: ${score.toFixed(2)})`);
+          return page.id; // Return existing page ID instead of creating
+        }
+      } else {
+        // Fallback: exact normalized match
+        const normNew = newTitle.replace(/[^a-z0-9 ]/g, '').replace(/\s+/g, ' ').trim();
+        const normExisting = existingTitle.replace(/[^a-z0-9 ]/g, '').replace(/\s+/g, ' ').trim();
+        if (normNew === normExisting) {
+          console.log(`[Notion] Skipped exact duplicate: "${title}"`);
+          return page.id;
+        }
+      }
+    }
+
     const properties = {
       Task: { title: [{ text: { content: title } }] },
       Priority: { select: { name: priority || 'Medium' } },
