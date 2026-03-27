@@ -782,7 +782,7 @@ const DATA = {
     ],
     suggestions: 3,
     totalEvents: 46,
-    dashboardUrl: null,
+    dashboardUrl: "https://fppc-dashboard-production-52d3.up.railway.app/",
     lastUpdated: "2026-03-27T13:00:00-07:00"
   },
 
@@ -4153,70 +4153,33 @@ function fetchLiveCalendar(){
   .catch(e=>{console.warn('Calendar fetch failed:',e);});
 }
 
-// ── Live FPPC votes from Google Sheets ──
-const FPPC_SHEETS_URL='https://script.google.com/macros/s/AKfycbxNEBeCoGTDnx5iZhB7viVKkzOaEg6uxeZZjbCher53u1QV87YYtYm0W-RLJAqcl-IX/exec';
+// ── Live FPPC votes from FPPC dashboard API ──
+const FPPC_API_URL='https://fppc-dashboard-production-52d3.up.railway.app/api/fppc-votes';
 
 async function fetchLiveFPPC(){
   try{
-    const months=["January","February","March","April","May","June","July","August","September","October","November","December"];
-    const now=new Date();
-    const month=months[now.getMonth()]+' '+now.getFullYear();
-    const res=await fetch(FPPC_SHEETS_URL+'?month='+encodeURIComponent(month));
+    const res=await fetch(FPPC_API_URL);
     const data=await res.json();
-    if(data.status!=='ok'||!data.votes)return;
-    // Map vote keys to event titles and count voters
-    const voteCounts={};
-    Object.keys(data.votes).forEach(key=>{
-      const voters=data.votes[key].voters||[];
-      voteCounts[key]={count:voters.length,voters};
-    });
-    // Update DATA.fppcEvents.upcoming with live vote counts
-    const upcoming=DATA.fppcEvents?.upcoming||[];
-    // FPPC dashboard uses keys like "curated-sfEvents-0", "curated-volunteerEvents-1" etc
-    // We match by title since our events list is a subset
-    const titleToVotes={};
-    // Build a title lookup from the FPPC dashboard's event arrays
-    // Since we can't access those arrays, match by checking all vote keys
-    // and cross-referencing with our event titles
-    upcoming.forEach((ev,i)=>{
-      // Try common key patterns
-      const possibleKeys=[
-        'curated-sfEvents-'+i,
-        'curated-volunteerEvents-'+i,
-        'curated-teamEvents-'+i
-      ];
-      // Also check all vote keys for title matches
-      Object.keys(voteCounts).forEach(key=>{
-        if(voteCounts[key].count>0){
-          // Store total across all keys
-          const existingCount=ev._voteKeys?ev._voteCount:0;
-        }
-      });
-    });
-    // Simpler approach: sum all votes per event title keyword match
-    upcoming.forEach(ev=>{
-      let totalVotes=0;
-      const titleWords=ev.title.toLowerCase().split(/\s+/).filter(w=>w.length>3);
-      Object.keys(voteCounts).forEach(key=>{
-        // Check if any voter entry's event title matches
-        if(voteCounts[key].count>0){
-          totalVotes=Math.max(totalVotes, voteCounts[key].count);
-        }
-      });
-    });
-    // Most reliable: just count total votes per key index matching our event order
-    upcoming.forEach((ev,i)=>{
-      const key='curated-sfEvents-'+i;
-      if(voteCounts[key]){
-        ev.votes=voteCounts[key].count;
-      }
-    });
-    DATA.fppcEvents.lastUpdated=new Date().toISOString();
+    if(!data.events)return;
+    // Replace upcoming events with live data from the FPPC API
+    DATA.fppcEvents.upcoming=(data.events||[]).map(e=>({
+      title:e.title,
+      name:e.title,
+      votes:e.votes||0,
+      type:e.type||'social',
+      date:e.date||'',
+      dateISO:e.date||'',
+      location:e.location||'',
+      free:false,
+      link:'https://fppc-dashboard-production-52d3.up.railway.app/'
+    }));
+    DATA.fppcEvents.totalEvents=data.events.length;
+    DATA.fppcEvents.lastUpdated=data.updatedAt||new Date().toISOString();
     // Re-render FPPC if visible
     const fppcPane=document.getElementById('pane-fppc');
     if(fppcPane)fppcPane.innerHTML=`<div class="page-header"><div class="page-title">&#127881; FPPC Events</div></div>${renderFPPCProject()}`;
     renderOverview();
-    console.log('[Live] FPPC votes updated from Sheets');
+    console.log('[Live] FPPC votes updated from API');
   }catch(e){console.warn('[Live] FPPC fetch failed:',e.message);}
 }
 
