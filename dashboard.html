@@ -420,7 +420,7 @@ a.loop-row:hover .loop-source{color:var(--gold)}
 // DATA  -  regenerated every 15 min by update-task-dashboard
 // ============================================================
 const DATA = {
-  refreshedAt: "2026-03-26T22:41:18-07:00",
+  refreshedAt: "2026-03-26T23:01:01-07:00",
   date: "Thursday, March 26",
 
   actionItems: {
@@ -1838,15 +1838,7 @@ let calDayIdx = (function(){
   return idx >= 0 ? idx : 0;
 })();
 
-function calToMin(t) {
-        if (!t || typeof t !== "string") return 0;
-        var m = t.match(/(\d+):(\d+)\s*(AM|PM)/i);
-        if (!m) return 0;
-        var h = parseInt(m[1]), min = parseInt(m[2]);
-        if (m[3].toUpperCase() === "PM" && h !== 12) h += 12;
-        if (m[3].toUpperCase() === "AM" && h === 12) h = 0;
-        return h * 60 + min;
-      }
+function calToMin(t){const m=t.match(/(\d+):(\d+)\s*(AM|PM)/i);if(!m)return 0;let h=parseInt(m[1]);const mn=parseInt(m[2]),ap=m[3].toUpperCase();if(ap==='PM'&&h!==12)h+=12;if(ap==='AM'&&h===12)h=0;return h*60+mn;}
 const CAL_SKIP=/sitter|gym|standup/i, CAL_OPT=/\[optional\]/i;
 function calSkip(e){return CAL_SKIP.test(e.title)||CAL_OPT.test(e.title)||e.rsvp==='declined';}
 function findConflicts(events){const s=new Set();for(let i=0;i<events.length;i++){if(calSkip(events[i]))continue;for(let j=i+1;j<events.length;j++){if(calSkip(events[j]))continue;if(calToMin(events[i].time)<calToMin(events[j].end)&&calToMin(events[j].time)<calToMin(events[i].end)){s.add(i);s.add(j);}}}return s;}
