@@ -381,6 +381,7 @@ app.post('/api/tasks/add', ensureAuth, (req, res) => {
 app.post('/api/tasks/complete', ensureAuth, async (req, res) => {
   try {
     const { taskId, title, done } = req.body;
+    console.log(`[Complete] Received: taskId=${taskId}, title=${(title||'').slice(0,40)}, done=${done}`);
     if (!taskId && !title) return res.status(400).json({ error: 'taskId or title required' });
 
     // 1. Find the Notion page ID
@@ -410,9 +411,13 @@ app.post('/api/tasks/complete', ensureAuth, async (req, res) => {
     }
 
     // 2. Update Notion
+    console.log(`[Complete] Resolved notionPageId=${notionPageId}`);
     let notionUpdated = false;
     if (notionPageId) {
       notionUpdated = await updateNotionTaskDone(notionPageId, done !== false);
+      console.log(`[Complete] Notion update result: ${notionUpdated}`);
+    } else {
+      console.log(`[Complete] WARNING: Could not resolve notionPageId for taskId=${taskId}`);
     }
 
     // 3. Update local JSON files
