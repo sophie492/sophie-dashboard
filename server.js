@@ -632,10 +632,11 @@ app.get('/api/calendar', ensureAuth, async (req, res) => {
     }
 
     if (token) {
+      const daysAhead = Math.min(parseInt(req.query.days) || 14, 30);
       const now = new Date();
       now.setHours(0, 0, 0, 0);
       const end = new Date(now);
-      end.setDate(end.getDate() + 7);
+      end.setDate(end.getDate() + daysAhead);
 
       const results = await Promise.all(
         CAL_IDS.map(id => fetchGCalEvents(token, id, now, end))
@@ -649,7 +650,7 @@ app.get('/api/calendar', ensureAuth, async (req, res) => {
         const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
         const dayMap = {};
 
-        for (let i = 0; i < 7; i++) {
+        for (let i = 0; i < daysAhead; i++) {
           const d = new Date(now);
           d.setDate(d.getDate() + i);
           const key = d.toISOString().slice(0, 10);

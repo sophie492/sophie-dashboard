@@ -4125,7 +4125,7 @@ async function fetchLivePulse(){
 }
 
 function fetchLiveCalendar(){
-  fetch('/api/calendar')
+  fetch('/api/calendar?days=14')
   .then(r=>r.ok?r.json():null)
   .then(data=>{
     if(!data||!Array.isArray(data.calendarDays)||data.calendarDays.length===0)return;
