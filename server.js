@@ -363,9 +363,16 @@ app.post('/api/tasks/complete', ensureAuth, async (req, res) => {
     const { taskId, title, done } = req.body;
     if (!taskId && !title) return res.status(400).json({ error: 'taskId or title required' });
 
-    // 1. Find the Notion page ID - check tasks.json first, then query Notion by title
+    // 1. Find the Notion page ID
     let notionPageId = null;
-    if (fs.existsSync(TASKS_PATH)) {
+
+    // Check if taskId itself is a valid Notion UUID (from live endpoint)
+    if (taskId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(taskId)) {
+      notionPageId = taskId;
+    }
+
+    // Check tasks.json
+    if (!notionPageId && fs.existsSync(TASKS_PATH)) {
       const data = JSON.parse(fs.readFileSync(TASKS_PATH, 'utf8'));
       const task = data.tasks.find(t => t.id === taskId || t.notionPageId === taskId);
       if (task) notionPageId = task.notionPageId;
@@ -375,9 +382,11 @@ app.post('/api/tasks/complete', ensureAuth, async (req, res) => {
       const task = manual.find(t => t.id === taskId);
       if (task) notionPageId = task.notionPageId;
     }
-    // If still no Notion ID, try finding by title in Notion
-    if (!notionPageId && title) {
-      notionPageId = await findNotionTaskByTitle(title);
+
+    // Query Notion directly by title (try with and without [Sophie] prefix)
+    if (!notionPageId && title && notion) {
+      notionPageId = await findNotionTaskByTitle('[Sophie] ' + title);
+      if (!notionPageId) notionPageId = await findNotionTaskByTitle(title);
     }
 
     // 2. Update Notion
