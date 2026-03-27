@@ -1207,6 +1207,109 @@ app.post('/api/fppc', (req, res) => {
   }
 });
 
+
+// ── News Feed API (Daily Brief tab) ──
+const NEWS_PATH = path.join(__dirname, 'data', 'news.json');
+
+app.get('/api/news', ensureAuth, (req, res) => {
+  try {
+    if (fs.existsSync(NEWS_PATH)) {
+      const data = JSON.parse(fs.readFileSync(NEWS_PATH, 'utf8'));
+      res.json(data);
+    } else {
+      res.json({ newsFeed: [], newsDigest: null, fermatNewsroom: [], lastUpdated: null });
+    }
+  } catch (err) {
+    console.error('Error reading news:', err);
+    res.status(500).json({ error: 'Failed to read news' });
+  }
+});
+
+app.post('/api/news', (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (!API_KEY || authHeader !== `Bearer ${API_KEY}`) {
+    return res.status(401).json({ error: 'Invalid or missing API key' });
+  }
+  try {
+    const dir = path.dirname(NEWS_PATH);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    const data = { ...req.body, lastUpdated: new Date().toISOString() };
+    fs.writeFileSync(NEWS_PATH, JSON.stringify(data, null, 2));
+    res.json({ ok: true, savedAt: data.lastUpdated });
+  } catch (err) {
+    console.error('Error writing news:', err);
+    res.status(500).json({ error: 'Failed to write news' });
+  }
+});
+
+// ── Utilities Stats API (Utilities tab) ──
+const UTILITIES_PATH = path.join(__dirname, 'data', 'utilities.json');
+
+app.get('/api/utilities', ensureAuth, (req, res) => {
+  try {
+    if (fs.existsSync(UTILITIES_PATH)) {
+      const data = JSON.parse(fs.readFileSync(UTILITIES_PATH, 'utf8'));
+      res.json(data);
+    } else {
+      res.json({ spam: null, meetingScheduler: null, spamCleanup: null, deliveries: [], taskHealth: [], lastUpdated: null });
+    }
+  } catch (err) {
+    console.error('Error reading utilities:', err);
+    res.status(500).json({ error: 'Failed to read utilities' });
+  }
+});
+
+app.post('/api/utilities', (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (!API_KEY || authHeader !== `Bearer ${API_KEY}`) {
+    return res.status(401).json({ error: 'Invalid or missing API key' });
+  }
+  try {
+    const dir = path.dirname(UTILITIES_PATH);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    const data = { ...req.body, lastUpdated: new Date().toISOString() };
+    fs.writeFileSync(UTILITIES_PATH, JSON.stringify(data, null, 2));
+    res.json({ ok: true, savedAt: data.lastUpdated });
+  } catch (err) {
+    console.error('Error writing utilities:', err);
+    res.status(500).json({ error: 'Failed to write utilities' });
+  }
+});
+
+// ── Weekly Pulse API ──
+const PULSE_PATH = path.join(__dirname, 'data', 'pulse.json');
+
+app.get('/api/pulse', ensureAuth, (req, res) => {
+  try {
+    if (fs.existsSync(PULSE_PATH)) {
+      const data = JSON.parse(fs.readFileSync(PULSE_PATH, 'utf8'));
+      res.json(data);
+    } else {
+      res.json({ weeklyPulse: null, lastUpdated: null });
+    }
+  } catch (err) {
+    console.error('Error reading pulse:', err);
+    res.status(500).json({ error: 'Failed to read pulse' });
+  }
+});
+
+app.post('/api/pulse', (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (!API_KEY || authHeader !== `Bearer ${API_KEY}`) {
+    return res.status(401).json({ error: 'Invalid or missing API key' });
+  }
+  try {
+    const dir = path.dirname(PULSE_PATH);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    const data = { ...req.body, lastUpdated: new Date().toISOString() };
+    fs.writeFileSync(PULSE_PATH, JSON.stringify(data, null, 2));
+    res.json({ ok: true, savedAt: data.lastUpdated });
+  } catch (err) {
+    console.error('Error writing pulse:', err);
+    res.status(500).json({ error: 'Failed to write pulse' });
+  }
+});
+
 // ââ Protected dashboard ââ
 app.get('/', ensureAuth, (req, res) => {
   res.sendFile(path.join(__dirname, 'dashboard.html'));
