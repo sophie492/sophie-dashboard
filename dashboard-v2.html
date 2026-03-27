@@ -4199,28 +4199,24 @@ async function fetchLiveTasks(){
       const fallback=await fetch('/api/tasks/live');
       if(!fallback.ok)return;
       const data=await fallback.json();
-      if(data.tasks)DATA.myTasks=data.tasks;
+      if(data.tasks){
+        const fbDoneIds=new Set(loadDoneIds());
+        const fbDoneTitles=new Set(loadDoneTitles());
+        data.tasks.forEach(t=>{if(fbDoneIds.has(t.id)||fbDoneTitles.has(normalizeTitle(t.title)))t.done=true;});
+        DATA.myTasks=data.tasks;
+      }
       renderTasksPage();renderOverview();renderSidebar();
       return;
     }
     const data=await res.json();
     if(!data.tasks||data.tasks.length===0)return;
 
-    // Apply localStorage done states (dashboard may have changes not yet synced)
+    // Apply localStorage done states — if you checked it off, it stays checked
     const doneIds=new Set(loadDoneIds());
     const doneTitles=new Set(loadDoneTitles());
     data.tasks.forEach(t=>{
       if(doneIds.has(t.id)||doneTitles.has(normalizeTitle(t.title))){
-        // Local says done but Notion might disagree — check timestamps
-        if(t.lastModifiedAt){
-          const localCheck=localStorage.getItem('sophie-dash-last-check-'+t.id);
-          if(localCheck&&new Date(localCheck)>new Date(t.lastModifiedAt)){
-            t.done=true; // Local is newer
-          }
-          // Otherwise trust Notion
-        }else{
-          t.done=true; // No timestamp info, trust local
-        }
+        t.done=true;
       }
     });
 
