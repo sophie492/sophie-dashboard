@@ -1348,10 +1348,13 @@ function fetchLiveCalendar() {
               day.events = merged;
             }
           });
-          var today = new Date().toISOString().slice(0,10);
-          var existing = (DATA.calendarDays || []).filter(function(d) { return d.date <= today; });
-          var future = data.calendarDays.filter(function(d) { return d.date > today; });
-          DATA.calendarDays = existing.concat(future).sort(function(a,b) { return a.date.localeCompare(b.date); });
+          // Get today in Pacific Time (not UTC)
+          var ptNow = new Date(new Date().toLocaleString('en-US', {timeZone: 'America/Los_Angeles'}));
+          var today = ptNow.getFullYear() + '-' + String(ptNow.getMonth()+1).padStart(2,'0') + '-' + String(ptNow.getDate()).padStart(2,'0');
+          // Keep today's hardcoded data, merge API data for today and future
+          var existing = (DATA.calendarDays || []).filter(function(d) { return d.date < today; });
+          var fromApi = data.calendarDays.filter(function(d) { return d.date >= today; });
+          DATA.calendarDays = existing.concat(fromApi).sort(function(a,b) { return a.date.localeCompare(b.date); });
           var todayIdx = DATA.calendarDays.findIndex(function(d) { return d.date >= today; });
           calDayIdx = todayIdx >= 0 ? todayIdx : 0;
           var container = document.getElementById("cal-card-container");
