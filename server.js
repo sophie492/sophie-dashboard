@@ -95,7 +95,11 @@ function ensureAuth(req, res, next) {
 app.use(express.json({ limit: '1mb' }));
 
 // ââ Health check ââ
-app.get('/health', (req, res) => res.json({ status: 'ok' }));
+app.get('/health', (req, res) => res.json({
+  status: 'ok',
+  notion: !!NOTION_TOKEN,
+  notionDbId: NOTION_DB_ID ? NOTION_DB_ID.slice(0,8)+'...' : null
+}));
 
 const API_KEY = process.env.DASHBOARD_API_KEY;
 
