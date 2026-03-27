@@ -2102,6 +2102,11 @@ function init() {
   // Fetch live action items from CEO daily brief API
   fetchLiveActionItems();
 
+  // Fetch live data from server APIs (news, utilities, pulse)
+  fetchLiveNews();
+  fetchLiveUtilities();
+  fetchLivePulse();
+
   // Top nav tab switching
   document.querySelectorAll('.top-nav-tab').forEach(tab => {
     tab.addEventListener('click', () => {
@@ -2111,6 +2116,75 @@ function init() {
       document.getElementById(tab.dataset.page).classList.add('active');
     });
   });
+}
+
+// -- Fetch live news from /api/news (Daily Brief tab) --
+async function fetchLiveNews() {
+  try {
+    const res = await fetch('/api/news');
+    if (!res.ok) return;
+    const data = await res.json();
+    if (!data.lastUpdated) return;
+    const apiTime = new Date(data.lastUpdated).getTime();
+    const dataTime = DATA.refreshedAt ? new Date(DATA.refreshedAt).getTime() : 0;
+    if (apiTime <= dataTime) return;
+    if (data.newsFeed && data.newsFeed.length > 0) DATA.newsFeed = data.newsFeed;
+    if (data.newsDigest) DATA.newsDigest = data.newsDigest;
+    if (data.fermatNewsroom) DATA.fermatNewsroom = data.fermatNewsroom;
+    document.getElementById('refresh-time').textContent =
+      'Updated ' + new Date(data.lastUpdated).toLocaleString('en-US',{timeZone:'America/Los_Angeles',month:'short',day:'numeric',hour:'numeric',minute:'2-digit',hour12:true}) + ' PT';
+    renderNewsFeed();
+    console.log('[Live] News updated from API:', data.lastUpdated);
+  } catch (err) {
+    console.warn('[Live] News fetch failed, using static data:', err.message);
+  }
+}
+
+// -- Fetch live utilities from /api/utilities (Utilities tab) --
+async function fetchLiveUtilities() {
+  try {
+    const res = await fetch('/api/utilities');
+    if (!res.ok) return;
+    const data = await res.json();
+    if (!data.lastUpdated) return;
+    const apiTime = new Date(data.lastUpdated).getTime();
+    const dataTime = DATA.refreshedAt ? new Date(DATA.refreshedAt).getTime() : 0;
+    if (apiTime <= dataTime) return;
+    if (data.spam) DATA.spam = data.spam;
+    if (data.meetingScheduler) DATA.meetingScheduler = data.meetingScheduler;
+    if (data.spamCleanup) DATA.spamCleanup = data.spamCleanup;
+    if (data.taskHealth) DATA.tasks = data.taskHealth;
+    if (data.deliveries) {
+      if (DATA.morningBrief && data.deliveries.morningBrief) Object.assign(DATA.morningBrief, data.deliveries.morningBrief);
+      if (DATA.morningDigest && data.deliveries.morningDigest) Object.assign(DATA.morningDigest, data.deliveries.morningDigest);
+      if (DATA.newsDigest && data.deliveries.newsDigest) Object.assign(DATA.newsDigest, data.deliveries.newsDigest);
+      if (DATA.eodCheckin && data.deliveries.eodCheckin) Object.assign(DATA.eodCheckin, data.deliveries.eodCheckin);
+      if (DATA.weeklyReview && data.deliveries.weeklyReview) Object.assign(DATA.weeklyReview, data.deliveries.weeklyReview);
+    }
+    renderUtilities();
+    renderKPIs();
+    console.log('[Live] Utilities updated from API:', data.lastUpdated);
+  } catch (err) {
+    console.warn('[Live] Utilities fetch failed, using static data:', err.message);
+  }
+}
+
+// -- Fetch live pulse from /api/pulse (Weekly Pulse tab) --
+async function fetchLivePulse() {
+  try {
+    const res = await fetch('/api/pulse');
+    if (!res.ok) return;
+    const data = await res.json();
+    if (!data.lastUpdated || !data.weeklyPulse) return;
+    const apiTime = new Date(data.lastUpdated).getTime();
+    const dataTime = DATA.refreshedAt ? new Date(DATA.refreshedAt).getTime() : 0;
+    if (apiTime <= dataTime) return;
+    DATA.weeklyPulse = data.weeklyPulse;
+    renderWeeklyPulse();
+    console.log('[Live] Pulse updated from API:', data.lastUpdated);
+  } catch (err) {
+    console.warn('[Live] Pulse fetch failed, using static data:', err.message);
+  }
 }
 
 // -- Fetch live action items from /api/action-items (CEO daily brief) --
