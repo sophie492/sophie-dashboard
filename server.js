@@ -1242,40 +1242,6 @@ app.post('/api/news', (req, res) => {
   }
 });
 
-// ── Utilities Stats API (Utilities tab) ──
-const UTILITIES_PATH = path.join(__dirname, 'data', 'utilities.json');
-
-app.get('/api/utilities', ensureAuth, (req, res) => {
-  try {
-    if (fs.existsSync(UTILITIES_PATH)) {
-      const data = JSON.parse(fs.readFileSync(UTILITIES_PATH, 'utf8'));
-      res.json(data);
-    } else {
-      res.json({ spam: null, meetingScheduler: null, spamCleanup: null, deliveries: [], taskHealth: [], lastUpdated: null });
-    }
-  } catch (err) {
-    console.error('Error reading utilities:', err);
-    res.status(500).json({ error: 'Failed to read utilities' });
-  }
-});
-
-app.post('/api/utilities', (req, res) => {
-  const authHeader = req.headers.authorization;
-  if (!API_KEY || authHeader !== `Bearer ${API_KEY}`) {
-    return res.status(401).json({ error: 'Invalid or missing API key' });
-  }
-  try {
-    const dir = path.dirname(UTILITIES_PATH);
-    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-    const data = { ...req.body, lastUpdated: new Date().toISOString() };
-    fs.writeFileSync(UTILITIES_PATH, JSON.stringify(data, null, 2));
-    res.json({ ok: true, savedAt: data.lastUpdated });
-  } catch (err) {
-    console.error('Error writing utilities:', err);
-    res.status(500).json({ error: 'Failed to write utilities' });
-  }
-});
-
 // ── Weekly Pulse API ──
 const PULSE_PATH = path.join(__dirname, 'data', 'pulse.json');
 
