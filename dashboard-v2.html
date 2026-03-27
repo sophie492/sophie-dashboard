@@ -4194,9 +4194,19 @@ async function fetchLiveTasks(){
     if(!res.ok)return;
     const data=await res.json();
     if(!data.tasks||data.tasks.length===0)return;
+    // Merge manual tasks that haven't synced to Notion yet
+    // Dedup by BOTH id and normalized title to prevent duplicates
     const manual=loadManualTasks();
     const existingIds=new Set(data.tasks.map(t=>t.id));
-    manual.forEach(m=>{if(!existingIds.has(m.id))data.tasks.unshift(m);});
+    const existingTitles=new Set(data.tasks.map(t=>normalizeTitle(t.title)));
+    const unsyncedManual=manual.filter(m=>{
+      if(existingIds.has(m.id))return false;
+      if(existingTitles.has(normalizeTitle(m.title)))return false;
+      // Also skip if it has a notionPageId that matches a live task
+      if(m.notionPageId&&existingIds.has(m.notionPageId))return false;
+      return true;
+    });
+    unsyncedManual.forEach(m=>data.tasks.unshift(m));
     DATA.myTasks=data.tasks;
     renderTasksPage();
     renderOverview();
