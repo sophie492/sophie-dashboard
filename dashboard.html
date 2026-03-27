@@ -1324,25 +1324,41 @@ async function fetchLiveActionItems() {
 }
 
 function fetchLiveCalendar() {
-  fetch("/api/calendar", {
-    headers: { "Authorization": "Bearer sophie-dashboard-secret-change-me" }
-  })
-  .then(function(r) { return r.ok ? r.json() : null; })
-  .then(function(data) {
-    if (!data || !Array.isArray(data.calendarDays) || data.calendarDays.length === 0) return;
-    // Merge: keep today from DATA, add future days from API
-    var today = new Date().toISOString().slice(0,10);
-    var existing = (DATA.calendarDays || []).filter(function(d) { return d.date <= today; });
-    var future = data.calendarDays.filter(function(d) { return d.date > today; });
-    DATA.calendarDays = existing.concat(future).sort(function(a,b) { return a.date.localeCompare(b.date); });
-    // Reset calendar index and re-render
-    var todayIdx = DATA.calendarDays.findIndex(function(d) { return d.date >= today; });
-    calDayIdx = todayIdx >= 0 ? todayIdx : 0;
-    var container = document.getElementById("cal-card-container");
-    if (container) container.innerHTML = renderCalendarInner();
-  })
-  .catch(function(e) { console.warn("Calendar fetch failed:", e); });
-}
+        fetch("/api/calendar", {
+          headers: { "Authorization": "Bearer sophie-dashboard-secret-change-me" }
+        })
+        .then(function(r) { return r.ok ? r.json() : null; })
+        .then(function(data) {
+          if (!data || !Array.isArray(data.calendarDays) || data.calendarDays.length === 0) return;
+          // Normalize: if days have rishabh/shreyas arrays instead of events, merge them
+          data.calendarDays.forEach(function(day) {
+            if (!day.events && (day.rishabh || day.shreyas)) {
+              var merged = [];
+              (day.rishabh || []).forEach(function(e) { e.calendar = "rishabh"; merged.push(e); });
+              (day.shreyas || []).forEach(function(e) {
+                var isDup = merged.some(function(m) { return m.time === e.time && m.title === e.title; });
+                if (!isDup) { e.calendar = "shreyas"; merged.push(e); }
+              });
+              // Sort by time
+              merged.sort(function(a, b) {
+                if (a.time === "All day") return -1;
+                if (b.time === "All day") return 1;
+                return a.time.localeCompare(b.time);
+              });
+              day.events = merged;
+            }
+          });
+          var today = new Date().toISOString().slice(0,10);
+          var existing = (DATA.calendarDays || []).filter(function(d) { return d.date <= today; });
+          var future = data.calendarDays.filter(function(d) { return d.date > today; });
+          DATA.calendarDays = existing.concat(future).sort(function(a,b) { return a.date.localeCompare(b.date); });
+          var todayIdx = DATA.calendarDays.findIndex(function(d) { return d.date >= today; });
+          calDayIdx = todayIdx >= 0 ? todayIdx : 0;
+          var container = document.getElementById("cal-card-container");
+          if (container) container.innerHTML = renderCalendarInner();
+        })
+        .catch(function(e) { console.warn("Calendar fetch failed:", e); });
+      }
 
 // -- KPI Strip --
 function renderKPIs() {
