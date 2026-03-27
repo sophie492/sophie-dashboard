@@ -420,14 +420,14 @@ a.loop-row:hover .loop-source{color:var(--gold)}
 // DATA  -  regenerated every 15 min by update-task-dashboard
 // ============================================================
 const DATA = {
-  refreshedAt: "2026-03-27T07:15:00-07:00",
+  refreshedAt: "2026-03-27T11:15:00-07:00",
   date: "Friday, March 27",
 
   actionItems: {
     totalToday: 28,
-    lastUpdated: "Fri 7:15 AM",
+    lastUpdated: "Fri 11:15 AM",
     draftLink: "https://mail.google.com/mail/u/0/#drafts",
-    runsToday: 1,
+    runsToday: 2,
     items: [
       {text:"Symbiotica budget/resource decision \u2014 15 days stale (Mar 6). Daniel\u2019s paternity leave Apr 1. No decision = Q3 slip. Flagged 6 consecutive days.", priority:"red", source:"Slack"},
       {text:"J.Jill reference intro to Viv Rettke \u2014 Shreyas confirmed Joe (Backcountry) ready Mar 17. 5-min email, still no action.", priority:"red", source:"Slack"},
@@ -459,16 +459,19 @@ const DATA = {
   },
 
   spam: {
-    caughtToday: 0,
-    lastScan: "Fri 7:15 AM",
-    runsToday: 1,
-    items: []
+    caughtToday: 2,
+    lastScan: "Fri 11:15 AM",
+    runsToday: 2,
+    items: [
+      {sender:"Capital One Shopping", reason:"Promotional offer email", time:"3:06 AM"},
+      {sender:"Notion Team", reason:"Onboarding/promo email", time:"1:37 AM"}
+    ]
   },
 
   spamCleanup: {
     threadsCleaned: 0,
-    lastRun: "Fri 7:15 AM",
-    runsToday: 1,
+    lastRun: "Fri 11:15 AM",
+    runsToday: 2,
     details: "0 threads cleaned today. 16 Rishabh senders + 47 Shreyas non-GitHub senders checked. Shreyas has ~33K suspected spam (99% GitHub notifications). Neither exec has replied to any suspected spam contacts."
   },
 
@@ -555,7 +558,7 @@ const DATA = {
 
   meetingScheduler: {
     draftsCreated: 0,
-    lastCheck: "Fri 7:15 AM",
+    lastCheck: "Fri 11:15 AM",
     runsToday: "running (every 15 min)"
   },
 
@@ -675,16 +678,18 @@ const DATA = {
     {text:"Maya \u2014 event details email for upcoming conferences", owner:"Maya", age:"14d", source:"Slack", priority:"red", link:"https://fermatcommerce.slack.com/archives/C04PZNVHG8M/p1710201600"},
     {text:"Evelyn \u2014 TeamLink invite follow-up coordination", owner:"Evelyn", age:"11d", source:"Slack", priority:"red", link:"https://fermatcommerce.slack.com/archives/D07UXHYMWCK/p1710460800"},
     {text:"Whit Harwood \u2014 Cannes planning call drafts STALE; need fresh proposals", owner:"Sophie", age:"8d", source:"Email", priority:"red", link:"https://mail.google.com/mail/u/0/#drafts"},
-    {text:"Travel cards for leadership offsite \u2014 Sophie needs Ramp admin access to issue cards in bulk", owner:"Sophie", age:"1d", source:"Slack", priority:"yellow", link:"https://getfermat.slack.com/archives/D09RVLQHEAU"},
-    {text:"Sakara contract pause \u2014 Talia managing. Monitor cancellation process.", owner:"Talia", age:"1d", source:"Slack", priority:"yellow", link:"https://getfermat.slack.com/archives/C04PZNVHG8M"},
+    {text:"Travel cards for leadership offsite \u2014 Sophie needs Ramp admin access to issue cards in bulk", owner:"Sophie", age:"2d", source:"Slack", priority:"yellow", link:"https://getfermat.slack.com/archives/D09RVLQHEAU"},
+    {text:"Sakara contract pause \u2014 Talia managing. Monitor cancellation process.", owner:"Talia", age:"2d", source:"Slack", priority:"yellow", link:"https://getfermat.slack.com/archives/C04PZNVHG8M"},
     {text:"Away video quality \u2014 eng degrades for load speed, Tinuiti won\u2019t launch ads", owner:"Shreyas/Rajat", age:"ongoing", source:"Slack", priority:"yellow", link:"https://getfermat.slack.com/archives/C04PZNVHG8M"},
-    {text:"VMG GTM Kickoff \u2014 confirmed Wed Apr 1 1pm PT. Shreyas may need calendar invite.", owner:"Sophie", age:"1d", source:"Email", priority:"yellow", link:"https://mail.google.com/mail/u/0/#drafts"},
-    {text:"Shreyas manager reviews \u2014 Sophie scheduling 1:1s with Mukul and Bharat next week", owner:"Sophie", age:"1d", source:"Slack", priority:"yellow", link:"https://getfermat.slack.com/archives/D09QM8FP7FD"},
-    {text:"FPPC vote tracker spreadsheet missing \u2014 vote monitor couldn\u2019t run (flagged twice)", owner:"Sophie", age:"1d", source:"System", priority:"yellow", link:""},
-    {text:"Delegated inbox access still unavailable for Rishabh/Shreyas \u2014 26 unlabeled emails carried over", owner:"System", age:"ongoing", source:"System", priority:"yellow", link:""},
+    {text:"VMG GTM Kickoff \u2014 confirmed Wed Apr 1 1pm PT. Shreyas may need calendar invite.", owner:"Sophie", age:"2d", source:"Email", priority:"yellow", link:"https://mail.google.com/mail/u/0/#drafts"},
+    {text:"Shreyas manager reviews \u2014 Sophie scheduling 1:1s with Mukul and Bharat next week", owner:"Sophie", age:"2d", source:"Slack", priority:"yellow", link:"https://getfermat.slack.com/archives/D09QM8FP7FD"},
+    {text:"FPPC vote tracker spreadsheet missing \u2014 vote monitor couldn\u2019t run (flagged twice)", owner:"Sophie", age:"2d", source:"System", priority:"yellow", link:""},
+    {text:"Delegated inbox access still unavailable for Rishabh/Shreyas \u2014 27 unlabeled emails carried over", owner:"System", age:"ongoing", source:"System", priority:"yellow", link:""},
+    {text:"10 new Shreyas calendar conflicts detected (next 2 weeks) \u2014 #calendar-conflicts channel archived, alerts can\u2019t post", owner:"Sophie", age:"new", source:"System", priority:"yellow", link:""},
     {text:"Greylock 1:1 \u2014 ALL CONFIRMED. Thu Apr 16 2:30\u20133:30 PM PT at Greylock SF.", owner:"Rishabh", age:"resolved", source:"Email", priority:"green", link:"https://mail.google.com/mail/u/0/#search/Greylock"},
     {text:"Gen Digital liability cap \u2014 Rishabh approved $3M carve-out", owner:"Rishabh", age:"resolved", source:"Slack", priority:"green", link:"https://getfermat.slack.com/archives/C090R9V7YN9"},
-    {text:"Criteo demo \u2014 locked Mon 3/30 11:30\u201312:15 PT", owner:"Rishabh", age:"resolved", source:"Gmail", priority:"green", link:"https://mail.google.com/mail/u/0/#search/Criteo+Mehdi"}
+    {text:"Criteo demo \u2014 locked Mon 3/30 11:30\u201312:15 PT", owner:"Rishabh", age:"resolved", source:"Gmail", priority:"green", link:"https://mail.google.com/mail/u/0/#search/Criteo+Mehdi"},
+    {text:"Tapestry MSA \u2014 Kira sent revised agreement, Gillian approved. Ready to send.", owner:"Gillian", age:"resolved", source:"Gmail", priority:"green", link:"https://mail.google.com/mail/u/0/#search/Tapestry+MSA"}
   ],
 
   weeklyPulse: {
@@ -868,7 +873,9 @@ const DATA = {
     {name:"Snack Order", status:"ok"}, {name:"Mtg Attendee", status:"ok"},
     {name:"FPPC Refresh", status:"ok"}, {name:"Hack Week", status:"ok"},
     {name:"Email Reactor", status:"ok"}, {name:"Email Scanner", status:"ok"}
-  ]
+  ],
+
+  fermatNewsroom: null
 };
 
 
