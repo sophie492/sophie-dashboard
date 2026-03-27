@@ -1855,18 +1855,22 @@ function getPersonActionItems(person){
   const items=DATA.actionItems?.items||[];
   const regex=new RegExp(person,'i');
   const isRishabh=person.toLowerCase()==='rishabh';
-  // Shreyas-specific patterns
-  const shreyasPatterns=/shreyas|video quality|away.*blurry|rajat|ranjit/i;
+  const isSreyas=person.toLowerCase()==='shreyas';
   return items.filter(i=>{
-    // If item has explicit owner field, use it
-    if(i.owner) return i.owner.toLowerCase()===person.toLowerCase();
-    // If text mentions the person by name, include it
+    // Explicit owner match
+    if(i.owner&&i.owner.toLowerCase()===person.toLowerCase()) return true;
+    // Text mentions the person by name
     if(regex.test(i.text)) return true;
-    // For Shreyas, also check Shreyas-specific patterns
-    if(person.toLowerCase()==='shreyas') return shreyasPatterns.test(i.text);
-    // For Rishabh: action items without an owner are CEO items by default
-    // (the daily brief generates action items for the CEO)
-    if(isRishabh&&!i.owner) return true;
+    // For Rishabh: items without an owner OR owned by "CEO" are his
+    // Also items about decisions, strategy, partnerships, investors
+    if(isRishabh){
+      if(!i.owner) return true;
+      if(/ceo|leadership|executive/i.test(i.owner)) return true;
+    }
+    // For Shreyas: items about engineering, video, product
+    if(isSreyas){
+      if(/shreyas|video quality|away.*blurry|rajat|ranjit|engineering|product/i.test(i.text)) return true;
+    }
     return false;
   });
 }
