@@ -1279,7 +1279,201 @@ app.post('/api/pulse', (req, res) => {
   }
 });
 
+
+// ── Notion Live Database IDs ──
+const NOTION_TASK_DB = process.env.NOTION_DB_ID || 'ec04c3e35f534ee487592c1fb304991e';
+const NOTION_MKT_EVENTS_DB = '19fd16cfaa714c6ebc783a8cc23ba1cf';
+const NOTION_OFFSITES_PARENT = 'ca7532fd33714488ba26507ff5bed79b';
+const NOTION_HACKWEEK_PARENT = '2b01ad76fd2a81a39933d57ffed44277';
+
+// ── Live Tasks from Notion ──
+app.get('/api/tasks/live', ensureAuth, async (req, res) => {
+  if (!notion) return res.status(503).json({ error: 'Notion not configured' });
+  try {
+    const response = await notion.databases.query({
+      database_id: NOTION_TASK_DB,
+      filter: {
+        and: [
+          { property: 'Task', title: { contains: '[Sophie]' } },
+          { property: 'Task', title: { does_not_contain: '[ARCHIVED]' } }
+        ]
+      },
+      sorts: [{ property: 'Priority', direction: 'ascending' }]
+    });
+    const tasks = response.results.map(page => {
+      const props = page.properties;
+      const titleRaw = props.Task?.title?.[0]?.plain_text || '';
+      const title = titleRaw.replace(/^\[Sophie\]\s*/, '');
+      return {
+        id: page.id,
+        notionPageId: page.id,
+        title,
+        done: props.Done?.checkbox || false,
+        priority: props.Priority?.select?.name || 'Medium',
+        due: props['Due Date']?.date?.start || null,
+        context: props.Source?.rich_text?.[0]?.plain_text || '',
+        sourceLink: props['Source Link']?.url || '',
+        owner: 'Sophie'
+      };
+    });
+    res.json({ tasks, lastUpdated: new Date().toISOString(), source: 'notion-live' });
+  } catch (err) {
+    console.error('[Notion Live] Tasks query failed:', err.message);
+    res.status(500).json({ error: 'Notion query failed' });
+  }
+});
+
+// ── Live MKT Events from Notion ──
+app.get('/api/events/live', ensureAuth, async (req, res) => {
+  if (!notion) return res.status(503).json({ error: 'Notion not configured' });
+  try {
+    let allResults = [];
+    let cursor;
+    do {
+      const response = await notion.databases.query({
+        database_id: NOTION_MKT_EVENTS_DB,
+        page_size: 100,
+        start_cursor: cursor
+      });
+      allResults = allResults.concat(response.results);
+      cursor = response.has_more ? response.next_cursor : null;
+    } while (cursor);
+
+    const events = allResults.map(page => {
+      const props = page.properties;
+      const name = props.Name?.title?.[0]?.plain_text || props.Event?.title?.[0]?.plain_text || '';
+      const startDate = props['Start Date']?.date?.start || props.Date?.date?.start || props['Event Date']?.date?.start || '';
+      const endDate = props['End Date']?.date?.start || props['Start Date']?.date?.end || props.Date?.date?.end || startDate;
+      const location = props.Location?.rich_text?.[0]?.plain_text || props.Location?.select?.name || '';
+      const type = props.Type?.select?.name || props['Event Type']?.select?.name || '';
+      const status = props.Status?.select?.name || props.Stage?.select?.name || '';
+      return {
+        id: page.id,
+        name,
+        startDate,
+        endDate: endDate || startDate,
+        location,
+        type,
+        status,
+        notionLink: 'https://notion.so/' + page.id.replace(/-/g, ''),
+        url: page.url
+      };
+    }).filter(e => e.name && e.startDate);
+
+    events.sort((a, b) => a.startDate.localeCompare(b.startDate));
+    res.json({ events, lastUpdated: new Date().toISOString() });
+  } catch (err) {
+    console.error('[Notion Live] Events query failed:', err.message);
+    res.status(500).json({ error: 'Notion query failed' });
+  }
+});
+
+// ── Offsite child pages from Notion ──
+app.get('/api/projects/offsites', ensureAuth, async (req, res) => {
+  if (!notion) return res.status(503).json({ error: 'Notion not configured' });
+  try {
+    const children = await notion.blocks.children.list({ block_id: NOTION_OFFSITES_PARENT, page_size: 50 });
+    const childPages = children.results.filter(b => b.type === 'child_page');
+    const projects = childPages.map(child => ({
+      id: child.id,
+      title: child.child_page?.title || 'Untitled',
+      url: 'https://notion.so/' + child.id.replace(/-/g, '')
+    }));
+    res.json({ projects, lastUpdated: new Date().toISOString() });
+  } catch (err) {
+    console.error('[Notion Live] Offsites query failed:', err.message);
+    res.status(500).json({ error: 'Notion query failed' });
+  }
+});
+
+// ── Hack week child pages from Notion ──
+app.get('/api/projects/hackweeks', ensureAuth, async (req, res) => {
+  if (!notion) return res.status(503).json({ error: 'Notion not configured' });
+  try {
+    const children = await notion.blocks.children.list({ block_id: NOTION_HACKWEEK_PARENT, page_size: 50 });
+    const childPages = children.results.filter(b => b.type === 'child_page');
+    const projects = childPages.map(child => ({
+      id: child.id,
+      title: child.child_page?.title || 'Untitled',
+      url: 'https://notion.so/' + child.id.replace(/-/g, '')
+    }));
+    res.json({ projects, lastUpdated: new Date().toISOString() });
+  } catch (err) {
+    console.error('[Notion Live] Hack weeks query failed:', err.message);
+    res.status(500).json({ error: 'Notion query failed' });
+  }
+});
+
+// ── Project page checklist from Notion ──
+app.get('/api/projects/:pageId/checklist', ensureAuth, async (req, res) => {
+  if (!notion) return res.status(503).json({ error: 'Notion not configured' });
+  try {
+    const pageId = req.params.pageId;
+    let allBlocks = [];
+    let cursor;
+    do {
+      const resp = await notion.blocks.children.list({ block_id: pageId, page_size: 100, start_cursor: cursor });
+      allBlocks = allBlocks.concat(resp.results);
+      cursor = resp.has_more ? resp.next_cursor : null;
+    } while (cursor);
+
+    const phases = [];
+    let currentPhase = { name: 'General', tasks: [] };
+    allBlocks.forEach(b => {
+      if (b.type === 'heading_2' || b.type === 'heading_3') {
+        if (currentPhase.tasks.length > 0 || phases.length > 0) phases.push(currentPhase);
+        const text = b[b.type]?.rich_text?.map(t => t.plain_text).join('') || '';
+        currentPhase = { name: text, tasks: [] };
+      } else if (b.type === 'to_do') {
+        const text = b.to_do.rich_text?.map(t => t.plain_text).join('') || '';
+        currentPhase.tasks.push({ blockId: b.id, text, done: b.to_do.checked || false });
+      }
+    });
+    if (currentPhase.tasks.length > 0) phases.push(currentPhase);
+
+    const totalTasks = phases.reduce((s, p) => s + p.tasks.length, 0);
+    const doneTasks = phases.reduce((s, p) => s + p.tasks.filter(t => t.done).length, 0);
+
+    res.json({
+      id: pageId,
+      phases,
+      totalTasks,
+      doneTasks,
+      pct: totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : 0,
+      lastUpdated: new Date().toISOString()
+    });
+  } catch (err) {
+    console.error('[Notion Live] Checklist query failed:', err.message);
+    res.status(500).json({ error: 'Notion query failed' });
+  }
+});
+
+// ── Toggle a Notion checkbox block ──
+app.patch('/api/projects/toggle-block/:blockId', ensureAuth, async (req, res) => {
+  if (!notion) return res.status(503).json({ error: 'Notion not configured' });
+  try {
+    const { checked } = req.body;
+    await notion.blocks.update({
+      block_id: req.params.blockId,
+      to_do: { checked: !!checked }
+    });
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[Notion Live] Block toggle failed:', err.message);
+    res.status(500).json({ error: 'Failed to update' });
+  }
+});
+
 // ââ Protected dashboard ââ
+// ── Podcast API ──
+try {
+  const createPodcastRouter = require('../../podcast-api.js');
+  app.use('/api/podcast', createPodcastRouter(null));
+  console.log('[Podcast] API mounted at /api/podcast');
+} catch (e) {
+  console.log('[Podcast] podcast-api.js not found, podcast API disabled');
+}
+
 app.get('/', ensureAuth, (req, res) => {
   res.sendFile(path.join(__dirname, 'dashboard.html'));
 });
