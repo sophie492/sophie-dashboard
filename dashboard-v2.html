@@ -2433,8 +2433,14 @@ function toggleMyTask(el) {
   localStorage.setItem('sophie-dash-last-check-'+taskId, new Date().toISOString());
   fetch('/api/tasks/complete', {
     method: 'POST', headers: {'Content-Type':'application/json'},
+    credentials: 'include',
     body: JSON.stringify({ taskId, title: titleText, done: isChecked })
-  }).catch(e => console.warn('Task completion sync failed:', e));
+  }).then(r=>{
+    if(!r.ok) console.error('[Sync] Task completion failed:',r.status,r.statusText);
+    else return r.json();
+  }).then(d=>{
+    if(d) console.log('[Sync] Task',isChecked?'completed':'unchecked','→ Notion:',d.notionUpdated?'updated':'not found');
+  }).catch(e => console.error('[Sync] Task completion failed:', e));
 
   const openList = document.getElementById('my-task-list');
   const doneList = document.getElementById('my-done-list');

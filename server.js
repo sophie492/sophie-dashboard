@@ -101,7 +101,7 @@ const API_KEY = process.env.DASHBOARD_API_KEY;
 
 // -- Notion integration (bidirectional sync) --
 const NOTION_TOKEN = process.env.NOTION_TOKEN;
-const NOTION_DB_ID = process.env.NOTION_DB_ID;
+const NOTION_DB_ID = process.env.NOTION_DB_ID || 'ec04c3e35f534ee487592c1fb304991e';
 const notion = NOTION_TOKEN ? new Client({ auth: NOTION_TOKEN }) : null;
 if (notion) console.log('[Notion] Integration enabled, DB:', NOTION_DB_ID);
 else console.log('[Notion] No NOTION_TOKEN set - write-back disabled');
