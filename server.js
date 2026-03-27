@@ -98,8 +98,28 @@ app.use(express.json({ limit: '1mb' }));
 app.get('/health', (req, res) => res.json({
   status: 'ok',
   notion: !!NOTION_TOKEN,
-  notionDbId: NOTION_DB_ID ? NOTION_DB_ID.slice(0,8)+'...' : null
+  notionClient: !!notion,
+  notionDbId: NOTION_DB_ID ? NOTION_DB_ID.slice(0,8)+'...' : null,
+  tasksJsonExists: fs.existsSync(path.join(__dirname, 'data', 'tasks.json')),
+  manualTasksJsonExists: fs.existsSync(path.join(__dirname, 'data', 'manual-tasks.json'))
 }));
+
+// Notion write test (remove after debugging)
+app.get('/health/notion-test', async (req, res) => {
+  if (!notion) return res.json({ error: 'notion client is null', NOTION_TOKEN: !!NOTION_TOKEN });
+  try {
+    // Try to read a known task
+    const testId = '3301ad76-fd2a-812f-a13c-f5b1b927fcda';
+    const page = await notion.pages.retrieve({ page_id: testId });
+    const done = page.properties.Done?.checkbox;
+    // Toggle it and toggle back
+    await notion.pages.update({ page_id: testId, properties: { Done: { checkbox: !done } } });
+    await notion.pages.update({ page_id: testId, properties: { Done: { checkbox: done } } });
+    res.json({ success: true, taskTitle: page.properties.Task?.title?.[0]?.plain_text, doneState: done, message: 'Toggled and restored' });
+  } catch (err) {
+    res.json({ error: err.message, code: err.code });
+  }
+});
 
 const API_KEY = process.env.DASHBOARD_API_KEY;
 
