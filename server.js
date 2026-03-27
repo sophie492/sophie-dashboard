@@ -1753,7 +1753,7 @@ app.post('/api/tasks/reconcile', ensureAuth, async (req, res) => {
 
 // ── Podcast API ──
 try {
-  const createPodcastRouter = require('../../podcast-api.js');
+  const createPodcastRouter = require('./podcast-api.js');
   app.use('/api/podcast', createPodcastRouter(null));
   console.log('[Podcast] API mounted at /api/podcast');
 } catch (e) {
