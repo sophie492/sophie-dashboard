@@ -1204,6 +1204,7 @@ function init() {
   fetchLiveNews();
   fetchLiveUtilities();
   fetchLivePulse();
+  fetchLiveCalendar();
 
   // Top nav tab switching
   document.querySelectorAll('.top-nav-tab').forEach(tab => {
@@ -1319,6 +1320,27 @@ async function fetchLiveActionItems() {
     // Network error or no API — silently use hardcoded data
     console.log('Action items API not available, using hardcoded data');
   }
+}
+
+function fetchLiveCalendar() {
+  fetch("/api/calendar", {
+    headers: { "Authorization": "Bearer sophie-dashboard-secret-change-me" }
+  })
+  .then(function(r) { return r.ok ? r.json() : null; })
+  .then(function(data) {
+    if (!data || !Array.isArray(data.calendarDays) || data.calendarDays.length === 0) return;
+    // Merge: keep today from DATA, add future days from API
+    var today = new Date().toISOString().slice(0,10);
+    var existing = (DATA.calendarDays || []).filter(function(d) { return d.date <= today; });
+    var future = data.calendarDays.filter(function(d) { return d.date > today; });
+    DATA.calendarDays = existing.concat(future).sort(function(a,b) { return a.date.localeCompare(b.date); });
+    // Reset calendar index and re-render
+    var todayIdx = DATA.calendarDays.findIndex(function(d) { return d.date >= today; });
+    calDayIdx = todayIdx >= 0 ? todayIdx : 0;
+    var container = document.getElementById("cal-card-container");
+    if (container) container.innerHTML = renderCalendarInner();
+  })
+  .catch(function(e) { console.warn("Calendar fetch failed:", e); });
 }
 
 // -- KPI Strip --
