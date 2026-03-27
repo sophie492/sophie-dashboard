@@ -2430,6 +2430,7 @@ function toggleMyTask(el) {
   }
   saveDoneIds(doneIds);
   saveDoneTitles(doneTitles);
+  localStorage.setItem('sophie-dash-last-check-'+taskId, new Date().toISOString());
   fetch('/api/tasks/complete', {
     method: 'POST', headers: {'Content-Type':'application/json'},
     body: JSON.stringify({ taskId, title: titleText, done: isChecked })
@@ -4190,31 +4191,47 @@ async function fetchLiveFPPC(){
 
 async function fetchLiveTasks(){
   try{
-    const res=await fetch('/api/tasks/live');
-    if(!res.ok)return;
+    // Use deduped endpoint instead of raw live
+    const res=await fetch('/api/tasks/deduped');
+    if(!res.ok){
+      // Fallback to basic live endpoint
+      const fallback=await fetch('/api/tasks/live');
+      if(!fallback.ok)return;
+      const data=await fallback.json();
+      if(data.tasks)DATA.myTasks=data.tasks;
+      renderTasksPage();renderOverview();renderSidebar();
+      return;
+    }
     const data=await res.json();
     if(!data.tasks||data.tasks.length===0)return;
-    // Merge manual tasks that haven't synced to Notion yet
-    // Dedup by BOTH id and normalized title to prevent duplicates
-    const manual=loadManualTasks();
-    const existingIds=new Set(data.tasks.map(t=>t.id));
-    const existingTitles=new Set(data.tasks.map(t=>normalizeTitle(t.title)));
-    const unsyncedManual=manual.filter(m=>{
-      if(existingIds.has(m.id))return false;
-      if(existingTitles.has(normalizeTitle(m.title)))return false;
-      // Also skip if it has a notionPageId that matches a live task
-      if(m.notionPageId&&existingIds.has(m.notionPageId))return false;
-      return true;
+
+    // Apply localStorage done states (dashboard may have changes not yet synced)
+    const doneIds=new Set(loadDoneIds());
+    const doneTitles=new Set(loadDoneTitles());
+    data.tasks.forEach(t=>{
+      if(doneIds.has(t.id)||doneTitles.has(normalizeTitle(t.title))){
+        // Local says done but Notion might disagree — check timestamps
+        if(t.lastModifiedAt){
+          const localCheck=localStorage.getItem('sophie-dash-last-check-'+t.id);
+          if(localCheck&&new Date(localCheck)>new Date(t.lastModifiedAt)){
+            t.done=true; // Local is newer
+          }
+          // Otherwise trust Notion
+        }else{
+          t.done=true; // No timestamp info, trust local
+        }
+      }
     });
-    unsyncedManual.forEach(m=>data.tasks.unshift(m));
+
     DATA.myTasks=data.tasks;
-    renderTasksPage();
-    renderOverview();
-    renderSidebar();
+    if(data.duplicatesFound&&data.duplicatesFound.length>0){
+      console.log('[Dedup] Duplicates resolved:',data.duplicatesFound);
+    }
+    renderTasksPage();renderOverview();renderSidebar();
     const activePage=loadActivePage();
     if(activePage&&activePage!=='overview')navigateTo(activePage);
-    console.log('[Live] Tasks updated from Notion:',data.tasks.length,'tasks');
-  }catch(e){console.warn('[Live] Notion tasks fetch failed:',e.message);}
+    console.log('[Live] Tasks updated (deduped):',data.tasks.length,'tasks');
+  }catch(e){console.warn('[Live] Task fetch failed:',e.message);}
 }
 
 async function fetchLiveEvents(){
@@ -4241,6 +4258,39 @@ async function fetchLiveEvents(){
   }catch(e){console.warn('[Live] Notion events fetch failed:',e.message);}
 }
 
+// ── Reconciliation ──
+
+async function reconcileTasks(){
+  try{
+    // Build local task state
+    const localTasks=DATA.myTasks.map(t=>({
+      id:t.id,
+      notionPageId:t.notionPageId,
+      title:t.title,
+      done:t.done,
+      lastModifiedAt:localStorage.getItem('sophie-dash-last-check-'+t.id)||t.lastModifiedAt||null
+    }));
+    const res=await fetch('/api/tasks/reconcile',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({localTasks})
+    });
+    if(!res.ok)return;
+    const data=await res.json();
+    // Apply local updates from reconciliation
+    if(data.actions){
+      data.actions.filter(a=>a.action==='update-local').forEach(a=>{
+        const task=DATA.myTasks.find(t=>t.id===a.taskId);
+        if(task)task.done=a.done;
+      });
+    }
+    if(data.resolved>0){
+      console.log('[Reconcile] Resolved',data.resolved,'conflicts');
+      renderTasksPage();
+    }
+  }catch(e){console.warn('[Reconcile] Failed:',e.message);}
+}
+
 // ── Auto-refresh ──
 
 function startAutoRefresh(){
@@ -4255,6 +4305,7 @@ function startAutoRefresh(){
     fetchLiveEvents();
   },180000);
   setInterval(updateFreshness,60000);
+  setInterval(reconcileTasks, 300000); // 5 minutes
 }
 
 // ── Init ──

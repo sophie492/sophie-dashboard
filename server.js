@@ -280,7 +280,7 @@ app.post('/api/tasks/add', ensureAuth, (req, res) => {
     const { title, priority } = req.body;
     if (!title) return res.status(400).json({ error: 'title is required' });
     const id = 'manual-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8);
-    const task = { id, title, text: title, done: false, priority: priority || 'Medium', due: null, context: 'Manual', owner: 'Sophie', notionSynced: false, addedAt: new Date().toISOString() };
+    const task = { id, title, text: title, done: false, priority: priority || 'Medium', due: null, context: 'Manual', owner: 'Sophie', notionSynced: false, addedAt: new Date().toISOString(), lastModifiedAt: new Date().toISOString(), lastModifiedBy: 'dashboard' };
     const dir = path.dirname(MANUAL_TASKS_PATH);
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
     const existing = fs.existsSync(MANUAL_TASKS_PATH) ? JSON.parse(fs.readFileSync(MANUAL_TASKS_PATH, 'utf8')) : [];
@@ -356,8 +356,21 @@ app.post('/api/tasks/complete', ensureAuth, async (req, res) => {
       const task = data.tasks.find(t => t.id === taskId);
       if (task) {
         task.done = done !== false;
+        task.lastModifiedAt = new Date().toISOString();
+        task.lastModifiedBy = 'dashboard';
         data.lastUpdated = new Date().toISOString();
         fs.writeFileSync(TASKS_PATH, JSON.stringify(data, null, 2));
+      }
+    }
+
+    // Also update manual tasks with lastModifiedAt
+    if (fs.existsSync(MANUAL_TASKS_PATH)) {
+      const manual = JSON.parse(fs.readFileSync(MANUAL_TASKS_PATH, 'utf8'));
+      const mt = manual.find(t => t.id === taskId);
+      if (mt) {
+        mt.lastModifiedAt = new Date().toISOString();
+        mt.lastModifiedBy = 'dashboard';
+        fs.writeFileSync(MANUAL_TASKS_PATH, JSON.stringify(manual, null, 2));
       }
     }
 
@@ -1466,6 +1479,233 @@ app.patch('/api/projects/toggle-block/:blockId', ensureAuth, async (req, res) =>
 });
 
 // ââ Protected dashboard ââ
+// ── Smart Task Dedup Engine ──
+function extractEntities(text) {
+  const lower = text.toLowerCase();
+  // Known company names (from active deals/relationships)
+  const companies = ['criteo','symbiotica','sakara','tapestry','bissell','gnc','greylock',
+    'tinuiti','away','murad','glossier','spanx','albertsons','j.jill','perry ellis',
+    'backcountry','moma','stripe','salesforce','anthropic','webflow','vmg','omaha',
+    'gen digital','shopify','sephora','pandora','fabletics','knitwell','brooks running',
+    'meta','fermat'];
+  // Known people
+  const people = ['rishabh','shreyas','sophie','evelyn','jess','bharat','jennifer','saunder',
+    'isabel','khushy','daniel','alec','james','talia','gillian','rhea','maya','ashley',
+    'mehdi','anshuman','alice','sarah','becky','helena','jack'];
+  // Action verbs
+  const actions = ['schedule','follow up','reply','send','confirm','book','cancel',
+    'reschedule','prepare','review','update','create','draft','coordinate','reach out',
+    'respond','fix','set up','check','organize','plan','sign','issue','collect','connect'];
+
+  const foundCompanies = companies.filter(c => lower.includes(c));
+  const foundPeople = people.filter(p => lower.includes(p));
+  const foundActions = actions.filter(a => lower.includes(a));
+
+  return { companies: foundCompanies, people: foundPeople, actions: foundActions };
+}
+
+function taskSimilarity(a, b) {
+  const entA = extractEntities(a);
+  const entB = extractEntities(b);
+
+  // Shared companies
+  const sharedCompanies = entA.companies.filter(c => entB.companies.includes(c));
+  // Shared people
+  const sharedPeople = entA.people.filter(p => entB.people.includes(p));
+  // Shared actions
+  const sharedActions = entA.actions.filter(a => entB.actions.includes(a));
+
+  // Scoring: company match is strongest signal
+  let score = 0;
+  if (sharedCompanies.length > 0) score += 0.5;
+  if (sharedPeople.length > 0) score += 0.25;
+  if (sharedActions.length > 0) score += 0.15;
+
+  // Exact normalized match
+  const normA = a.toLowerCase().replace(/[^a-z0-9 ]/g, '').replace(/\s+/g, ' ').trim();
+  const normB = b.toLowerCase().replace(/[^a-z0-9 ]/g, '').replace(/\s+/g, ' ').trim();
+  if (normA === normB) score = 1.0;
+
+  // Word overlap ratio
+  const wordsA = new Set(normA.split(' ').filter(w => w.length > 2));
+  const wordsB = new Set(normB.split(' ').filter(w => w.length > 2));
+  const shared = [...wordsA].filter(w => wordsB.has(w));
+  const overlap = shared.length / Math.max(wordsA.size, wordsB.size, 1);
+  score = Math.max(score, overlap * 0.8);
+
+  return score;
+}
+
+const DEDUP_THRESHOLD = 0.55; // Tuned: company + action match = 0.65, company alone = 0.5 (no match)
+
+app.get('/api/tasks/deduped', ensureAuth, async (req, res) => {
+  if (!notion) return res.status(503).json({ error: 'Notion not configured' });
+  try {
+    // 1. Get Notion tasks
+    const response = await notion.databases.query({
+      database_id: NOTION_TASK_DB,
+      filter: {
+        and: [
+          { property: 'Task', title: { contains: '[Sophie]' } },
+          { property: 'Task', title: { does_not_contain: '[ARCHIVED]' } }
+        ]
+      },
+      sorts: [{ property: 'Priority', direction: 'ascending' }]
+    });
+    const notionTasks = response.results.map(page => {
+      const props = page.properties;
+      const titleRaw = props.Task?.title?.[0]?.plain_text || '';
+      return {
+        id: page.id,
+        notionPageId: page.id,
+        title: titleRaw.replace(/^\[Sophie\]\s*/, ''),
+        done: props.Done?.checkbox || false,
+        priority: props.Priority?.select?.name || 'Medium',
+        due: props['Due Date']?.date?.start || null,
+        context: props.Source?.rich_text?.[0]?.plain_text || '',
+        sourceLink: props['Source Link']?.url || '',
+        owner: 'Sophie',
+        source: 'notion',
+        lastModifiedAt: page.last_edited_time
+      };
+    });
+
+    // 2. Get manual tasks from server
+    const manualTasks = fs.existsSync(MANUAL_TASKS_PATH)
+      ? JSON.parse(fs.readFileSync(MANUAL_TASKS_PATH, 'utf8'))
+      : [];
+
+    // 3. Smart merge: for each manual task, check if it matches a Notion task
+    const merged = [...notionTasks];
+    const dupLog = [];
+
+    manualTasks.forEach(m => {
+      // Skip if already matched by ID or notionPageId
+      if (merged.some(n => n.id === m.id || n.id === m.notionPageId)) return;
+
+      // Smart similarity check against all Notion tasks
+      let bestMatch = null;
+      let bestScore = 0;
+      merged.forEach(n => {
+        const score = taskSimilarity(m.title, n.title);
+        if (score > bestScore) { bestScore = score; bestMatch = n; }
+      });
+
+      if (bestScore >= DEDUP_THRESHOLD) {
+        // Duplicate detected -- keep Notion version, log the dup
+        dupLog.push({ manual: m.title, notion: bestMatch.title, score: bestScore });
+      } else {
+        // Unique manual task -- add it
+        m.source = 'manual';
+        m.lastModifiedAt = m.addedAt || new Date().toISOString();
+        merged.push(m);
+      }
+    });
+
+    res.json({
+      tasks: merged,
+      duplicatesFound: dupLog,
+      lastUpdated: new Date().toISOString(),
+      source: 'notion-deduped'
+    });
+  } catch (err) {
+    console.error('[Notion Dedup] Query failed:', err.message);
+    res.status(500).json({ error: 'Dedup query failed' });
+  }
+});
+
+app.post('/api/tasks/reconcile', ensureAuth, async (req, res) => {
+  if (!notion) return res.status(503).json({ error: 'Notion not configured' });
+  try {
+    const { localTasks } = req.body; // Tasks from dashboard localStorage
+    if (!Array.isArray(localTasks)) return res.status(400).json({ error: 'localTasks array required' });
+
+    // 1. Get current Notion state
+    const response = await notion.databases.query({
+      database_id: NOTION_TASK_DB,
+      filter: {
+        and: [
+          { property: 'Task', title: { contains: '[Sophie]' } },
+          { property: 'Task', title: { does_not_contain: '[ARCHIVED]' } }
+        ]
+      }
+    });
+
+    const notionTasks = new Map();
+    response.results.forEach(page => {
+      const props = page.properties;
+      const title = (props.Task?.title?.[0]?.plain_text || '').replace(/^\[Sophie\]\s*/, '');
+      notionTasks.set(page.id, {
+        id: page.id,
+        title,
+        done: props.Done?.checkbox || false,
+        lastModifiedAt: page.last_edited_time
+      });
+    });
+
+    const actions = [];
+
+    // 2. For each local task, resolve conflicts
+    localTasks.forEach(local => {
+      const notionVersion = notionTasks.get(local.notionPageId) || notionTasks.get(local.id);
+
+      if (!notionVersion) {
+        // Local task not in Notion -- create it (unless it's been soft-deleted)
+        if (!local._deleted) {
+          actions.push({ action: 'create-in-notion', task: local });
+        }
+        return;
+      }
+
+      // Both exist -- compare modification times
+      const localTime = new Date(local.lastModifiedAt || 0).getTime();
+      const notionTime = new Date(notionVersion.lastModifiedAt || 0).getTime();
+
+      if (local.done !== notionVersion.done) {
+        if (localTime > notionTime) {
+          // Dashboard is newer -- push to Notion
+          actions.push({ action: 'update-notion', pageId: notionVersion.id, done: local.done });
+        } else {
+          // Notion is newer -- update local
+          actions.push({ action: 'update-local', taskId: local.id, done: notionVersion.done });
+        }
+      }
+
+      // Remove from map so we can detect Notion-only tasks
+      notionTasks.delete(notionVersion.id);
+    });
+
+    // 3. Tasks in Notion but not local -- include them (new tasks added in Notion)
+    const newFromNotion = [];
+    notionTasks.forEach(task => {
+      newFromNotion.push(task);
+    });
+
+    // 4. Execute Notion updates
+    for (const act of actions) {
+      if (act.action === 'update-notion') {
+        await updateNotionTaskDone(act.pageId, act.done);
+      } else if (act.action === 'create-in-notion' && act.task.title) {
+        await createNotionTask({
+          title: act.task.title,
+          priority: act.task.priority || 'Medium',
+          source: 'Dashboard'
+        });
+      }
+    }
+
+    res.json({
+      actions,
+      newFromNotion,
+      resolved: actions.length,
+      lastUpdated: new Date().toISOString()
+    });
+  } catch (err) {
+    console.error('[Reconcile] Failed:', err.message);
+    res.status(500).json({ error: 'Reconciliation failed' });
+  }
+});
+
 // ── Podcast API ──
 try {
   const createPodcastRouter = require('../../podcast-api.js');
