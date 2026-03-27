@@ -570,7 +570,7 @@ async function fetchGCalEvents(token, calendarId, timeMin, timeMax) {
     singleEvents: 'true',
     orderBy: 'startTime',
     maxResults: '250',
-    timeZone: 'America/New_York'
+    timeZone: 'America/Los_Angeles'
   });
   const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?${params}`;
   const resp = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
@@ -585,11 +585,14 @@ async function fetchGCalEvents(token, calendarId, timeMin, timeMax) {
 
 function fmtTime(dateTime) {
   if (!dateTime) return '';
-  const d = new Date(dateTime);
-  let h = d.getHours(); const m = d.getMinutes();
-  const ampm = h >= 12 ? 'PM' : 'AM';
+  // Parse local time directly from ISO string (already in PT from GCal API)
+  var match = dateTime.match(/T(\d{2}):(\d{2})/);
+  if (!match) return '';
+  var h = parseInt(match[1], 10);
+  var m = parseInt(match[2], 10);
+  var ampm = h >= 12 ? 'PM' : 'AM';
   h = h % 12 || 12;
-  return m === 0 ? `${h}:00 ${ampm}` : `${h}:${String(m).padStart(2, '0')} ${ampm}`;
+  return m === 0 ? h + ':00 ' + ampm : h + ':' + String(m).padStart(2, '0') + ' ' + ampm;
 }
 
 function classifyEvent(ev) {
