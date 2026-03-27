@@ -1853,19 +1853,21 @@ function updateFreshness(){
 // -- Person filtering helpers --
 function getPersonActionItems(person){
   const items=DATA.actionItems?.items||[];
-  // Prefer structured owner field, fall back to regex for legacy items
+  const regex=new RegExp(person,'i');
+  // Show items where owner matches OR text mentions the person (for awareness)
   return items.filter(i=>{
-    if(i.owner) return i.owner.toLowerCase()===person.toLowerCase();
-    return new RegExp(person,'i').test(i.text);
+    if(i.owner&&i.owner.toLowerCase()===person.toLowerCase()) return true;
+    return regex.test(i.text);
   });
 }
 function getPersonWaitingOn(person){
   const stalePatterns=/stale|no action|hasn't replied|pending|no reply|no decision|waiting|unanswered/i;
   const items=DATA.actionItems?.items||[];
+  const regex=new RegExp(person,'i');
   return items.filter(i=>{
-    const isOwner=i.owner?i.owner.toLowerCase()===person.toLowerCase():new RegExp(person,'i').test(i.text);
+    const isRelevant=(i.owner&&i.owner.toLowerCase()===person.toLowerCase())||regex.test(i.text);
     const isWaiting=i.category==='waiting-on'||stalePatterns.test(i.text);
-    return isOwner&&isWaiting;
+    return isRelevant&&isWaiting;
   });
 }
 function getPersonCalendar(person){
