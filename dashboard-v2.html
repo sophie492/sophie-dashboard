@@ -2359,7 +2359,7 @@ function renderMyTasks() {
     </div>
     <div class="card-body" style="padding:10px 14px 6px">
       <div class="filter-bar">
-        <button class="filter-btn active" onclick="filterMyTasks('all',this)">All (${tasks.length})</button>
+        <button class="filter-btn active" onclick="filterMyTasks('all',this)">All (${open.length})</button>
         <button class="filter-btn" onclick="filterMyTasks('high',this)">&#128308; Urgent (${high.length})</button>
         <button class="filter-btn" onclick="filterMyTasks('due',this)">&#128197; Has due</button>
         <button class="filter-btn" onclick="filterMyTasks('done',this)">&#9989; Done (${done.length})</button>
@@ -2477,7 +2477,8 @@ function filterMyTasks(filter, btn) {
     doneList.style.display='none';
     openList.querySelectorAll('.task-check-item').forEach(item => {
       let show = true;
-      if(filter==='high') show = item.dataset.priority==='High';
+      if(filter==='all') show = true; // Show all open tasks — reset any previous filter
+      else if(filter==='high') show = item.dataset.priority==='High';
       else if(filter==='due') show = item.dataset.hasDue==='yes';
       item.style.display = show ? '' : 'none';
     });
