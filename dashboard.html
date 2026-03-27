@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+/<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -1194,11 +1194,11 @@ async function fetchLiveActionItems() {
 
 // -- KPI Strip --
 function renderKPIs() {
-  const open = DATA.myTasks.filter(t=>!t.done).length;
-  const urgent = DATA.actionItems.items.filter(i=>i.priority==='red').length;
-  const loops = DATA.openLoops.length;
-  const loopsHot = DATA.openLoops.filter(l=>l.priority==='red').length;
-  const broken = DATA.tasks.filter(t=>t.status!=='ok' && t.status!=='off').length;
+  const open = (DATA.myTasks||[]).filter(t=>!t.done).length;
+  const urgent = (DATA.actionItems && DATA.actionItems.items || []).filter(i=>i.priority==='red').length;
+  const loops = (DATA.openLoops||[]).length;
+  const loopsHot = (DATA.openLoops||[]).filter(l=>l.priority==='red').length;
+  const broken = (DATA.tasks||[]).filter(t=>t.status!=='ok' && t.status!=='off').length;
   const drafts = DATA.unreadDrafts;
   document.getElementById('kpi-strip').innerHTML = `
     <div class="kpi ${open > 13 ? 'red' : open > 8 ? 'yellow' : 'gold'}"><div class="num">${open}</div><div class="lbl">My Tasks</div></div>
@@ -2366,6 +2366,7 @@ function toggleHWTask(el) {
 }
 
 function renderSFBudget() {
+  if (!DATA.rampBudgets || !DATA.rampBudgets.sfSocial) return '<div class="card" style="height:100%"><div class="card-head"><div class="card-title">&#128179; SF Social Budget</div></div><div class="card-body" style="padding:14px;color:var(--text-muted);font-size:12px">Budget data loading...</div></div>';
   const b = DATA.rampBudgets.sfSocial;
   const pct = Math.round((b.spent / b.limit) * 100);
   const barColor = pct >= 90 ? 'var(--red)' : pct >= 70 ? 'var(--yellow)' : 'var(--leaf)';
