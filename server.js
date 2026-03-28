@@ -220,6 +220,55 @@ app.get('/api/action-items/live', async (req, res) => {
   }
 });
 
+// ── Resolve/Create CEO Action Items in Notion ──
+app.post('/api/action-items/resolve', async (req, res) => {
+  const authHeader = req.headers.authorization || '';
+  const token = authHeader.replace('Bearer ', '');
+  if (token !== (process.env.DASHBOARD_API_KEY || 'sophie-dashboard-secret-change-me')) {
+    return res.status(401).json({ error: 'Invalid API key' });
+  }
+  if (!notion) return res.status(503).json({ error: 'Notion not configured' });
+  const { notionId, resolution } = req.body;
+  if (!notionId) return res.status(400).json({ error: 'notionId required' });
+  try {
+    const props = { Status: { select: { name: 'Done' } } };
+    if (resolution) props['Resolution Notes'] = { rich_text: [{ text: { content: resolution } }] };
+    await notion.pages.update({ page_id: notionId, properties: props });
+    console.log(`[Action Items] Resolved: ${notionId}`);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[Action Items] Resolve failed:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/action-items/create', async (req, res) => {
+  const authHeader = req.headers.authorization || '';
+  const token = authHeader.replace('Bearer ', '');
+  if (token !== (process.env.DASHBOARD_API_KEY || 'sophie-dashboard-secret-change-me')) {
+    return res.status(401).json({ error: 'Invalid API key' });
+  }
+  if (!notion) return res.status(503).json({ error: 'Notion not configured' });
+  const { text, priority, category } = req.body;
+  if (!text) return res.status(400).json({ error: 'text required' });
+  try {
+    const properties = {
+      'Action Item': { title: [{ text: { content: text } }] },
+      Status: { select: { name: 'Open' } },
+      Priority: { select: { name: priority === 'red' ? 'High' : priority === 'green' ? 'Low' : 'Medium' } },
+      Category: { select: { name: category || 'Rishabh to act' } },
+      'Date Raised': { date: { start: new Date().toISOString().slice(0, 10) } },
+      Source: { rich_text: [{ text: { content: 'Dashboard' } }] }
+    };
+    const page = await notion.pages.create({ parent: { database_id: NOTION_ACTION_ITEMS_DB }, properties });
+    console.log(`[Action Items] Created: "${text}" -> ${page.id}`);
+    res.json({ ok: true, notionId: page.id });
+  } catch (err) {
+    console.error('[Action Items] Create failed:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Notion write test (remove after debugging)
 app.get('/health/notion-test', async (req, res) => {
   if (!notion) return res.json({ error: 'notion client is null', NOTION_TOKEN: !!NOTION_TOKEN });

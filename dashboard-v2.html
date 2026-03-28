@@ -2200,10 +2200,12 @@ function renderPersonPage(person){
   } else {
     items.forEach(it=>{
       const dotClass=it.priority||'yellow';
+      const dismissBtn=it.notionId?`<button class="item-dismiss" onclick="resolveActionItem(this,'${it.notionId}')" title="Resolve">&times;</button>`:'';
       aiHtml+=`<div class="ai-row">
         <span class="ai-dot ${dotClass}"></span>
         <span style="flex:1;font-size:11px;color:var(--text-dim)">${it.text}</span>
         <span class="badge tag-gray" style="font-size:8px">${it.source||''}</span>
+        ${dismissBtn}
       </div>`;
     });
   }
@@ -4381,6 +4383,25 @@ async function reconcileTasks(){
       renderTasksPage();
     }
   }catch(e){console.warn('[Reconcile] Failed:',e.message);}
+}
+
+// ── Action Item resolve/create → Notion ──
+function resolveActionItem(btn,notionId){
+  const row=btn.closest('.ai-row');
+  row.style.transition='opacity .3s,transform .3s';
+  row.style.opacity='0';
+  row.style.transform='translateX(12px)';
+  setTimeout(()=>row.remove(),300);
+  if(notionId){
+    fetch('/api/action-items/resolve',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer sophie-dashboard-secret-change-me'},
+      body:JSON.stringify({notionId})
+    }).then(r=>r.json()).then(d=>{
+      if(d.ok)console.log('[Action Items] Resolved in Notion:',notionId);
+      else console.error('[Action Items] Resolve failed:',d.error);
+    }).catch(e=>console.error('[Action Items] Resolve failed:',e.message));
+  }
 }
 
 // ── Auto-refresh ──
