@@ -658,7 +658,6 @@ const DATA = {
     {id:"32f1ad76-fd2a-8105-9d98-e0da3f92999f",notionPageId:"32f1ad76-fd2a-8105-9d98-e0da3f92999f",title:"Get desk name plates for SF office \u2014 per Emily",done:false,priority:"Low",due:null,context:"Slack",sourceLink:"https://getfermat.slack.com/archives/D09QLFZSQF6/p1774556698109049",owner:"Sophie"},
     {id:"32e1ad76-fd2a-818f-9e0c-e61cf7bc2a96",notionPageId:"32e1ad76-fd2a-818f-9e0c-e61cf7bc2a96",title:"Confirm Webflow/Helena calendar invite landed on Rishabh\'s calendar \u2014 Thu 4/23 10am at Sightglass Coffee",done:false,priority:"Low",due:null,context:"Gmail",sourceLink:"https://mail.google.com/mail/u/0/#all/19d265d5702d1f96",owner:"Sophie"},
     {id:"32e1ad76-fd2a-8158-a650-ccae7aec0119",notionPageId:"32e1ad76-fd2a-8158-a650-ccae7aec0119",title:"Valkyries game",done:false,priority:"Low",due:null,context:"Manual",sourceLink:"",owner:"Sophie"},
-    {id:"manual-1774556022198-q6v7cp",notionPageId:"manual-1774556022198-q6v7cp",title:"podcast",done:false,priority:"Medium",due:null,context:"Manual",sourceLink:"",owner:"Sophie"}
   ],
 
   // notionTasks removed — team-level tasks now flow through the CEO brief's
@@ -4227,18 +4226,30 @@ function applyDoneStatesAndMergeManual(tasks){
     // Also check by notionPageId
     if(t.notionPageId&&doneIds.has(t.notionPageId))t.done=true;
   });
-  // 2. Re-merge manual tasks from localStorage (they get lost on live refresh)
+  // 2. Re-merge manual tasks — ONLY if they synced to Notion (have notionPageId)
+  // Tasks without notionPageId are ghosts that never made it to Notion
   const manual=loadManualTasks();
   const existingIds=new Set(tasks.map(t=>t.id));
   const existingTitles=new Set(tasks.map(t=>normalizeTitle(t.title)));
+  const validManual=[];
   manual.forEach(m=>{
+    // Skip if already in the live task list
     if(existingIds.has(m.id))return;
     if(m.notionPageId&&existingIds.has(m.notionPageId))return;
     if(existingTitles.has(normalizeTitle(m.title)))return;
-    // Apply done state to manual task too
-    if(doneIds.has(m.id)||doneTitles.has(normalizeTitle(m.title)))m.done=true;
-    tasks.unshift(m);
+    // Only keep if it has a Notion page ID (successfully synced) OR was just created (< 2 min ago)
+    const ageMs=Date.now()-new Date(m.addedAt||0).getTime();
+    if(m.notionPageId||m.notionSynced||ageMs<120000){
+      if(doneIds.has(m.id)||doneTitles.has(normalizeTitle(m.title)))m.done=true;
+      tasks.unshift(m);
+      validManual.push(m);
+    }
   });
+  // Clean up localStorage — remove ghost tasks
+  if(validManual.length<manual.length){
+    saveManualTasks(validManual);
+    console.log('[Cleanup] Removed',manual.length-validManual.length,'ghost tasks from localStorage');
+  }
   // 3. Process retry queue — re-send failed completion calls
   const retryQueue=JSON.parse(localStorage.getItem('sophie-dash-retry-queue')||'[]');
   if(retryQueue.length>0){
