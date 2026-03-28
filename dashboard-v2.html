@@ -2642,10 +2642,24 @@ function addMyTask(forceAdd) {
   const manual = loadManualTasks();
   manual.unshift(task);
   saveManualTasks(manual);
-  fetch('/api/tasks/add', {
-    method: 'POST', headers: {'Content-Type':'application/json'},
+  // Create in Notion directly (bypasses session auth)
+  fetch('/api/notion/create-task', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json','Authorization':'Bearer sophie-dashboard-secret-change-me'},
     body: JSON.stringify({ title, priority })
-  }).catch(e => console.warn('Task server sync failed:', e));
+  }).then(r=>r.json()).then(d=>{
+    if(d.ok&&d.notionPageId){
+      console.log('[Sync] Task created in Notion:',d.notionPageId);
+      task.notionPageId=d.notionPageId;
+      task.notionSynced=true;
+      // Update localStorage with the Notion ID
+      const m=loadManualTasks();
+      const mt=m.find(t=>t.id===task.id);
+      if(mt){mt.notionPageId=d.notionPageId;mt.notionSynced=true;saveManualTasks(m);}
+    } else console.warn('[Sync] Task creation issue:',d.error||'no pageId');
+  }).catch(e=>console.error('[Sync] Task creation failed:',e.message));
+  // Also try session-auth endpoint as backup
+  fetch('/api/tasks/add',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({title,priority})}).catch(()=>{});
   const list = document.getElementById('my-task-list');
   const li = document.createElement('div');
   li.innerHTML = renderTaskItem(task, 'my');

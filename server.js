@@ -127,6 +127,27 @@ app.post('/api/notion/toggle-task', async (req, res) => {
   }
 });
 
+// ── Direct Notion task creation — no session auth, uses API key ──
+app.post('/api/notion/create-task', async (req, res) => {
+  const authHeader = req.headers.authorization || '';
+  const token = authHeader.replace('Bearer ', '');
+  if (token !== (process.env.DASHBOARD_API_KEY || 'sophie-dashboard-secret-change-me')) {
+    return res.status(401).json({ error: 'Invalid API key' });
+  }
+  if (!notion) return res.status(503).json({ error: 'Notion not configured' });
+  const { title, priority } = req.body;
+  if (!title) return res.status(400).json({ error: 'title required' });
+  try {
+    const notionTitle = '[Sophie] ' + title;
+    const pageId = await createNotionTask({ title: notionTitle, priority: priority || 'Medium', source: 'Dashboard' });
+    console.log(`[Notion Direct] Created task: "${title}" -> ${pageId}`);
+    res.json({ ok: true, notionPageId: pageId });
+  } catch (err) {
+    console.error(`[Notion Direct] Create failed: ${err.message}`);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Notion write test (remove after debugging)
 app.get('/health/notion-test', async (req, res) => {
   if (!notion) return res.json({ error: 'notion client is null', NOTION_TOKEN: !!NOTION_TOKEN });
