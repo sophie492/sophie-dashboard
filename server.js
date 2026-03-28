@@ -148,6 +148,78 @@ app.post('/api/notion/create-task', async (req, res) => {
   }
 });
 
+// ── Live CEO Action Items from Notion ──
+const NOTION_ACTION_ITEMS_DB = 'a4ad0b7234f44b5eb568fc270e253b09';
+
+app.get('/api/action-items/live', async (req, res) => {
+  // No session auth — use API key or allow unauthenticated (read-only summary)
+  if (!notion) return res.status(503).json({ error: 'Notion not configured' });
+  try {
+    const response = await notion.databases.query({
+      database_id: NOTION_ACTION_ITEMS_DB,
+      filter: {
+        or: [
+          { property: 'Status', select: { equals: 'Open' } },
+          { property: 'Status', select: { equals: 'Stale' } },
+          { property: 'Status', select: { equals: 'Escalated' } }
+        ]
+      },
+      sorts: [{ property: 'Priority', direction: 'ascending' }]
+    });
+
+    const items = response.results.map(page => {
+      const p = page.properties;
+      const title = p['Action Item']?.title?.[0]?.plain_text || '';
+      const status = p.Status?.select?.name || 'Open';
+      const priorityRaw = p.Priority?.select?.name || 'Medium';
+      const category = p.Category?.select?.name || '';
+      const owner = p.Owner?.select?.name || category.split(' ')[0] || '';
+      const account = p.Account?.rich_text?.[0]?.plain_text || '';
+      const dateRaised = p['Date Raised']?.date?.start || '';
+      const source = p.Source?.rich_text?.[0]?.plain_text || '';
+
+      // Map priority to dashboard color
+      let priority = 'yellow';
+      if (priorityRaw === 'High' || status === 'Stale' || status === 'Escalated') priority = 'red';
+      else if (priorityRaw === 'Low') priority = 'green';
+
+      // Calculate age
+      let age = '';
+      if (dateRaised) {
+        const days = Math.floor((Date.now() - new Date(dateRaised).getTime()) / 86400000);
+        age = days + 'd';
+      }
+
+      // Determine owner for person filtering
+      let personOwner = '';
+      if (category.includes('Rishabh')) personOwner = 'Rishabh';
+      else if (category.includes('Shreyas')) personOwner = 'Shreyas';
+      else if (category.includes('Sophie')) personOwner = 'Sophie';
+
+      return {
+        text: title + (account ? ' — ' + account : '') + (status === 'Stale' ? ' [STALE ' + age + ']' : ''),
+        priority,
+        source: source || 'Notion',
+        owner: personOwner,
+        category,
+        age,
+        status,
+        notionId: page.id
+      };
+    });
+
+    res.json({
+      items,
+      totalToday: items.length,
+      lastUpdated: new Date().toISOString(),
+      source: 'notion-ceo-brief'
+    });
+  } catch (err) {
+    console.error('[Notion Live] Action items query failed:', err.message);
+    res.status(500).json({ error: 'Notion query failed' });
+  }
+});
+
 // Notion write test (remove after debugging)
 app.get('/health/notion-test', async (req, res) => {
   if (!notion) return res.json({ error: 'notion client is null', NOTION_TOKEN: !!NOTION_TOKEN });

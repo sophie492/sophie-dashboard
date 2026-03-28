@@ -4077,9 +4077,31 @@ function renderSystemPage(){
 
 async function fetchLiveActionItems(){
   try{
-    const res=await fetch('/api/action-items');
-    if(!res.ok)return;
-    const data=await res.json();
+    // Try live Notion endpoint first (no session auth needed)
+    const res=await fetch('/api/action-items/live');
+    if(res.ok){
+      const ct=res.headers.get('content-type')||'';
+      if(ct.includes('json')){
+        const data=await res.json();
+        if(data.items&&data.items.length>0){
+          DATA.actionItems.items=data.items;
+          DATA.actionItems.totalToday=data.items.length;
+          DATA.actionItems.lastUpdated=new Date().toLocaleString('en-US',{timeZone:'America/Los_Angeles',weekday:'short',hour:'numeric',minute:'2-digit',hour12:true});
+          renderOverview();
+          renderPersonPage('Rishabh');
+          renderPersonPage('Shreyas');
+          renderSidebar();
+          const activePage=loadActivePage();
+          if(activePage!=='overview')navigateTo(activePage);
+          console.log('[Live] Action items updated from CEO brief DB:',data.items.length,'items');
+          return;
+        }
+      }
+    }
+    // Fallback: try the old session-auth endpoint
+    const fallback=await fetch('/api/action-items',{credentials:'include'});
+    if(!fallback.ok)return;
+    const data=await fallback.json();
     if(!data.items||data.items.length===0)return;
     DATA.actionItems.items=data.items;
     DATA.actionItems.totalToday=data.items.length;
@@ -4087,12 +4109,7 @@ async function fetchLiveActionItems(){
       const d=new Date(data.lastUpdated);
       DATA.actionItems.lastUpdated=d.toLocaleString('en-US',{timeZone:'America/Los_Angeles',weekday:'short',hour:'numeric',minute:'2-digit',hour12:true});
     }
-    renderOverview();
-    renderPersonPage('Rishabh');
-    renderPersonPage('Shreyas');
-    renderSidebar();
-    const activePage=loadActivePage();
-    if(activePage!=='overview')navigateTo(activePage);
+    renderOverview();renderPersonPage('Rishabh');renderPersonPage('Shreyas');renderSidebar();
   }catch(e){console.log('Action items API not available, using hardcoded data');}
 }
 
