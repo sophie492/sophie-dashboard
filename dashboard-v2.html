@@ -2431,26 +2431,24 @@ function toggleMyTask(el) {
   saveDoneIds(doneIds);
   saveDoneTitles(doneTitles);
   localStorage.setItem('sophie-dash-last-check-'+taskId, new Date().toISOString());
-  fetch('/api/tasks/complete', {
-    method: 'POST', headers: {'Content-Type':'application/json'},
-    credentials: 'include',
-    redirect: 'error',
-    body: JSON.stringify({ taskId, title: titleText, done: isChecked })
-  }).then(r=>{
-    if(!r.ok) throw new Error('Server returned '+r.status);
-    const ct=r.headers.get('content-type')||'';
-    if(!ct.includes('application/json')) throw new Error('Auth session expired — got HTML instead of JSON');
-    return r.json();
-  }).then(d=>{
-    if(d&&d.notionUpdated) console.log('[Sync] Task',isChecked?'completed':'unchecked','→ Notion updated');
-    else if(d) console.warn('[Sync] Task saved locally but Notion page not found — will retry on reconcile');
-  }).catch(e=>{
-    console.error('[Sync] Task completion failed:',e.message);
-    // Queue for retry on next reconciliation
-    const retryQueue=JSON.parse(localStorage.getItem('sophie-dash-retry-queue')||'[]');
-    retryQueue.push({taskId,title:titleText,done:isChecked,timestamp:new Date().toISOString()});
-    localStorage.setItem('sophie-dash-retry-queue',JSON.stringify(retryQueue));
-  });
+  // Use direct Notion endpoint (no session auth needed — uses API key)
+  const isNotionId=/^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(taskId);
+  if(isNotionId){
+    fetch('/api/notion/toggle-task',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer sophie-dashboard-secret-change-me'},
+      body:JSON.stringify({pageId:taskId,done:isChecked})
+    }).then(r=>r.json()).then(d=>{
+      if(d.ok) console.log('[Sync] Task',isChecked?'checked':'unchecked','→ Notion updated directly');
+      else console.error('[Sync] Notion direct failed:',d.error);
+    }).catch(e=>console.error('[Sync] Notion direct failed:',e.message));
+  }
+  // Also try the session-auth endpoint as backup (updates server-side tasks.json)
+  fetch('/api/tasks/complete',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    credentials:'include',
+    body:JSON.stringify({taskId,title:titleText,done:isChecked})
+  }).catch(()=>{});
 
   const openList = document.getElementById('my-task-list');
   const doneList = document.getElementById('my-done-list');

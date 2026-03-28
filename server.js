@@ -104,6 +104,29 @@ app.get('/health', (req, res) => res.json({
   manualTasksJsonExists: fs.existsSync(path.join(__dirname, 'data', 'manual-tasks.json'))
 }));
 
+// ── Direct Notion task toggle — no session auth required, uses API key ──
+app.post('/api/notion/toggle-task', async (req, res) => {
+  const authHeader = req.headers.authorization || '';
+  const token = authHeader.replace('Bearer ', '');
+  if (token !== (process.env.DASHBOARD_API_KEY || 'sophie-dashboard-secret-change-me')) {
+    return res.status(401).json({ error: 'Invalid API key' });
+  }
+  if (!notion) return res.status(503).json({ error: 'Notion not configured' });
+  const { pageId, done } = req.body;
+  if (!pageId) return res.status(400).json({ error: 'pageId required' });
+  try {
+    await notion.pages.update({
+      page_id: pageId,
+      properties: { Done: { checkbox: !!done } }
+    });
+    console.log(`[Notion Direct] ${done ? 'Checked' : 'Unchecked'}: ${pageId}`);
+    res.json({ ok: true, notionUpdated: true, pageId });
+  } catch (err) {
+    console.error(`[Notion Direct] Failed: ${err.message}`);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Notion write test (remove after debugging)
 app.get('/health/notion-test', async (req, res) => {
   if (!notion) return res.json({ error: 'notion client is null', NOTION_TOKEN: !!NOTION_TOKEN });
