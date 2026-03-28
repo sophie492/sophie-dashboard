@@ -1713,40 +1713,86 @@ app.get('/api/tasks/deduped', ensureAuth, async (req, res) => {
       };
     });
 
-    // 2. Get manual tasks from server
+    // 2. Dedup WITHIN Notion tasks — archive duplicates at the source
+    const dupLog = [];
+    const archiveQueue = [];
+    const kept = [];
+
+    for (let i = 0; i < notionTasks.length; i++) {
+      const task = notionTasks[i];
+      let isDup = false;
+
+      for (const existing of kept) {
+        const score = taskSimilarity(task.title, existing.title);
+        if (score >= DEDUP_THRESHOLD) {
+          // Duplicate found — decide which to keep
+          if (task.done && !existing.done) {
+            // Task is done, existing is not — the undone one is the stale duplicate
+            // But wait — the done one means work IS complete, so keep the done one
+            // and archive the undone duplicate
+            archiveQueue.push({ id: existing.id, title: existing.title, reason: 'Duplicate of done task: ' + task.title });
+            dupLog.push({ archived: existing.title, kept: task.title, score, reason: 'undone duplicate of done task' });
+            // Replace existing with the done version
+            const idx = kept.indexOf(existing);
+            kept[idx] = task;
+            isDup = true;
+            break;
+          } else if (!task.done && existing.done) {
+            // Existing is done, new task is undone — archive the undone one
+            archiveQueue.push({ id: task.id, title: task.title, reason: 'Duplicate of done task: ' + existing.title });
+            dupLog.push({ archived: task.title, kept: existing.title, score, reason: 'undone duplicate of done task' });
+            isDup = true;
+            break;
+          } else {
+            // Both same done state — archive the newer one (later in the list)
+            archiveQueue.push({ id: task.id, title: task.title, reason: 'Duplicate of: ' + existing.title });
+            dupLog.push({ archived: task.title, kept: existing.title, score, reason: 'newer duplicate' });
+            isDup = true;
+            break;
+          }
+        }
+      }
+
+      if (!isDup) kept.push(task);
+    }
+
+    // 3. Archive duplicates in Notion (async, don't block response)
+    if (archiveQueue.length > 0) {
+      console.log(`[Dedup] Archiving ${archiveQueue.length} duplicates in Notion`);
+      archiveQueue.forEach(dup => {
+        archiveNotionTask(dup.id, '[Sophie] ' + dup.title).catch(e =>
+          console.error(`[Dedup] Failed to archive ${dup.id}:`, e.message)
+        );
+      });
+    }
+
+    // 4. Merge manual tasks
     const manualTasks = fs.existsSync(MANUAL_TASKS_PATH)
       ? JSON.parse(fs.readFileSync(MANUAL_TASKS_PATH, 'utf8'))
       : [];
 
-    // 3. Smart merge: for each manual task, check if it matches a Notion task
-    const merged = [...notionTasks];
-    const dupLog = [];
-
     manualTasks.forEach(m => {
-      // Skip if already matched by ID or notionPageId
-      if (merged.some(n => n.id === m.id || n.id === m.notionPageId)) return;
+      if (kept.some(n => n.id === m.id || n.id === m.notionPageId)) return;
 
-      // Smart similarity check against all Notion tasks
       let bestMatch = null;
       let bestScore = 0;
-      merged.forEach(n => {
+      kept.forEach(n => {
         const score = taskSimilarity(m.title, n.title);
         if (score > bestScore) { bestScore = score; bestMatch = n; }
       });
 
       if (bestScore >= DEDUP_THRESHOLD) {
-        // Duplicate detected -- keep Notion version, log the dup
-        dupLog.push({ manual: m.title, notion: bestMatch.title, score: bestScore });
+        dupLog.push({ archived: m.title, kept: bestMatch.title, score: bestScore, reason: 'manual duplicate' });
       } else {
-        // Unique manual task -- add it
         m.source = 'manual';
         m.lastModifiedAt = m.addedAt || new Date().toISOString();
-        merged.push(m);
+        kept.push(m);
       }
     });
 
     res.json({
-      tasks: merged,
+      tasks: kept,
+      duplicatesArchived: archiveQueue.length,
       duplicatesFound: dupLog,
       lastUpdated: new Date().toISOString(),
       source: 'notion-deduped'
