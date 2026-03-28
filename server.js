@@ -225,6 +225,25 @@ async function createNotionTask({ title, priority, due, source }) {
   }
 }
 
+async function archiveNotionTask(notionPageId, currentTitle) {
+  if (!notion || !notionPageId) return false;
+  try {
+    const archivedTitle = currentTitle.startsWith('[ARCHIVED]') ? currentTitle : '[ARCHIVED] ' + currentTitle;
+    await notion.pages.update({
+      page_id: notionPageId,
+      properties: {
+        Task: { title: [{ text: { content: archivedTitle } }] },
+        Done: { checkbox: true }
+      }
+    });
+    console.log(`[Notion] Archived + marked done: ${notionPageId}`);
+    return true;
+  } catch (err) {
+    console.error('[Notion] Failed to archive:', err.message);
+    return false;
+  }
+}
+
 async function updateNotionTaskDone(notionPageId, done) {
   if (!notion || !notionPageId) return false;
   try {
