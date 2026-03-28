@@ -4218,13 +4218,26 @@ async function fetchLiveFPPC(){
 
 
 function applyDoneStatesAndMergeManual(tasks){
-  // 1. Apply localStorage done states — if you checked it, it stays checked
+  // 1. Apply localStorage done states ONLY for recent checks (< 3 min)
+  // Notion is the source of truth. localStorage is just an optimistic cache
+  // to prevent the UI from flickering between check and next live refresh.
   const doneIds=new Set(loadDoneIds());
   const doneTitles=new Set(loadDoneTitles());
+  const now=Date.now();
   tasks.forEach(t=>{
-    if(doneIds.has(t.id)||doneTitles.has(normalizeTitle(t.title)))t.done=true;
-    // Also check by notionPageId
-    if(t.notionPageId&&doneIds.has(t.notionPageId))t.done=true;
+    // If Notion says done, trust it
+    if(t.done) return;
+    // If localStorage says done, only trust it if the check was recent (< 3 min)
+    const checkTime=localStorage.getItem('sophie-dash-last-check-'+t.id);
+    if(checkTime && (now - new Date(checkTime).getTime()) < 180000) {
+      if(doneIds.has(t.id)||doneTitles.has(normalizeTitle(t.title))) t.done=true;
+    }
+    if(t.notionPageId) {
+      const checkTime2=localStorage.getItem('sophie-dash-last-check-'+t.notionPageId);
+      if(checkTime2 && (now - new Date(checkTime2).getTime()) < 180000) {
+        if(doneIds.has(t.notionPageId)) t.done=true;
+      }
+    }
   });
   // 2. Re-merge manual tasks — ONLY if they synced to Notion (have notionPageId)
   // Tasks without notionPageId are ghosts that never made it to Notion
