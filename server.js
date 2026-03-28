@@ -1596,49 +1596,59 @@ app.patch('/api/projects/toggle-block/:blockId', ensureAuth, async (req, res) =>
 // ── Smart Task Dedup Engine ──
 function extractEntities(text) {
   const lower = text.toLowerCase();
-  // Known company names (from active deals/relationships)
   const companies = ['criteo','symbiotica','sakara','tapestry','bissell','gnc','greylock',
     'tinuiti','away','murad','glossier','spanx','albertsons','j.jill','perry ellis',
     'backcountry','moma','stripe','salesforce','anthropic','webflow','vmg','omaha',
     'gen digital','shopify','sephora','pandora','fabletics','knitwell','brooks running',
-    'meta','fermat'];
-  // Known people
+    'meta','fermat','podcast'];
   const people = ['rishabh','shreyas','sophie','evelyn','jess','bharat','jennifer','saunder',
     'isabel','khushy','daniel','alec','james','talia','gillian','rhea','maya','ashley',
-    'mehdi','anshuman','alice','sarah','becky','helena','jack'];
-  // Action verbs
-  const actions = ['schedule','follow up','reply','send','confirm','book','cancel',
-    'reschedule','prepare','review','update','create','draft','coordinate','reach out',
-    'respond','fix','set up','check','organize','plan','sign','issue','collect','connect'];
+    'mehdi','anshuman','alice','sarah','becky','helena','jack','matt kruer','kira','jillian'];
+
+  // Action verb GROUPS — verbs in the same group are synonymous
+  const actionGroups = {
+    scheduling: ['schedule','book','reschedule','set up call','set up meeting','calendar invite'],
+    followup: ['follow up','reply','respond','reach out','nudge','check in','ping'],
+    sending: ['send','email','draft','forward','share'],
+    creation: ['create','build','prepare','write','set up','organize','plan','launch','execute'],
+    review: ['review','approve','sign','check','confirm','verify'],
+    fixing: ['fix','update','resolve','debug'],
+    logistics: ['issue','collect','connect','coordinate','print','order','get']
+  };
 
   const foundCompanies = companies.filter(c => lower.includes(c));
   const foundPeople = people.filter(p => lower.includes(p));
-  const foundActions = actions.filter(a => lower.includes(a));
 
-  return { companies: foundCompanies, people: foundPeople, actions: foundActions };
+  // Find which action groups match
+  const foundActionGroups = [];
+  for (const [group, verbs] of Object.entries(actionGroups)) {
+    if (verbs.some(v => lower.includes(v))) foundActionGroups.push(group);
+  }
+
+  return { companies: foundCompanies, people: foundPeople, actionGroups: foundActionGroups };
 }
 
 function taskSimilarity(a, b) {
   const entA = extractEntities(a);
   const entB = extractEntities(b);
 
-  // Shared companies
   const sharedCompanies = entA.companies.filter(c => entB.companies.includes(c));
-  // Shared people
   const sharedPeople = entA.people.filter(p => entB.people.includes(p));
-  // Shared actions
-  const sharedActions = entA.actions.filter(a => entB.actions.includes(a));
+  // Actions only match if they're in the SAME group (schedule≠follow up)
+  const sharedActionGroups = entA.actionGroups.filter(g => entB.actionGroups.includes(g));
 
-  // Scoring: company match is strongest signal
-  let score = 0;
-  if (sharedCompanies.length > 0) score += 0.5;
-  if (sharedPeople.length > 0) score += 0.25;
-  if (sharedActions.length > 0) score += 0.15;
-
-  // Exact normalized match
+  // Exact normalized match — always a duplicate
   const normA = a.toLowerCase().replace(/[^a-z0-9 ]/g, '').replace(/\s+/g, ' ').trim();
   const normB = b.toLowerCase().replace(/[^a-z0-9 ]/g, '').replace(/\s+/g, ' ').trim();
-  if (normA === normB) score = 1.0;
+  if (normA === normB) return 1.0;
+
+  // Entity-based scoring — requires action match to reach threshold
+  let score = 0;
+  if (sharedCompanies.length > 0) score += 0.3;
+  if (sharedPeople.length > 0) score += 0.15;
+  if (sharedActionGroups.length > 0) score += 0.25;
+  // Bonus: all three match = very likely duplicate
+  if (sharedCompanies.length > 0 && sharedPeople.length > 0 && sharedActionGroups.length > 0) score += 0.15;
 
   // Word overlap ratio
   const wordsA = new Set(normA.split(' ').filter(w => w.length > 2));
@@ -1650,7 +1660,7 @@ function taskSimilarity(a, b) {
   return score;
 }
 
-const DEDUP_THRESHOLD = 0.55; // Tuned: company + action match = 0.65, company alone = 0.5 (no match)
+const DEDUP_THRESHOLD = 0.65; // Raised from 0.55 — better to show a duplicate than hide a real task
 
 app.get('/api/tasks/deduped', ensureAuth, async (req, res) => {
   if (!notion) return res.status(503).json({ error: 'Notion not configured' });
