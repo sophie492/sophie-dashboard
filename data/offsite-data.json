@@ -1549,21 +1549,21 @@
               "pros": "Fermat has automatic 10% off website rate. WeWork across the street. Alice (travel agent) negotiating further with GM Diana.",
               "cons": "",
               "bestPairedWith": "WeWork Chelsea",
-              "aliceNote": "Alice contacted Diana at Moxy for Fermat-specific discount. $1,120/room for both nights before discount. Awaiting final pricing.",
+              "aliceNote": "Sophie told Alice to book. Alice working with Diana (GM) on Fermat-specific discount. $1,120/room for both nights before discount.",
               "currentFrontrunner": true
             }
           ],
           "hotel": {
-            "name": "Moxy NYC Chelsea (pending final pricing)",
+            "name": "Moxy NYC Chelsea",
             "rate": 420,
-            "rateNote": "~$420/room with 10% Fermat discount, pending Diana confirmation via Alice",
+            "rateNote": "~$420/room with 10% Fermat discount",
             "nights": 2,
-            "rooms": 8,
-            "roomsNote": "8 rooms needed -- Isabel is NYC-based",
+            "rooms": 6,
+            "roomsNote": "6 rooms needed — 3 NYC locals (Evelyn, Jess, Jennifer) don't need hotel",
             "confirmed": false,
             "contactPerson": "Alice Zhao (travel agent, alice.zhao@fora.travel)",
             "roomsNeeded": 6,
-            "status": "Researching",
+            "status": "Booking",
             "selectedOption": 3,
             "confirmationDetails": ""
           },
@@ -1780,8 +1780,8 @@
         "aliceCorrespondence": {
           "threadSubject": "Next Leadership Offsite",
           "lastEmailDate": "2026-03-27",
-          "summary": "Sophie initially asked about Courtyard Midtown East for 4 rooms. Alice suggested Moxy NYC Chelsea (Fermat has auto 10% off). Moxy quoted ~$1,120/room for both nights without discount. Alice contacted Diana (GM) for Fermat-specific pricing. Sophie confirmed Moxy is the likely choice pending budget approval. Alice is standing by for names, Marriott numbers, and which CC to use once approval comes through.",
-          "nextStep": "Awaiting Moxy pricing from Diana via Alice. Need budget approval from Evelyn before committing.",
+          "summary": "Sophie told Alice to book Moxy NYC Chelsea. Alice contacted Diana (GM) for Fermat-specific pricing (auto 10% off). Awaiting confirmation from Alice that rooms are booked.",
+          "nextStep": "Alice is booking Moxy. Need confirmation + send names, Marriott numbers, and CC details.",
           "keyEmails": [
             {
               "date": "2026-03-23",
