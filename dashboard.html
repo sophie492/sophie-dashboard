@@ -5368,43 +5368,43 @@ async function fetchLivePulse(){
 }
 
 function fetchLiveCalendar(){
-  // Try auth endpoint first (gets fresh data), fall back to cache (no auth needed)
-  return fetch('/api/calendar?days=14',{credentials:'include'})
+  // Always load cache first (has 14+ days), then try live on top
+  return fetch('/api/calendar/cached')
   .then(r=>r.ok?r.json():null)
-  .then(data=>{
-    if(!data||!Array.isArray(data.calendarDays)||data.calendarDays.length===0)return;
-    data.calendarDays.forEach(day=>{
-      if(!day.events&&(day.rishabh||day.shreyas)){
-        var merged=[];
-        (day.rishabh||[]).forEach(e=>{e.calendar='rishabh';merged.push(e);});
-        (day.shreyas||[]).forEach(e=>{
-          var isDup=merged.some(m=>m.time===e.time&&m.title===e.title);
-          if(!isDup){e.calendar='shreyas';merged.push(e);}
-        });
-        merged.sort((a,b)=>{if(a.time==='All day')return -1;if(b.time==='All day')return 1;return a.time.localeCompare(b.time);});
-        day.events=merged;
+  .then(cached=>{
+    if(cached&&Array.isArray(cached.calendarDays)&&cached.calendarDays.length>0){
+      // Only use cache if it has MORE days than current data
+      if(cached.calendarDays.length>(DATA.calendarDays||[]).length){
+        DATA.calendarDays=cached.calendarDays;
+        renderOverview();
+        renderPersonPage('Rishabh');
+        renderPersonPage('Shreyas');
+        console.log('[Calendar] Loaded from cache:',cached.calendarDays.length,'days');
       }
-    });
-    var ptNow=new Date(new Date().toLocaleString('en-US',{timeZone:'America/Los_Angeles'}));
-    var todayStr=ptNow.getFullYear()+'-'+String(ptNow.getMonth()+1).padStart(2,'0')+'-'+String(ptNow.getDate()).padStart(2,'0');
-    var existing=(DATA.calendarDays||[]).filter(d=>d.date<todayStr);
-    var fromApi=data.calendarDays.filter(d=>d.date>=todayStr);
-    DATA.calendarDays=existing.concat(fromApi).sort((a,b)=>a.date.localeCompare(b.date));
-    renderOverview();
-    renderPersonPage('Rishabh');
-    renderPersonPage('Shreyas');
+    }
   })
-  .catch(e=>{
-    console.warn('Calendar auth fetch failed, trying cache:',e.message||e);
-    // Fallback: try cached calendar (no auth needed)
-    fetch('/api/calendar/cached').then(r=>r.ok?r.json():null).then(data=>{
+  .catch(()=>{})
+  .then(()=>{
+    // Then try live auth endpoint for freshest data (may fail if session expired)
+    return fetch('/api/calendar?days=14',{credentials:'include',redirect:'error'})
+    .then(r=>{
+      if(!r.ok)throw new Error('not ok');
+      var ct=r.headers.get('content-type')||'';
+      if(!ct.includes('json'))throw new Error('not json');
+      return r.json();
+    })
+    .then(data=>{
       if(!data||!Array.isArray(data.calendarDays)||data.calendarDays.length===0)return;
-      DATA.calendarDays=data.calendarDays;
-      renderOverview();
-      renderPersonPage('Rishabh');
-      renderPersonPage('Shreyas');
-      console.log('[Calendar] Loaded from cache:',data.calendarDays.length,'days');
-    }).catch(()=>{});
+      // Only override if live has MORE data than cache
+      if(data.calendarDays.length>(DATA.calendarDays||[]).length){
+        DATA.calendarDays=data.calendarDays;
+        renderOverview();
+        renderPersonPage('Rishabh');
+        renderPersonPage('Shreyas');
+        console.log('[Calendar] Live update:',data.calendarDays.length,'days');
+      }
+    })
+    .catch(()=>{});
   });
 }
 
