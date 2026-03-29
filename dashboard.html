@@ -4218,22 +4218,35 @@ function renderOffsiteDetailView(el, OFFSITE, ALLDATA) {
 
   // ── Attendees tab ──
   function renderAttendeesTab() {
-    var confirmed = attendees.filter(function(a) { return a.hotelConfirmed && a.flightBooked; }).length;
+    var travelers = attendees.filter(function(a) { return a.needsHotel !== false; });
+    var confirmed = travelers.filter(function(a) { return a.hotelConfirmed && a.flightBooked; }).length;
+    var locals = attendees.filter(function(a) { return a.needsHotel === false; }).length;
+    function attendeeToggle(a, field) {
+      var isLocal = (a.needsHotel === false && (field === 'hotelConfirmed' || field === 'flightBooked')) ||
+                    (a.needsFlight === false && field === 'flightBooked');
+      if (isLocal) {
+        return '<span style="font-size:10px;color:var(--text-muted);font-style:italic">N/A</span>';
+      }
+      var val = a[field];
+      return '<button class="offsite-status-toggle" onclick="toggleAttendeeStatus(\'' + a.name.replace(/'/g, "\\'") + '\',\'' + field + '\')" style="background:' + (val ? 'var(--green-soft)' : 'var(--surface)') + ';color:' + (val ? 'var(--green)' : 'var(--text-muted)') + ';border:1px solid ' + (val ? 'var(--green)' : 'var(--border)') + ';padding:2px 8px;border-radius:4px;font-size:10px;cursor:pointer;font-family:inherit">' + (val ? '\u2713' : '\u2014') + '</button>';
+    }
     var attendeeRows = attendees.map(function(a, ai) {
+      var locationTag = a.location ? '<div style="font-size:9px;color:var(--text-muted);margin-top:1px">' + a.location + '</div>' : '';
+      var travelTag = a.travelNotes ? '<div style="font-size:9px;color:' + (a.needsFlight === false ? 'var(--green)' : 'var(--text-muted)') + ';margin-top:1px">' + a.travelNotes + '</div>' : '';
       return '<tr style="border-bottom:1px solid var(--border);font-size:11px">' +
-        '<td style="padding:6px 8px;font-weight:600;color:var(--text)">' + a.name + (a.notes ? '<div style="font-size:9px;color:var(--yellow);margin-top:2px">' + a.notes + '</div>' : '') + '</td>' +
+        '<td style="padding:6px 8px;font-weight:600;color:var(--text)">' + a.name + (a.title ? '<div style="font-size:9px;color:var(--text-dim)">' + a.title + '</div>' : '') + locationTag + '</td>' +
         '<td style="padding:6px 8px;color:var(--text-muted);font-size:10px">' + (a.email || '') + '</td>' +
-        '<td style="padding:6px 8px;color:var(--text-muted);font-family:monospace;font-size:10px">' + (a.marriottNum || '<span style="color:var(--red)">missing</span>') + '</td>' +
-        '<td style="padding:6px 8px;text-align:center"><button class="offsite-status-toggle" onclick="toggleAttendeeStatus(\'' + a.name.replace(/'/g, "\\'") + '\',\'hotelConfirmed\')" style="background:' + (a.hotelConfirmed ? 'var(--green-soft)' : 'var(--surface)') + ';color:' + (a.hotelConfirmed ? 'var(--green)' : 'var(--yellow)') + '">' + (a.hotelConfirmed ? '&#10003;' : '&#9679;') + '</button></td>' +
-        '<td style="padding:6px 8px;text-align:center"><button class="offsite-status-toggle" onclick="toggleAttendeeStatus(\'' + a.name.replace(/'/g, "\\'") + '\',\'flightBooked\')" style="background:' + (a.flightBooked ? 'var(--green-soft)' : 'var(--surface)') + ';color:' + (a.flightBooked ? 'var(--green)' : 'var(--yellow)') + '">' + (a.flightBooked ? '&#10003;' : '&#9679;') + '</button></td>' +
-        '<td style="padding:6px 8px;text-align:center"><button class="offsite-status-toggle" onclick="toggleAttendeeStatus(\'' + a.name.replace(/'/g, "\\'") + '\',\'travelCardIssued\')" style="background:' + (a.travelCardIssued ? 'var(--green-soft)' : 'var(--surface)') + ';color:' + (a.travelCardIssued ? 'var(--green)' : 'var(--yellow)') + '">' + (a.travelCardIssued ? '&#10003;' : '&#9679;') + '</button></td>' +
-        '<td style="padding:6px 8px;color:var(--text-muted);font-size:10px">' + (a.dietaryNeeds || '--') + '</td>' +
+        '<td style="padding:6px 8px;color:var(--text-muted);font-family:monospace;font-size:10px">' + (a.needsHotel === false ? '<span style="color:var(--text-muted);font-style:italic">N/A</span>' : (a.marriottNum || '<span style="color:var(--red)">missing</span>')) + '</td>' +
+        '<td style="padding:6px 8px;text-align:center">' + attendeeToggle(a, 'hotelConfirmed') + '</td>' +
+        '<td style="padding:6px 8px;text-align:center">' + attendeeToggle(a, 'flightBooked') + '</td>' +
+        '<td style="padding:6px 8px;text-align:center">' + attendeeToggle(a, 'travelCardIssued') + '</td>' +
+        '<td style="padding:6px 8px;color:var(--text-muted);font-size:10px">' + travelTag + '</td>' +
       '</tr>';
     }).join('');
 
     return '<div class="offsite-tab-pane" id="offsite-attendees">' +
       '<div style="display:flex;align-items:center;gap:16px;margin-bottom:12px">' +
-        '<div style="font-size:13px;font-weight:700;color:var(--text)">' + confirmed + '/' + attendees.length + ' fully confirmed</div>' +
+        '<div style="font-size:13px;font-weight:700;color:var(--text)">' + confirmed + '/' + travelers.length + ' travelers confirmed' + (locals > 0 ? ' <span style="font-size:10px;color:var(--text-muted);font-weight:500">(' + locals + ' local — N/A)</span>' : '') + '</div>' +
         '<div style="flex:1;height:6px;background:var(--surface);border-radius:3px;overflow:hidden;max-width:300px"><div style="height:100%;width:' + (attendees.length ? Math.round(confirmed/attendees.length*100) : 0) + '%;background:var(--green);border-radius:3px;transition:width .3s"></div></div>' +
       '</div>' +
       '<div class="card">' +
