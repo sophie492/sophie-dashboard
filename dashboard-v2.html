@@ -5662,7 +5662,14 @@ async function fetchLiveBrief() {
     const data = await res.json();
     if (data.lastUpdated) {
       CEO_BRIEF = data;
-      console.log('[Live] CEO brief loaded:', data.flagged?.length, 'flagged,', data.priorities?.length, 'priorities');
+      console.log('[Live] CEO brief loaded:', data.priorities?.length, 'priorities');
+      // Re-render pages that depend on brief data
+      renderOverview();
+      renderPersonPage('Rishabh');
+      renderPersonPage('Shreyas');
+      renderSidebar();
+      const activePage=loadActivePage();
+      if(activePage&&activePage!=='overview')navigateTo(activePage);
     }
   } catch (e) { console.warn('[Live] CEO brief fetch failed:', e.message); }
 }
