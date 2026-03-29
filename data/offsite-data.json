@@ -94,64 +94,307 @@
   "template": {
     "phases": [
       {
-        "phase": "Phase 1: Kickoff",
-        "what": "Confirm dates, city, headcount, budget expectations"
+        "name": "Phase 1: Kickoff",
+        "deadline": "8 weeks before",
+        "tasks": [
+          {
+            "text": "Confirm dates and city",
+            "done": false
+          },
+          {
+            "text": "Confirm headcount and attendee list",
+            "done": false
+          },
+          {
+            "text": "Create a Planning Hub page for this offsite",
+            "done": false
+          },
+          {
+            "text": "Create calendar event",
+            "done": false
+          },
+          {
+            "text": "Set budget expectations with Evelyn",
+            "done": false
+          }
+        ]
       },
       {
-        "phase": "Phase 2: Logistics",
-        "what": "Hotel + budget approved, WeWork + social activity booked"
+        "name": "Phase 2: Logistics",
+        "deadline": "6 weeks before",
+        "tasks": [
+          {
+            "text": "Coordinate hotel booking with travel agent",
+            "done": false
+          },
+          {
+            "text": "Collect Marriott member numbers",
+            "done": false
+          },
+          {
+            "text": "Send hotel confirmation numbers to attendees",
+            "done": false
+          },
+          {
+            "text": "Find nearest WeWork to hotel (walking distance)",
+            "done": false
+          },
+          {
+            "text": "Book WeWork conference room (capacity 10+)",
+            "done": false
+          },
+          {
+            "text": "Research 3 group activity options",
+            "done": false
+          },
+          {
+            "text": "Book social activity",
+            "done": false
+          },
+          {
+            "text": "Book dinner restaurant",
+            "done": false
+          },
+          {
+            "text": "Prepare DoorDash group order links",
+            "done": false
+          },
+          {
+            "text": "Compile estimated costs across all categories",
+            "done": false
+          },
+          {
+            "text": "Draft budget approval request to Evelyn",
+            "done": false
+          },
+          {
+            "text": "Get budget approved before committing",
+            "done": false
+          }
+        ]
       },
       {
-        "phase": "Phase 3: Agenda",
-        "what": "Coordinate agenda with leadership, collect materials"
+        "name": "Phase 3: Content & Agenda",
+        "deadline": "3 weeks before",
+        "tasks": [
+          {
+            "text": "Review #leadership Slack (past 30 days) for themes",
+            "done": false
+          },
+          {
+            "text": "Run keyword searches across Slack",
+            "done": false
+          },
+          {
+            "text": "Check Granola notes for recent leadership topics",
+            "done": false
+          },
+          {
+            "text": "Coordinate agenda topics with Evelyn & leadership",
+            "done": false
+          },
+          {
+            "text": "Confirm topic owners and time slots",
+            "done": false
+          },
+          {
+            "text": "Build agenda in Notion",
+            "done": false
+          },
+          {
+            "text": "Collect pre-read materials from topic owners",
+            "done": false
+          },
+          {
+            "text": "Send pre-reads to team (1 week before)",
+            "done": false
+          }
+        ]
       },
       {
-        "phase": "Pre-reads sent",
-        "what": "Send pre-reads to team (1 week before)"
+        "name": "Phase 4: Final Comms",
+        "deadline": "1 week before",
+        "tasks": [
+          {
+            "text": "Draft logistics announcement for #leadership",
+            "done": false
+          },
+          {
+            "text": "Send hotel confirmation details to attendees",
+            "done": false
+          },
+          {
+            "text": "Follow up on missing travel details",
+            "done": false
+          },
+          {
+            "text": "Confirm all bookings (hotel, venue, activity, restaurant)",
+            "done": false
+          },
+          {
+            "text": "Build buffer time into schedule",
+            "done": false
+          }
+        ]
       },
       {
-        "phase": "Phase 4: Final Comms",
-        "what": "Logistics announcement, confirm all bookings"
+        "name": "Day Before",
+        "deadline": "1 day before",
+        "tasks": [
+          {
+            "text": "Confirm all hotel reservations",
+            "done": false
+          },
+          {
+            "text": "Confirm restaurant reservation",
+            "done": false
+          },
+          {
+            "text": "Confirm social activity booking",
+            "done": false
+          },
+          {
+            "text": "Prepare DoorDash links for lunch orders",
+            "done": false
+          }
+        ]
       },
       {
-        "phase": "Day Before",
-        "what": "Final confirmations, prep DoorDash links"
+        "name": "Day 1",
+        "deadline": "Day of",
+        "tasks": [
+          {
+            "text": "Send DoorDash link at start of first session",
+            "done": false
+          },
+          {
+            "text": "Send any last-minute logistics updates",
+            "done": false
+          }
+        ]
       },
       {
-        "phase": "Day 1",
-        "what": "Offsite Day 1"
+        "name": "Day 2",
+        "deadline": "Day of",
+        "tasks": [
+          {
+            "text": "Send DoorDash link for lunch",
+            "done": false
+          },
+          {
+            "text": "Collect informal feedback",
+            "done": false
+          },
+          {
+            "text": "Note action items from sessions",
+            "done": false
+          }
+        ]
       },
       {
-        "phase": "Day 2",
-        "what": "Offsite Day 2"
-      },
-      {
-        "phase": "Post-Offsite",
-        "what": "Lessons learned, action item follow-up"
+        "name": "Post-Offsite",
+        "deadline": "1 week after",
+        "tasks": [
+          {
+            "text": "Capture lessons learned",
+            "done": false
+          },
+          {
+            "text": "Follow up on action items and owners",
+            "done": false
+          }
+        ]
       }
     ],
-    "budgetCategories": ["Hotel", "Venue", "Transportation", "Food & Beverage", "Social Activity", "Misc"],
+    "budgetCategories": [
+      "Hotel",
+      "Venue",
+      "Transportation",
+      "Food & Beverage",
+      "Social Activity",
+      "Misc"
+    ],
     "lessonsLearned": [
-      { "lesson": "Prioritize central/downtown location walkable to all activities. Avoid airport-area hotels.", "source": "Template / Denver 2026 Q1" },
-      { "lesson": "Group activity + dinner is a proven combo. Escape room was a hit. Find unique activities.", "source": "Template / Denver 2026 Q1" },
-      { "lesson": "Send DoorDash links at the start of sessions so food arrives on time.", "source": "Template / Denver 2026 Q1" },
-      { "lesson": "Build flexible scheduling -- not every minute needs to be programmed. The team valued unstructured bonding time.", "source": "Template / Denver 2026 Q1" },
-      { "lesson": "Agenda content and topics come from Evelyn and leadership -- Sophie coordinates and organizes, but doesn't set the agenda.", "source": "Template" },
-      { "lesson": "People did work beforehand - debating is useful. Pre-reads help drive better discussions.", "source": "2024 Q1 SF" },
-      { "lesson": "Should've done more team building -- non-business activities matter.", "source": "2024 Q1 SF (Shreyas, Rishabh feedback)" },
-      { "lesson": "Pacing matters. Starting late and going late works for some but not all (Azi disliked late dinner + early start). Schedule carefully.", "source": "2024 Q4 SF" },
-      { "lesson": "Goal/rock setting improved dramatically when leaders came prepared with own models/POV.", "source": "2024 Q4 SF" },
-      { "lesson": "More leading indicators vs. lagging indicators in discussions.", "source": "2024 Q4 SF" },
-      { "lesson": "Require a single compiled pre-read document from all presenters.", "source": "2025 Q4 SF (Hult feedback)" },
-      { "lesson": "Include recap/celebration of wins from prior quarter -- don't just focus forward.", "source": "2025 Q4 SF (Isabel, Jess feedback)" },
-      { "lesson": "Laptops down during sessions. People should not be missing meetings.", "source": "2025 Q4 SF (Evelyn, Jess feedback)" },
-      { "lesson": "Clearer structure with specific talking points per session -- not just topic headings.", "source": "2025 Q4 SF (Bharat feedback)" },
-      { "lesson": "More push + pull in revenue makeup discussions and changes.", "source": "2025 Q2 SF" },
-      { "lesson": "Dinner was too late -- schedule social dinner earlier.", "source": "2025 Q3 SF (Rishabh feedback)" },
-      { "lesson": "Increased social pressure on getting pre-reads completed works.", "source": "2026 Q1 Denver (Bharat feedback)" },
-      { "lesson": "Agree 2 weeks before on what each person wants to bring to the offsite.", "source": "2026 Q1 Denver (Hult feedback)" },
-      { "lesson": "Include deal review (close won vs. close lost) for learning.", "source": "2026 Q1 Denver (Isabel feedback)" },
-      { "lesson": "Walking distance between all locations (hotel, venue, dinner, activity) is a huge advantage.", "source": "2026 Q1 Denver (Rishabh feedback)" }
+      {
+        "lesson": "Prioritize central/downtown location walkable to all activities. Avoid airport-area hotels.",
+        "source": "Template / Denver 2026 Q1"
+      },
+      {
+        "lesson": "Group activity + dinner is a proven combo. Escape room was a hit. Find unique activities.",
+        "source": "Template / Denver 2026 Q1"
+      },
+      {
+        "lesson": "Send DoorDash links at the start of sessions so food arrives on time.",
+        "source": "Template / Denver 2026 Q1"
+      },
+      {
+        "lesson": "Build flexible scheduling -- not every minute needs to be programmed. The team valued unstructured bonding time.",
+        "source": "Template / Denver 2026 Q1"
+      },
+      {
+        "lesson": "Agenda content and topics come from Evelyn and leadership -- Sophie coordinates and organizes, but doesn't set the agenda.",
+        "source": "Template"
+      },
+      {
+        "lesson": "People did work beforehand - debating is useful. Pre-reads help drive better discussions.",
+        "source": "2024 Q1 SF"
+      },
+      {
+        "lesson": "Should've done more team building -- non-business activities matter.",
+        "source": "2024 Q1 SF (Shreyas, Rishabh feedback)"
+      },
+      {
+        "lesson": "Pacing matters. Starting late and going late works for some but not all (Azi disliked late dinner + early start). Schedule carefully.",
+        "source": "2024 Q4 SF"
+      },
+      {
+        "lesson": "Goal/rock setting improved dramatically when leaders came prepared with own models/POV.",
+        "source": "2024 Q4 SF"
+      },
+      {
+        "lesson": "More leading indicators vs. lagging indicators in discussions.",
+        "source": "2024 Q4 SF"
+      },
+      {
+        "lesson": "Require a single compiled pre-read document from all presenters.",
+        "source": "2025 Q4 SF (Hult feedback)"
+      },
+      {
+        "lesson": "Include recap/celebration of wins from prior quarter -- don't just focus forward.",
+        "source": "2025 Q4 SF (Isabel, Jess feedback)"
+      },
+      {
+        "lesson": "Laptops down during sessions. People should not be missing meetings.",
+        "source": "2025 Q4 SF (Evelyn, Jess feedback)"
+      },
+      {
+        "lesson": "Clearer structure with specific talking points per session -- not just topic headings.",
+        "source": "2025 Q4 SF (Bharat feedback)"
+      },
+      {
+        "lesson": "More push + pull in revenue makeup discussions and changes.",
+        "source": "2025 Q2 SF"
+      },
+      {
+        "lesson": "Dinner was too late -- schedule social dinner earlier.",
+        "source": "2025 Q3 SF (Rishabh feedback)"
+      },
+      {
+        "lesson": "Increased social pressure on getting pre-reads completed works.",
+        "source": "2026 Q1 Denver (Bharat feedback)"
+      },
+      {
+        "lesson": "Agree 2 weeks before on what each person wants to bring to the offsite.",
+        "source": "2026 Q1 Denver (Hult feedback)"
+      },
+      {
+        "lesson": "Include deal review (close won vs. close lost) for learning.",
+        "source": "2026 Q1 Denver (Isabel feedback)"
+      },
+      {
+        "lesson": "Walking distance between all locations (hotel, venue, dinner, activity) is a huge advantage.",
+        "source": "2026 Q1 Denver (Rishabh feedback)"
+      }
     ]
   },
   "offsites": {
@@ -166,7 +409,16 @@
         "venue": "Rishabh's Clubhouse (260 King St.)",
         "status": "Complete",
         "notionPageId": "1c1d1c4b9a534eb28a91356db6c69f0f",
-        "attendees": ["Rishabh", "Shreyas", "Evelyn", "Rabah", "Josh", "Azi", "Abe", "Aless"],
+        "attendees": [
+          "Rishabh",
+          "Shreyas",
+          "Evelyn",
+          "Rabah",
+          "Josh",
+          "Azi",
+          "Abe",
+          "Aless"
+        ],
         "summary": "Mission & strategy, TAM analysis + ICP refinement, product roadmap, $4M investment discussion, pre-mortem on 2024 risks.",
         "keyOutcomes": [
           "ICP defined: $5-50M GMV primary, Beauty/Health/Apparel verticals, Shopify + SFCC",
@@ -176,14 +428,46 @@
         ],
         "rating": 7.9,
         "ratingDetails": [
-          { "name": "Aless", "rating": 8.0, "feedback": "$4M went better than expected, much more tangible" },
-          { "name": "Josh", "rating": 9.0, "feedback": "Wants more work" },
-          { "name": "Azi", "rating": 9.0, "feedback": "Got what you wanted out of it" },
-          { "name": "Shreyas", "rating": 7.0, "feedback": "Would be valuable to get one non-business activity" },
-          { "name": "Rishabh", "rating": 8.0, "feedback": "Debating is useful. Should've done more team building" },
-          { "name": "Abe", "rating": 8.0, "feedback": "Lots of meat, zooming in on what we want" },
-          { "name": "Evelyn", "rating": 7.0, "feedback": "" },
-          { "name": "Rabah", "rating": 7.5, "feedback": "Structure strong, social event would've been nice" }
+          {
+            "name": "Aless",
+            "rating": 8.0,
+            "feedback": "$4M went better than expected, much more tangible"
+          },
+          {
+            "name": "Josh",
+            "rating": 9.0,
+            "feedback": "Wants more work"
+          },
+          {
+            "name": "Azi",
+            "rating": 9.0,
+            "feedback": "Got what you wanted out of it"
+          },
+          {
+            "name": "Shreyas",
+            "rating": 7.0,
+            "feedback": "Would be valuable to get one non-business activity"
+          },
+          {
+            "name": "Rishabh",
+            "rating": 8.0,
+            "feedback": "Debating is useful. Should've done more team building"
+          },
+          {
+            "name": "Abe",
+            "rating": 8.0,
+            "feedback": "Lots of meat, zooming in on what we want"
+          },
+          {
+            "name": "Evelyn",
+            "rating": 7.0,
+            "feedback": ""
+          },
+          {
+            "name": "Rabah",
+            "rating": 7.5,
+            "feedback": "Structure strong, social event would've been nice"
+          }
         ],
         "lessonsLearned": [
           "Pre-reads and debate are useful - people did work beforehand",
@@ -201,7 +485,16 @@
         "venue": "Rishabh's Clubhouse + FERMAT Office (300 Brannan)",
         "status": "Complete",
         "notionPageId": "c96769a108ff4b3bbcec3408945c728d",
-        "attendees": ["Rishabh", "Shreyas", "Evelyn", "Rabah", "Steve", "Steeve", "Azi", "Abe"],
+        "attendees": [
+          "Rishabh",
+          "Shreyas",
+          "Evelyn",
+          "Rabah",
+          "Steve",
+          "Steeve",
+          "Azi",
+          "Abe"
+        ],
         "summary": "Urban hike, H2 reforecast, product roadmap, customer journey, ICP, pricing, pre-mortem. North star: 180 happy customers by Jan 1.",
         "keyOutcomes": [
           "Company north star: 180 Happy Customers by Jan 1",
@@ -227,7 +520,15 @@
         "venue": "Rishabh's Clubhouse + FERMAT Office",
         "status": "Complete",
         "notionPageId": "12d1ad76fd2a800d8a92c15edeeedf5d",
-        "attendees": ["Rishabh", "Shreyas", "Evelyn", "Rabah", "Steve", "Steeve", "Azi"],
+        "attendees": [
+          "Rishabh",
+          "Shreyas",
+          "Evelyn",
+          "Rabah",
+          "Steve",
+          "Steeve",
+          "Azi"
+        ],
         "summary": "Q4 financial plan, GTM moat/touchless, enterprise, agency, mid-market scaling, pricing, rock writing, partnerships. Pickleball/padel tournament.",
         "keyOutcomes": [
           "Goal setting significantly better - clarity on who owns what",
@@ -236,13 +537,41 @@
         ],
         "rating": 9.1,
         "ratingDetails": [
-          { "name": "Rishabh", "rating": 9.9, "feedback": "Everything was better - people came with own POV" },
-          { "name": "Shreyas", "rating": 8.5, "feedback": "Pacing was better. Rock setting went much better" },
-          { "name": "Hult", "rating": 9.0, "feedback": "Good reorientation on new initiatives" },
-          { "name": "Steeve", "rating": 9.9, "feedback": "" },
-          { "name": "Rabah", "rating": 9.5, "feedback": "Liked starting late and going late" },
-          { "name": "Evelyn", "rating": 8.0, "feedback": "Did not enjoy Mon/Tue orientation" },
-          { "name": "Azi", "rating": 9.0, "feedback": "Dinner + early start on Tuesday did not work out well" }
+          {
+            "name": "Rishabh",
+            "rating": 9.9,
+            "feedback": "Everything was better - people came with own POV"
+          },
+          {
+            "name": "Shreyas",
+            "rating": 8.5,
+            "feedback": "Pacing was better. Rock setting went much better"
+          },
+          {
+            "name": "Hult",
+            "rating": 9.0,
+            "feedback": "Good reorientation on new initiatives"
+          },
+          {
+            "name": "Steeve",
+            "rating": 9.9,
+            "feedback": ""
+          },
+          {
+            "name": "Rabah",
+            "rating": 9.5,
+            "feedback": "Liked starting late and going late"
+          },
+          {
+            "name": "Evelyn",
+            "rating": 8.0,
+            "feedback": "Did not enjoy Mon/Tue orientation"
+          },
+          {
+            "name": "Azi",
+            "rating": 9.0,
+            "feedback": "Dinner + early start on Tuesday did not work out well"
+          }
         ],
         "lessonsLearned": [
           "Starting late + going late works for some but not all",
@@ -264,7 +593,17 @@
         "venue": "WeWork (600 B St, San Diego, CA 92101)",
         "status": "Complete",
         "notionPageId": "1731ad76fd2a804b87dac7e8f258b521",
-        "attendees": ["Rishabh", "Shreyas", "Evelyn", "Rabah", "Steve", "Steeve", "Azi", "Bharat", "Saunder"],
+        "attendees": [
+          "Rishabh",
+          "Shreyas",
+          "Evelyn",
+          "Rabah",
+          "Steve",
+          "Steeve",
+          "Azi",
+          "Bharat",
+          "Saunder"
+        ],
         "summary": "FY25 financial plan, product strategy (big bets), people/culture/comp, pre-mortem, rocks. Kayak tour + dinner at Malibu Farms. Pre-reads: The Effective Executive, High Output Management, Multipliers.",
         "keyOutcomes": [
           "2025 Product Big Bets identified",
@@ -289,7 +628,15 @@
         "venue": "Rishabh's Clubhouse + FERMAT Office",
         "status": "Complete",
         "notionPageId": "1dc1ad76fd2a8014b1f9d0432bba3570",
-        "attendees": ["Rishabh", "Shreyas", "Evelyn", "Rabah", "Steve", "Bharat", "Saunder"],
+        "attendees": [
+          "Rishabh",
+          "Shreyas",
+          "Evelyn",
+          "Rabah",
+          "Steve",
+          "Bharat",
+          "Saunder"
+        ],
         "summary": "FY25 Q2 financial plan, tariffs + economy impact, product experimentation (international, consumer behavioral data), org structure decision, people management. Cooking class. Shirley's management presentation, hiring, pricing.",
         "keyOutcomes": [
           "Org structure decision made",
@@ -299,13 +646,41 @@
         ],
         "rating": 8.9,
         "ratingDetails": [
-          { "name": "Rishabh", "rating": 8.3, "feedback": "Not enough debate" },
-          { "name": "Shreyas", "rating": 9.0, "feedback": "" },
-          { "name": "Evelyn", "rating": 9.0, "feedback": "" },
-          { "name": "Rabah", "rating": 9.0, "feedback": "" },
-          { "name": "Hult", "rating": 9.0, "feedback": "" },
-          { "name": "Bharat", "rating": 9.1, "feedback": "" },
-          { "name": "Saunder", "rating": 9.2, "feedback": "" }
+          {
+            "name": "Rishabh",
+            "rating": 8.3,
+            "feedback": "Not enough debate"
+          },
+          {
+            "name": "Shreyas",
+            "rating": 9.0,
+            "feedback": ""
+          },
+          {
+            "name": "Evelyn",
+            "rating": 9.0,
+            "feedback": ""
+          },
+          {
+            "name": "Rabah",
+            "rating": 9.0,
+            "feedback": ""
+          },
+          {
+            "name": "Hult",
+            "rating": 9.0,
+            "feedback": ""
+          },
+          {
+            "name": "Bharat",
+            "rating": 9.1,
+            "feedback": ""
+          },
+          {
+            "name": "Saunder",
+            "rating": 9.2,
+            "feedback": ""
+          }
         ],
         "lessonsLearned": [
           "More push + pull in revenue makeup discussions",
@@ -323,7 +698,15 @@
         "venue": "Soma Central (450 Townsend St.) + FERMAT Office",
         "status": "Complete",
         "notionPageId": "2381ad76fd2a80b084edfab6660eb111",
-        "attendees": ["Rishabh", "Shreyas", "Evelyn", "Rabah", "Steve", "Bharat", "Saunder"],
+        "attendees": [
+          "Rishabh",
+          "Shreyas",
+          "Evelyn",
+          "Rabah",
+          "Steve",
+          "Bharat",
+          "Saunder"
+        ],
         "summary": "FY25 Q3 financial plan, GTM reprioritization + pricing (service pricing), EPD reprioritization, AI readiness. Dinner at Rich Table. Pre-read: Only the Paranoid Survive.",
         "keyOutcomes": [
           "GTM reprioritization completed",
@@ -334,13 +717,48 @@
         ],
         "rating": 8.9,
         "ratingDetails": [
-          { "name": "Rishabh", "rating": 9.7, "lqRating": 8.3, "feedback": "Dinner was too late" },
-          { "name": "Shreyas", "rating": 8.5, "lqRating": 9.0, "feedback": "Tremendous execution risk" },
-          { "name": "Evelyn", "rating": 9.5, "lqRating": 9.0, "feedback": "Debate" },
-          { "name": "Rabah", "rating": 8.5, "lqRating": 9.0, "feedback": "" },
-          { "name": "Hult", "rating": 9.0, "lqRating": 9.0, "feedback": "Identified future path with clarity, everyone bought in" },
-          { "name": "Bharat", "rating": 8.2, "lqRating": 9.1, "feedback": "" },
-          { "name": "Saunder", "rating": 9.1, "lqRating": 9.2, "feedback": "Really candid discussion" }
+          {
+            "name": "Rishabh",
+            "rating": 9.7,
+            "lqRating": 8.3,
+            "feedback": "Dinner was too late"
+          },
+          {
+            "name": "Shreyas",
+            "rating": 8.5,
+            "lqRating": 9.0,
+            "feedback": "Tremendous execution risk"
+          },
+          {
+            "name": "Evelyn",
+            "rating": 9.5,
+            "lqRating": 9.0,
+            "feedback": "Debate"
+          },
+          {
+            "name": "Rabah",
+            "rating": 8.5,
+            "lqRating": 9.0,
+            "feedback": ""
+          },
+          {
+            "name": "Hult",
+            "rating": 9.0,
+            "lqRating": 9.0,
+            "feedback": "Identified future path with clarity, everyone bought in"
+          },
+          {
+            "name": "Bharat",
+            "rating": 8.2,
+            "lqRating": 9.1,
+            "feedback": ""
+          },
+          {
+            "name": "Saunder",
+            "rating": 9.1,
+            "lqRating": 9.2,
+            "feedback": "Really candid discussion"
+          }
         ],
         "lessonsLearned": [
           "Dinner was too late - schedule social dinner earlier",
@@ -358,7 +776,17 @@
         "venue": "WeWork (535 Mission St.) + FERMAT Office",
         "status": "Complete",
         "notionPageId": "2921ad76fd2a8018bd7ac5bcacb63890",
-        "attendees": ["Rishabh", "Shreyas", "Evelyn", "Steve", "Bharat", "Saunder", "Jess", "Isabel", "Jennifer"],
+        "attendees": [
+          "Rishabh",
+          "Shreyas",
+          "Evelyn",
+          "Steve",
+          "Bharat",
+          "Saunder",
+          "Jess",
+          "Isabel",
+          "Jennifer"
+        ],
         "summary": "Product roadmap, enterprise strategy, agency discussion, mid-market (MM), catch-all session, retro/rocks. Breakfast working session. First offsite for Jess, Isabel, Jennifer.",
         "keyOutcomes": [
           "Clarity of execution is dramatically stronger",
@@ -368,15 +796,57 @@
         ],
         "rating": 6.4,
         "ratingDetails": [
-          { "name": "Rishabh", "rating": 8.5, "lqRating": 9.7, "feedback": "" },
-          { "name": "Shreyas", "rating": 7.0, "lqRating": 8.5, "feedback": "Time management was medium. No wins recap. Mid-market could've been pushed more" },
-          { "name": "Evelyn", "rating": 7.5, "lqRating": 9.5, "feedback": "Laptops down" },
-          { "name": "Hult", "rating": 6.0, "lqRating": 9.0, "feedback": "Before and after helpful. Pre-read should be one compiled doc. Prioritize what should not be prio'd" },
-          { "name": "Bharat", "rating": 6.0, "lqRating": 8.2, "feedback": "Need clearer structure, know major talking points. Outcomes were ok" },
-          { "name": "Saunder", "rating": 6.8, "lqRating": 9.1, "feedback": "Most clear ever. Rishabh stating his mind better. A little messy" },
-          { "name": "Isabel", "rating": 5.0, "feedback": "Recap/celebratory things would help. Don't miss meetings" },
-          { "name": "Jess", "rating": 5.0, "feedback": "Preparation and pre-read needed. First time seeing info. People shouldn't miss meetings" },
-          { "name": "Jennifer", "rating": 6.0, "feedback": "One structure everyone follows. Broader company goals context needed" }
+          {
+            "name": "Rishabh",
+            "rating": 8.5,
+            "lqRating": 9.7,
+            "feedback": ""
+          },
+          {
+            "name": "Shreyas",
+            "rating": 7.0,
+            "lqRating": 8.5,
+            "feedback": "Time management was medium. No wins recap. Mid-market could've been pushed more"
+          },
+          {
+            "name": "Evelyn",
+            "rating": 7.5,
+            "lqRating": 9.5,
+            "feedback": "Laptops down"
+          },
+          {
+            "name": "Hult",
+            "rating": 6.0,
+            "lqRating": 9.0,
+            "feedback": "Before and after helpful. Pre-read should be one compiled doc. Prioritize what should not be prio'd"
+          },
+          {
+            "name": "Bharat",
+            "rating": 6.0,
+            "lqRating": 8.2,
+            "feedback": "Need clearer structure, know major talking points. Outcomes were ok"
+          },
+          {
+            "name": "Saunder",
+            "rating": 6.8,
+            "lqRating": 9.1,
+            "feedback": "Most clear ever. Rishabh stating his mind better. A little messy"
+          },
+          {
+            "name": "Isabel",
+            "rating": 5.0,
+            "feedback": "Recap/celebratory things would help. Don't miss meetings"
+          },
+          {
+            "name": "Jess",
+            "rating": 5.0,
+            "feedback": "Preparation and pre-read needed. First time seeing info. People shouldn't miss meetings"
+          },
+          {
+            "name": "Jennifer",
+            "rating": 6.0,
+            "feedback": "One structure everyone follows. Broader company goals context needed"
+          }
         ],
         "lessonsLearned": [
           "Require a single compiled pre-read document from all presenters",
@@ -399,7 +869,18 @@
         "venue": "WeWork (1200 17th Street)",
         "status": "Complete",
         "notionPageId": "2cc1ad76fd2a81489477da0961829048",
-        "attendees": ["Rishabh", "Shreyas", "Evelyn", "Steve", "Bharat", "Saunder", "Jess", "Isabel", "Jennifer", "Sophie"],
+        "attendees": [
+          "Rishabh",
+          "Shreyas",
+          "Evelyn",
+          "Steve",
+          "Bharat",
+          "Saunder",
+          "Jess",
+          "Isabel",
+          "Jennifer",
+          "Sophie"
+        ],
         "summary": "The List, Rules of Engagement, Roles & Responsibilities, POC Commercials, Culture & Context, Retro. Escape Room at 4 Dreams Escape Game + Dinner at Earls Kitchen + Bar. Sophie's first offsite.",
         "keyOutcomes": [
           "Rules of Engagement defined",
@@ -410,15 +891,60 @@
         ],
         "rating": 8.1,
         "ratingDetails": [
-          { "name": "Rishabh", "rating": 9.0, "lqRating": 8.5, "feedback": "Enough trust in room. All appropriately anxious. Being execution-biased is better. Could walk everywhere" },
-          { "name": "Shreyas", "rating": 8.0, "lqRating": 7.0, "feedback": "Openness best we've seen, everyone else needs stronger opinions" },
-          { "name": "Evelyn", "rating": 7.5, "lqRating": 7.5, "feedback": "Got what I needed, but less debate than expected" },
-          { "name": "Hult", "rating": 7.5, "lqRating": 6.0, "feedback": "Aligned strategically. Agree 2 weeks before on what to bring" },
-          { "name": "Bharat", "rating": 7.4, "lqRating": 6.0, "feedback": "Want 3-month summary + focus areas. More tactical. Pre-read social pressure" },
-          { "name": "Saunder", "rating": 8.8, "lqRating": 6.8, "feedback": "Most optimistic and urgent. More aligned on strategy" },
-          { "name": "Isabel", "rating": 8.0, "lqRating": 5.0, "feedback": "Enjoyed culture piece. Liked more tactical. Deal review (close won vs lost)" },
-          { "name": "Jess", "rating": 8.75, "lqRating": 5.0, "feedback": "More collaboration. Could do more pre-reads. Resolved future state items" },
-          { "name": "Jennifer", "rating": 8.0, "lqRating": 6.0, "feedback": "Helpful to get into tactics. Enjoyed culture. More focused on future state" }
+          {
+            "name": "Rishabh",
+            "rating": 9.0,
+            "lqRating": 8.5,
+            "feedback": "Enough trust in room. All appropriately anxious. Being execution-biased is better. Could walk everywhere"
+          },
+          {
+            "name": "Shreyas",
+            "rating": 8.0,
+            "lqRating": 7.0,
+            "feedback": "Openness best we've seen, everyone else needs stronger opinions"
+          },
+          {
+            "name": "Evelyn",
+            "rating": 7.5,
+            "lqRating": 7.5,
+            "feedback": "Got what I needed, but less debate than expected"
+          },
+          {
+            "name": "Hult",
+            "rating": 7.5,
+            "lqRating": 6.0,
+            "feedback": "Aligned strategically. Agree 2 weeks before on what to bring"
+          },
+          {
+            "name": "Bharat",
+            "rating": 7.4,
+            "lqRating": 6.0,
+            "feedback": "Want 3-month summary + focus areas. More tactical. Pre-read social pressure"
+          },
+          {
+            "name": "Saunder",
+            "rating": 8.8,
+            "lqRating": 6.8,
+            "feedback": "Most optimistic and urgent. More aligned on strategy"
+          },
+          {
+            "name": "Isabel",
+            "rating": 8.0,
+            "lqRating": 5.0,
+            "feedback": "Enjoyed culture piece. Liked more tactical. Deal review (close won vs lost)"
+          },
+          {
+            "name": "Jess",
+            "rating": 8.75,
+            "lqRating": 5.0,
+            "feedback": "More collaboration. Could do more pre-reads. Resolved future state items"
+          },
+          {
+            "name": "Jennifer",
+            "rating": 8.0,
+            "lqRating": 6.0,
+            "feedback": "Helpful to get into tactics. Enjoyed culture. More focused on future state"
+          }
         ],
         "lessonsLearned": [
           "Walking distance between all locations is a huge advantage",
@@ -578,129 +1104,416 @@
         ],
         "phases": [
           {
-            "phase": "Phase 1: Kickoff",
-            "deadline": "Fri Mar 20",
-            "what": "Confirm dates, city, headcount, budget expectations",
-            "status": "mostly_done"
+            "name": "Phase 1: Kickoff",
+            "deadline": "8 weeks before",
+            "tasks": [
+              {
+                "text": "Confirm dates and city",
+                "done": true
+              },
+              {
+                "text": "Confirm headcount and attendee list",
+                "done": true
+              },
+              {
+                "text": "Create a Planning Hub page for this offsite",
+                "done": true
+              },
+              {
+                "text": "Create calendar event",
+                "done": true
+              },
+              {
+                "text": "Set budget expectations with Evelyn",
+                "done": false
+              }
+            ]
           },
           {
-            "phase": "Phase 2: Logistics",
-            "deadline": "Wed Mar 25 -- Fri Mar 27",
-            "what": "Hotel + budget approved by Mar 25, WeWork + social activity booked by Mar 27",
-            "status": "in_progress"
+            "name": "Phase 2: Logistics",
+            "deadline": "6 weeks before",
+            "tasks": [
+              {
+                "text": "Coordinate hotel booking with travel agent",
+                "done": false
+              },
+              {
+                "text": "Collect Marriott member numbers",
+                "done": false
+              },
+              {
+                "text": "Send hotel confirmation numbers to attendees",
+                "done": false
+              },
+              {
+                "text": "Find nearest WeWork to hotel (walking distance)",
+                "done": false
+              },
+              {
+                "text": "Book WeWork conference room (capacity 10+)",
+                "done": false
+              },
+              {
+                "text": "Research 3 group activity options",
+                "done": false
+              },
+              {
+                "text": "Book social activity",
+                "done": false
+              },
+              {
+                "text": "Book dinner restaurant",
+                "done": false
+              },
+              {
+                "text": "Prepare DoorDash group order links",
+                "done": false
+              },
+              {
+                "text": "Compile estimated costs across all categories",
+                "done": false
+              },
+              {
+                "text": "Draft budget approval request to Evelyn",
+                "done": false
+              },
+              {
+                "text": "Get budget approved before committing",
+                "done": false
+              }
+            ]
           },
           {
-            "phase": "Phase 3: Agenda",
-            "deadline": "Fri Apr 3",
-            "what": "Coordinate agenda with leadership, collect materials",
-            "status": "not_started"
+            "name": "Phase 3: Content & Agenda",
+            "deadline": "3 weeks before",
+            "tasks": [
+              {
+                "text": "Review #leadership Slack (past 30 days) for themes",
+                "done": true
+              },
+              {
+                "text": "Run keyword searches across Slack",
+                "done": true
+              },
+              {
+                "text": "Check Granola notes for recent leadership topics",
+                "done": true
+              },
+              {
+                "text": "Coordinate agenda topics with Evelyn & leadership",
+                "done": false
+              },
+              {
+                "text": "Confirm topic owners and time slots",
+                "done": false
+              },
+              {
+                "text": "Build agenda in Notion",
+                "done": false
+              },
+              {
+                "text": "Collect pre-read materials from topic owners",
+                "done": false
+              },
+              {
+                "text": "Send pre-reads to team (1 week before)",
+                "done": false
+              }
+            ]
           },
           {
-            "phase": "Pre-reads sent",
-            "deadline": "Mon Apr 13",
-            "what": "Send pre-reads to team (1 week before)",
-            "status": "not_started"
+            "name": "Phase 4: Final Comms",
+            "deadline": "1 week before",
+            "tasks": [
+              {
+                "text": "Draft logistics announcement for #leadership",
+                "done": false
+              },
+              {
+                "text": "Send hotel confirmation details to attendees",
+                "done": false
+              },
+              {
+                "text": "Follow up on missing travel details",
+                "done": false
+              },
+              {
+                "text": "Confirm all bookings (hotel, venue, activity, restaurant)",
+                "done": false
+              },
+              {
+                "text": "Build buffer time into schedule",
+                "done": false
+              }
+            ]
           },
           {
-            "phase": "Phase 4: Final Comms",
-            "deadline": "Fri Apr 13",
-            "what": "Logistics announcement, confirm all bookings",
-            "status": "not_started"
+            "name": "Day Before",
+            "deadline": "1 day before",
+            "tasks": [
+              {
+                "text": "Confirm all hotel reservations",
+                "done": false
+              },
+              {
+                "text": "Confirm restaurant reservation",
+                "done": false
+              },
+              {
+                "text": "Confirm social activity booking",
+                "done": false
+              },
+              {
+                "text": "Prepare DoorDash links for lunch orders",
+                "done": false
+              }
+            ]
           },
           {
-            "phase": "Day Before",
-            "deadline": "Sun Apr 19",
-            "what": "Final confirmations, prep DoorDash links",
-            "status": "not_started"
+            "name": "Day 1",
+            "deadline": "Day of",
+            "tasks": [
+              {
+                "text": "Send DoorDash link at start of first session",
+                "done": false
+              },
+              {
+                "text": "Send any last-minute logistics updates",
+                "done": false
+              }
+            ]
           },
           {
-            "phase": "Day 1",
-            "deadline": "Mon Apr 20",
-            "what": "Offsite Day 1",
-            "status": "not_started"
+            "name": "Day 2",
+            "deadline": "Day of",
+            "tasks": [
+              {
+                "text": "Send DoorDash link for lunch",
+                "done": false
+              },
+              {
+                "text": "Collect informal feedback",
+                "done": false
+              },
+              {
+                "text": "Note action items from sessions",
+                "done": false
+              }
+            ]
           },
           {
-            "phase": "Day 2",
-            "deadline": "Tue Apr 21",
-            "what": "Offsite Day 2",
-            "status": "not_started"
-          },
-          {
-            "phase": "Post-Offsite",
-            "deadline": "Fri Apr 24",
-            "what": "Lessons learned, action item follow-up",
-            "status": "not_started"
+            "name": "Post-Offsite",
+            "deadline": "1 week after",
+            "tasks": [
+              {
+                "text": "Capture lessons learned",
+                "done": false
+              },
+              {
+                "text": "Follow up on action items and owners",
+                "done": false
+              }
+            ]
           }
         ],
         "checklist": {
           "phase1_kickoff": [
-            { "item": "Confirm dates and city -- April 20-21, NYC", "done": true },
-            { "item": "Confirm headcount and attendee list -- 9 attendees", "done": true },
-            { "item": "Create a Planning Hub page for this offsite", "done": true },
-            { "item": "Create calendar event (attendees in notes, no invites sent yet)", "done": true },
-            { "item": "Set budget expectations with Evelyn", "done": false }
+            {
+              "item": "Confirm dates and city -- April 20-21, NYC",
+              "done": true
+            },
+            {
+              "item": "Confirm headcount and attendee list -- 9 attendees",
+              "done": true
+            },
+            {
+              "item": "Create a Planning Hub page for this offsite",
+              "done": true
+            },
+            {
+              "item": "Create calendar event (attendees in notes, no invites sent yet)",
+              "done": true
+            },
+            {
+              "item": "Set budget expectations with Evelyn",
+              "done": false
+            }
           ],
           "phase2_logistics": {
             "hotel": [
-              { "item": "Coordinate booking with Alice (travel agent)", "done": false },
-              { "item": "Collect Marriott member numbers (offer to link reservations)", "done": false },
-              { "item": "Send hotel confirmation numbers to attendees", "done": false }
+              {
+                "item": "Coordinate booking with Alice (travel agent)",
+                "done": false
+              },
+              {
+                "item": "Collect Marriott member numbers (offer to link reservations)",
+                "done": false
+              },
+              {
+                "item": "Send hotel confirmation numbers to attendees",
+                "done": false
+              }
             ],
             "wework": [
-              { "item": "Find nearest WeWork to hotel (walking distance)", "done": false },
-              { "item": "Book conference room or private office for the team (capacity 10+)", "done": false }
+              {
+                "item": "Find nearest WeWork to hotel (walking distance)",
+                "done": false
+              },
+              {
+                "item": "Book conference room or private office for the team (capacity 10+)",
+                "done": false
+              }
             ],
             "socialActivity": [
-              { "item": "Research 3 group activity options", "done": false },
-              { "item": "Ensure flexible participation levels", "done": false },
-              { "item": "Book activity", "done": false },
-              { "item": "Book dinner restaurant (pair with social activity)", "done": false }
+              {
+                "item": "Research 3 group activity options",
+                "done": false
+              },
+              {
+                "item": "Ensure flexible participation levels",
+                "done": false
+              },
+              {
+                "item": "Book activity",
+                "done": false
+              },
+              {
+                "item": "Book dinner restaurant (pair with social activity)",
+                "done": false
+              }
             ],
             "food": [
-              { "item": "Prepare DoorDash group order links in advance -- each day", "done": false }
+              {
+                "item": "Prepare DoorDash group order links in advance -- each day",
+                "done": false
+              }
             ],
             "budget": [
-              { "item": "Compile estimated costs across all categories", "done": false },
-              { "item": "Draft budget approval request to Evelyn", "done": false },
-              { "item": "Get budget approved before committing to bookings", "done": false },
-              { "item": "Track committed and actual spend as bookings are made", "done": false }
+              {
+                "item": "Compile estimated costs across all categories",
+                "done": false
+              },
+              {
+                "item": "Draft budget approval request to Evelyn",
+                "done": false
+              },
+              {
+                "item": "Get budget approved before committing to bookings",
+                "done": false
+              },
+              {
+                "item": "Track committed and actual spend as bookings are made",
+                "done": false
+              }
             ]
           },
           "phase3_agenda": [
-            { "item": "Review #leadership Slack channel (past 30 days) for discussion themes", "done": true },
-            { "item": "Run keyword searches across Slack (strategy, roadmap, priority, blocker, hiring, revenue)", "done": true },
-            { "item": "Check Granola meeting notes for recent leadership topics", "done": true },
-            { "item": "Coordinate with Evelyn and leadership team on agenda topics and materials", "done": false },
-            { "item": "Confirm topic owners and time slots with leadership", "done": false },
-            { "item": "Build agenda in Notion based on leadership input", "done": false },
-            { "item": "Collect pre-read materials from topic owners", "done": false },
-            { "item": "Send pre-reads to team -- by Mon Apr 13 (1 week before)", "done": false }
+            {
+              "item": "Review #leadership Slack channel (past 30 days) for discussion themes",
+              "done": true
+            },
+            {
+              "item": "Run keyword searches across Slack (strategy, roadmap, priority, blocker, hiring, revenue)",
+              "done": true
+            },
+            {
+              "item": "Check Granola meeting notes for recent leadership topics",
+              "done": true
+            },
+            {
+              "item": "Coordinate with Evelyn and leadership team on agenda topics and materials",
+              "done": false
+            },
+            {
+              "item": "Confirm topic owners and time slots with leadership",
+              "done": false
+            },
+            {
+              "item": "Build agenda in Notion based on leadership input",
+              "done": false
+            },
+            {
+              "item": "Collect pre-read materials from topic owners",
+              "done": false
+            },
+            {
+              "item": "Send pre-reads to team -- by Mon Apr 13 (1 week before)",
+              "done": false
+            }
           ],
           "phase4_finalComms": [
-            { "item": "Draft logistics announcement for #leadership (get approval before sending)", "done": false },
-            { "item": "Send hotel confirmation details to attendees", "done": false },
-            { "item": "Follow up with anyone who hasn't shared travel details", "done": false },
-            { "item": "Confirm all bookings (hotel, venue, activity, restaurant)", "done": false },
-            { "item": "Build buffer time into schedule for unstructured socializing", "done": false }
+            {
+              "item": "Draft logistics announcement for #leadership (get approval before sending)",
+              "done": false
+            },
+            {
+              "item": "Send hotel confirmation details to attendees",
+              "done": false
+            },
+            {
+              "item": "Follow up with anyone who hasn't shared travel details",
+              "done": false
+            },
+            {
+              "item": "Confirm all bookings (hotel, venue, activity, restaurant)",
+              "done": false
+            },
+            {
+              "item": "Build buffer time into schedule for unstructured socializing",
+              "done": false
+            }
           ],
           "dayBefore": [
-            { "item": "Confirm all hotel reservations", "done": false },
-            { "item": "Confirm restaurant reservation", "done": false },
-            { "item": "Confirm social activity booking", "done": false },
-            { "item": "Prepare DoorDash links for lunch orders", "done": false }
+            {
+              "item": "Confirm all hotel reservations",
+              "done": false
+            },
+            {
+              "item": "Confirm restaurant reservation",
+              "done": false
+            },
+            {
+              "item": "Confirm social activity booking",
+              "done": false
+            },
+            {
+              "item": "Prepare DoorDash links for lunch orders",
+              "done": false
+            }
           ],
           "day1": [
-            { "item": "Send DoorDash link at start of first session", "done": false },
-            { "item": "Send any last-minute logistics updates", "done": false }
+            {
+              "item": "Send DoorDash link at start of first session",
+              "done": false
+            },
+            {
+              "item": "Send any last-minute logistics updates",
+              "done": false
+            }
           ],
           "day2": [
-            { "item": "Send DoorDash link for lunch", "done": false },
-            { "item": "Collect informal feedback", "done": false },
-            { "item": "Note action items from sessions", "done": false }
+            {
+              "item": "Send DoorDash link for lunch",
+              "done": false
+            },
+            {
+              "item": "Collect informal feedback",
+              "done": false
+            },
+            {
+              "item": "Note action items from sessions",
+              "done": false
+            }
           ],
           "postOffsite": [
-            { "item": "Capture lessons learned -- update checklist for next time", "done": false },
-            { "item": "Follow up on action items and owners", "done": false }
+            {
+              "item": "Capture lessons learned -- update checklist for next time",
+              "done": false
+            },
+            {
+              "item": "Follow up on action items and owners",
+              "done": false
+            }
           ]
         },
         "logistics": {
@@ -807,7 +1620,11 @@
           ],
           "dinner": {
             "name": "Restaurant (booked)",
-            "options": ["The Modern", "BLACKBARN", "Yara"],
+            "options": [
+              "The Modern",
+              "BLACKBARN",
+              "Yara"
+            ],
             "confirmed": true,
             "requirement": "Strong vegetarian options + private dining"
           },
@@ -836,7 +1653,11 @@
           ],
           "activity": {
             "name": "TBD",
-            "options": ["Escape Room", "Cooking Class / Great Guac Off", "Improv Workshop"],
+            "options": [
+              "Escape Room",
+              "Cooking Class / Great Guac Off",
+              "Improv Workshop"
+            ],
             "confirmed": false,
             "lesson": "Group activity + dinner is a proven combo. Escape room was a hit in Denver."
           },
@@ -847,12 +1668,48 @@
             "actual": 0,
             "approver": "Evelyn",
             "categories": [
-              { "category": "Hotel", "estimated": null, "committed": null, "actual": null, "notes": "8 rooms x 2 nights. Moxy ~$420/room = ~$6,720 estimated" },
-              { "category": "Venue / Coworking", "estimated": null, "committed": null, "actual": null, "notes": "WeWork ~$1,500-2,000 for 2 full days" },
-              { "category": "Transportation", "estimated": null, "committed": null, "actual": null, "notes": "People arrange own flights" },
-              { "category": "Food & Beverage", "estimated": null, "committed": null, "actual": null, "notes": "DoorDash group orders x2 days + dinner" },
-              { "category": "Social Activity", "estimated": null, "committed": null, "actual": null, "notes": "Range: $360-1,125 depending on activity" },
-              { "category": "Miscellaneous", "estimated": null, "committed": null, "actual": null, "notes": "" }
+              {
+                "category": "Hotel",
+                "estimated": null,
+                "committed": null,
+                "actual": null,
+                "notes": "8 rooms x 2 nights. Moxy ~$420/room = ~$6,720 estimated"
+              },
+              {
+                "category": "Venue / Coworking",
+                "estimated": null,
+                "committed": null,
+                "actual": null,
+                "notes": "WeWork ~$1,500-2,000 for 2 full days"
+              },
+              {
+                "category": "Transportation",
+                "estimated": null,
+                "committed": null,
+                "actual": null,
+                "notes": "People arrange own flights"
+              },
+              {
+                "category": "Food & Beverage",
+                "estimated": null,
+                "committed": null,
+                "actual": null,
+                "notes": "DoorDash group orders x2 days + dinner"
+              },
+              {
+                "category": "Social Activity",
+                "estimated": null,
+                "committed": null,
+                "actual": null,
+                "notes": "Range: $360-1,125 depending on activity"
+              },
+              {
+                "category": "Miscellaneous",
+                "estimated": null,
+                "committed": null,
+                "actual": null,
+                "notes": ""
+              }
             ]
           }
         },
@@ -892,8 +1749,17 @@
           }
         ],
         "coordinationContacts": [
-          { "name": "Evelyn", "role": "Budget approver", "reachOutFor": "Budget approval, agenda coordination" },
-          { "name": "Alice Zhao", "role": "Travel agent (Fora Travel)", "email": "alice.zhao@fora.travel", "reachOutFor": "Hotel bookings, group rates, flight coordination" }
+          {
+            "name": "Evelyn",
+            "role": "Budget approver",
+            "reachOutFor": "Budget approval, agenda coordination"
+          },
+          {
+            "name": "Alice Zhao",
+            "role": "Travel agent (Fora Travel)",
+            "email": "alice.zhao@fora.travel",
+            "reachOutFor": "Hotel bookings, group rates, flight coordination"
+          }
         ],
         "aliceCorrespondence": {
           "threadSubject": "Next Leadership Offsite",
@@ -901,13 +1767,41 @@
           "summary": "Sophie initially asked about Courtyard Midtown East for 4 rooms. Alice suggested Moxy NYC Chelsea (Fermat has auto 10% off). Moxy quoted ~$1,120/room for both nights without discount. Alice contacted Diana (GM) for Fermat-specific pricing. Sophie confirmed Moxy is the likely choice pending budget approval. Alice is standing by for names, Marriott numbers, and which CC to use once approval comes through.",
           "nextStep": "Awaiting Moxy pricing from Diana via Alice. Need budget approval from Evelyn before committing.",
           "keyEmails": [
-            { "date": "2026-03-23", "from": "Sophie", "summary": "Initial request for Courtyard Midtown East, 4 rooms" },
-            { "date": "2026-03-23", "from": "Alice", "summary": "Suggested Moxy Chelsea -- Fermat has 10% off. Moxy ~$469/room total ($1,120 for 2 nights before discount). WeWork across the street." },
-            { "date": "2026-03-24", "from": "Sophie", "summary": "Confirmed likely going with Moxy, getting budget approval" },
-            { "date": "2026-03-24", "from": "Alice", "summary": "Will wait on names/Marriott numbers and CC once approval comes" },
-            { "date": "2026-03-27", "from": "Sophie", "summary": "Asked Alice to check availability and rates at Moxy for Apr 20-21, 4 people" },
-            { "date": "2026-03-27", "from": "Alice", "summary": "Contacted Diana at Moxy for Fermat-specific discount" },
-            { "date": "2026-03-27", "from": "Sophie", "summary": "Thanked Alice" }
+            {
+              "date": "2026-03-23",
+              "from": "Sophie",
+              "summary": "Initial request for Courtyard Midtown East, 4 rooms"
+            },
+            {
+              "date": "2026-03-23",
+              "from": "Alice",
+              "summary": "Suggested Moxy Chelsea -- Fermat has 10% off. Moxy ~$469/room total ($1,120 for 2 nights before discount). WeWork across the street."
+            },
+            {
+              "date": "2026-03-24",
+              "from": "Sophie",
+              "summary": "Confirmed likely going with Moxy, getting budget approval"
+            },
+            {
+              "date": "2026-03-24",
+              "from": "Alice",
+              "summary": "Will wait on names/Marriott numbers and CC once approval comes"
+            },
+            {
+              "date": "2026-03-27",
+              "from": "Sophie",
+              "summary": "Asked Alice to check availability and rates at Moxy for Apr 20-21, 4 people"
+            },
+            {
+              "date": "2026-03-27",
+              "from": "Alice",
+              "summary": "Contacted Diana at Moxy for Fermat-specific discount"
+            },
+            {
+              "date": "2026-03-27",
+              "from": "Sophie",
+              "summary": "Thanked Alice"
+            }
           ]
         },
         "agenda": [],
