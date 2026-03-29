@@ -512,6 +512,110 @@ app.post('/api/hackweek', (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// ── BD Notion Sync ──
+app.post('/api/bd/relationships/add', async (req, res) => {
+  const authHeader = req.headers.authorization || '';
+  const token = authHeader.replace('Bearer ', '');
+  if (token !== (process.env.DASHBOARD_API_KEY || 'sophie-dashboard-secret-change-me')) {
+    return res.status(401).json({ error: 'Invalid API key' });
+  }
+  try {
+    const { company, contact, contactTitle, type, status, tier, nextAction, nextActionDate, owner, notes } = req.body;
+    if (!company && !contact) return res.status(400).json({ error: 'company or contact required' });
+    const data = fs.existsSync(BD_PATH) ? JSON.parse(fs.readFileSync(BD_PATH, 'utf8')) : { relationships: [] };
+    const id = 'r' + (data.relationships.length + 1) + '-' + Date.now().toString(36);
+    const rel = { id, company: company||'', contact: contact||'', contactTitle: contactTitle||'', type: type||'prospect', status: status||'New', tier: tier||'Tier 3', lastTouch: new Date().toISOString().slice(0,10), nextAction: nextAction||'', nextActionDate: nextActionDate||null, owner: owner||'Sophie', notes: notes||'' };
+    data.relationships.push(rel);
+    data.lastSynced = new Date().toISOString();
+    fs.writeFileSync(BD_PATH, JSON.stringify(data, null, 2));
+    res.json({ ok: true, relationship: rel });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/bd/relationships/archive', async (req, res) => {
+  const authHeader = req.headers.authorization || '';
+  const token = authHeader.replace('Bearer ', '');
+  if (token !== (process.env.DASHBOARD_API_KEY || 'sophie-dashboard-secret-change-me')) {
+    return res.status(401).json({ error: 'Invalid API key' });
+  }
+  try {
+    const { id } = req.body;
+    const data = fs.existsSync(BD_PATH) ? JSON.parse(fs.readFileSync(BD_PATH, 'utf8')) : { relationships: [] };
+    const rel = data.relationships.find(r => r.id === id);
+    if (!rel) return res.status(404).json({ error: 'Not found' });
+    rel.status = 'Archived';
+    rel.archivedAt = new Date().toISOString();
+    data.lastSynced = new Date().toISOString();
+    fs.writeFileSync(BD_PATH, JSON.stringify(data, null, 2));
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/bd/relationships/log', async (req, res) => {
+  const authHeader = req.headers.authorization || '';
+  const token = authHeader.replace('Bearer ', '');
+  if (token !== (process.env.DASHBOARD_API_KEY || 'sophie-dashboard-secret-change-me')) {
+    return res.status(401).json({ error: 'Invalid API key' });
+  }
+  try {
+    const { id, type, note } = req.body;
+    const data = fs.existsSync(BD_PATH) ? JSON.parse(fs.readFileSync(BD_PATH, 'utf8')) : { relationships: [] };
+    const rel = data.relationships.find(r => r.id === id);
+    if (!rel) return res.status(404).json({ error: 'Not found' });
+    rel.lastTouch = new Date().toISOString().slice(0,10);
+    if (note) rel.notes = note + '\n' + (rel.notes || '');
+    if (!rel.interactions) rel.interactions = [];
+    rel.interactions.unshift({ type: type||'note', note: note||'', date: new Date().toISOString() });
+    data.lastSynced = new Date().toISOString();
+    fs.writeFileSync(BD_PATH, JSON.stringify(data, null, 2));
+    res.json({ ok: true, lastTouch: rel.lastTouch });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ── Marketing Standup Archive ──
+app.post('/api/marketing/standup', (req, res) => {
+  const authHeader = req.headers.authorization || '';
+  const token = authHeader.replace('Bearer ', '');
+  if (token !== (process.env.DASHBOARD_API_KEY || 'sophie-dashboard-secret-change-me')) {
+    return res.status(401).json({ error: 'Invalid API key' });
+  }
+  try {
+    const data = fs.existsSync(MARKETING_PATH) ? JSON.parse(fs.readFileSync(MARKETING_PATH, 'utf8')) : { standups: [], campaigns: [], reviews: [] };
+    const standup = { ...req.body, savedAt: new Date().toISOString() };
+    data.standups.unshift(standup);
+    // Keep last 30 standups
+    if (data.standups.length > 30) data.standups = data.standups.slice(0, 30);
+    data.lastSynced = new Date().toISOString();
+    fs.writeFileSync(MARKETING_PATH, JSON.stringify(data, null, 2));
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// Campaign tracking
+app.post('/api/marketing/campaigns', (req, res) => {
+  const authHeader = req.headers.authorization || '';
+  const token = authHeader.replace('Bearer ', '');
+  if (token !== (process.env.DASHBOARD_API_KEY || 'sophie-dashboard-secret-change-me')) {
+    return res.status(401).json({ error: 'Invalid API key' });
+  }
+  try {
+    const data = fs.existsSync(MARKETING_PATH) ? JSON.parse(fs.readFileSync(MARKETING_PATH, 'utf8')) : { standups: [], campaigns: [], reviews: [] };
+    const { action, campaign } = req.body;
+    if (action === 'add') {
+      campaign.id = 'c' + Date.now().toString(36);
+      campaign.createdAt = new Date().toISOString();
+      if (!data.campaigns) data.campaigns = [];
+      data.campaigns.push(campaign);
+    } else if (action === 'update' && campaign.id) {
+      const idx = data.campaigns.findIndex(c => c.id === campaign.id);
+      if (idx >= 0) Object.assign(data.campaigns[idx], campaign);
+    }
+    data.lastSynced = new Date().toISOString();
+    fs.writeFileSync(MARKETING_PATH, JSON.stringify(data, null, 2));
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 // ── CEO Brief Data Storage ──
 const BRIEF_PATH = path.join(__dirname, 'data', 'ceo-brief.json');
 
