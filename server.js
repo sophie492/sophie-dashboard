@@ -785,6 +785,31 @@ app.post('/api/marketing/campaigns', (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// ── Calendar cache (no auth needed) ──
+app.get('/api/calendar/cached', (req, res) => {
+  try {
+    if (fs.existsSync(CALENDAR_PATH)) {
+      return res.json(JSON.parse(fs.readFileSync(CALENDAR_PATH, 'utf8')));
+    }
+    res.json({ calendarDays: [], lastUpdated: null, source: 'none' });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// Allow update-task-dashboard to push calendar data via API key
+app.post('/api/calendar/cache', (req, res) => {
+  const authHeader = req.headers.authorization || '';
+  const token = authHeader.replace('Bearer ', '');
+  if (token !== (process.env.DASHBOARD_API_KEY || 'sophie-dashboard-secret-change-me')) {
+    return res.status(401).json({ error: 'Invalid API key' });
+  }
+  try {
+    const dir = path.dirname(CALENDAR_PATH);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(CALENDAR_PATH, JSON.stringify(req.body, null, 2));
+    res.json({ ok: true });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
 // ── FPPC Proxy (avoids CORS) ──
 app.get('/api/fppc-votes', async (req, res) => {
   try {

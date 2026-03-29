@@ -5368,7 +5368,8 @@ async function fetchLivePulse(){
 }
 
 function fetchLiveCalendar(){
-  return fetch('/api/calendar?days=14')
+  // Try auth endpoint first (gets fresh data), fall back to cache (no auth needed)
+  return fetch('/api/calendar?days=14',{credentials:'include'})
   .then(r=>r.ok?r.json():null)
   .then(data=>{
     if(!data||!Array.isArray(data.calendarDays)||data.calendarDays.length===0)return;
@@ -5393,7 +5394,18 @@ function fetchLiveCalendar(){
     renderPersonPage('Rishabh');
     renderPersonPage('Shreyas');
   })
-  .catch(e=>{console.warn('Calendar fetch failed:',e);});
+  .catch(e=>{
+    console.warn('Calendar auth fetch failed, trying cache:',e.message||e);
+    // Fallback: try cached calendar (no auth needed)
+    fetch('/api/calendar/cached').then(r=>r.ok?r.json():null).then(data=>{
+      if(!data||!Array.isArray(data.calendarDays)||data.calendarDays.length===0)return;
+      DATA.calendarDays=data.calendarDays;
+      renderOverview();
+      renderPersonPage('Rishabh');
+      renderPersonPage('Shreyas');
+      console.log('[Calendar] Loaded from cache:',data.calendarDays.length,'days');
+    }).catch(()=>{});
+  });
 }
 
 // ── Live FPPC votes from FPPC dashboard API ──
