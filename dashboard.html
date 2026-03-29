@@ -4559,17 +4559,20 @@ async function renderPodcastPage(){
       cb.classList.toggle('checked');
       if(isChecked) { item.style.opacity='0.45'; } else { item.style.opacity=''; }
       const epId = item.dataset.epId;
-      const taskId = item.dataset.todoIdx;
+      const todoIdx = parseInt(item.dataset.todoIdx);
       const ep = PODCAST_EPISODES.find(e => e.id === epId);
-      if (ep && taskId !== undefined) {
-        const todoIdx = parseInt(taskId);
-        if (!isNaN(todoIdx) && ep.todos[todoIdx]) {
-          ep.todos[todoIdx].done = isChecked;
-        }
-        fetch('/api/podcast/episodes/' + epId + '/todos/' + taskId, {
+      if (ep && !isNaN(todoIdx) && ep.todos[todoIdx]) {
+        ep.todos[todoIdx].done = isChecked;
+        // Use the task's actual id field (e.g. "t1"), not the array index
+        const taskRealId = ep.todos[todoIdx].id || ('t' + (todoIdx + 1));
+        fetch('/api/podcast/episodes/' + epId + '/todos/' + taskRealId, {
           method: 'PATCH',
           headers: {'Content-Type': 'application/json'},
+          credentials: 'include',
           body: JSON.stringify({status: isChecked ? 'Done' : 'To Do'})
+        }).then(r=>r.json()).then(d=>{
+          if(d.ok) console.log('[Podcast] Todo updated:', taskRealId);
+          else console.error('[Podcast] Todo update failed:', d.error);
         }).catch(err => console.error('Failed to update episode todo:', err));
       }
       updatePodEpProgress(epId);
@@ -4584,16 +4587,18 @@ async function renderPodcastPage(){
       const isChecked = item.classList.toggle('checked');
       cb.classList.toggle('checked');
       if(isChecked) { item.style.opacity='0.45'; } else { item.style.opacity=''; }
-      const taskId = item.dataset.launchIdx;
-      if (taskId !== undefined) {
-        const todoIdx = parseInt(taskId);
-        if (!isNaN(todoIdx)) {
-          PODCAST_LAUNCH_TASKS[todoIdx]._done = isChecked;
-        }
-        fetch('/api/podcast/launch-tasks/' + taskId, {
+      const todoIdx = parseInt(item.dataset.launchIdx);
+      if (!isNaN(todoIdx) && PODCAST_LAUNCH_TASKS[todoIdx]) {
+        PODCAST_LAUNCH_TASKS[todoIdx]._done = isChecked;
+        const taskRealId = PODCAST_LAUNCH_TASKS[todoIdx].id || ('lt' + (todoIdx + 1));
+        fetch('/api/podcast/launch-tasks/' + taskRealId, {
           method: 'PATCH',
           headers: {'Content-Type': 'application/json'},
+          credentials: 'include',
           body: JSON.stringify({status: isChecked ? 'Done' : 'Not Started'})
+        }).then(r=>r.json()).then(d=>{
+          if(d.ok) console.log('[Podcast] Launch task updated:', taskRealId);
+          else console.error('[Podcast] Launch task update failed:', d.error);
         }).catch(err => console.error('Failed to update launch todo:', err));
       }
       updatePodLaunchProgress();
