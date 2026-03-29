@@ -2,6 +2,7 @@ const express = require('express');
 const session = require('express-session');
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
+const cookieParser = require('cookie-parser');
 const path = require('path');
 const fs = require('fs');
 const { Client } = require('@notionhq/client');
@@ -21,6 +22,7 @@ const ALLOWED_DOMAIN = 'fermatcommerce.com';
 
 // ââ Session ââ
 app.set('trust proxy', 1);
+app.use(cookieParser());
 app.use(session({
   secret: SESSION_SECRET,
   resave: false,
@@ -67,7 +69,20 @@ app.get('/auth/google', passport.authenticate('google', {
 
 app.get('/auth/google/callback',
   passport.authenticate('google', { failureRedirect: '/auth/denied' }),
-  (req, res) => res.redirect('/')
+  (req, res) => {
+    // Set a long-lived remember-me cookie that survives server restarts
+    const crypto = require('crypto');
+    const payload = JSON.stringify({ email: req.user.email, name: req.user.name, id: req.user.id });
+    const hmac = crypto.createHmac('sha256', SESSION_SECRET).update(payload).digest('hex');
+    const token = Buffer.from(payload).toString('base64') + '.' + hmac;
+    res.cookie('remember_me', token, {
+      maxAge: 365 * 24 * 60 * 60 * 1000, // 1 year
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax'
+    });
+    res.redirect('/');
+  }
 );
 
 app.get('/auth/denied', (req, res) => {
@@ -88,6 +103,28 @@ app.get('/auth/logout', (req, res) => {
 function ensureAuth(req, res, next) {
   if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) return next();
   if (req.isAuthenticated()) return next();
+
+  // Check remember-me cookie — auto-login without OAuth redirect
+  const token = req.cookies?.remember_me;
+  if (token) {
+    try {
+      const crypto = require('crypto');
+      const [payloadB64, hmac] = token.split('.');
+      const payload = Buffer.from(payloadB64, 'base64').toString('utf8');
+      const expected = crypto.createHmac('sha256', SESSION_SECRET).update(payload).digest('hex');
+      if (hmac === expected) {
+        const user = JSON.parse(payload);
+        if (user.email && user.email.endsWith('@' + ALLOWED_DOMAIN)) {
+          req.login(user, (err) => {
+            if (err) return res.redirect('/auth/google');
+            return next();
+          });
+          return;
+        }
+      }
+    } catch (e) { /* invalid cookie, fall through to OAuth */ }
+  }
+
   res.redirect('/auth/google');
 }
 
