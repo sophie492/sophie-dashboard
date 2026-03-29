@@ -1569,51 +1569,55 @@
           },
           "weworkResearch": [
             {
+              "name": "135 Madison Ave",
+              "location": "Midtown (near Madison Square Park)",
+              "bestPairedWith": "Moxy NYC Chelsea (walking distance)",
+              "notes": "SELECTED — Room 12B booked for Day 2 (4/21) 8:30am-5pm. Day 1 (4/20) still needs booking. Invoice paid 3/27.",
+              "selected": true
+            },
+            {
               "name": "575 Fifth Avenue",
               "location": "Midtown East",
               "bestPairedWith": "Courtyard Midtown East",
-              "notes": "Near Grand Central, Bryant Park. B/D/F/M/4/5/6/7 trains."
+              "notes": "Near Grand Central, Bryant Park. B/D/F/M/4/5/6/7 trains.",
+              "selected": false
             },
             {
               "name": "1460 Broadway",
               "location": "Times Square",
               "bestPairedWith": "SpringHill Suites",
-              "notes": "Heart of Times Square. 1/2/3/N/Q/R/W/A/C/E trains."
+              "notes": "Heart of Times Square. 1/2/3/N/Q/R/W/A/C/E trains.",
+              "selected": false
             },
             {
               "name": "430 Park Avenue",
               "location": "Midtown East",
               "bestPairedWith": "Courtyard Midtown East",
-              "notes": "Quieter location, close to Grand Central."
+              "notes": "Quieter location, close to Grand Central.",
+              "selected": false
             }
           ],
           "venue": {
-            "name": "WeWork (booked)",
-            "address": "",
-            "confirmed": true,
+            "name": "WeWork 135 Madison Ave",
+            "address": "135 Madison Ave, New York, NY 10016",
+            "confirmed": false,
             "capacity": "10+",
             "estimatedCost": "$1,500-2,000",
             "costNote": "Day pass conference rooms start ~$10/seat/hr. 10-person room for 2 full days.",
-            "status": "Booked",
-            "selectedOption": null,
-            "confirmationDetails": "WeWork confirmed"
+            "status": "Partially Booked",
+            "statusDetail": "Day 2 (4/21) booked — Room 12B, 8:30am-5pm. Day 1 (4/20) NOT YET BOOKED.",
+            "selectedOption": 0,
+            "confirmationDetails": "Day 2 confirmed via WeWork email 3/27. Day 1 still needs booking."
           },
           "dinnerResearch": [
             {
-              "name": "The Modern",
-              "cuisine": "French / New American",
-              "privateDining": "Yes (large groups)",
-              "location": "MoMA, Midtown",
-              "vegetarianOptions": "Excellent -- seasonal vegetable-forward menu",
-              "notes": "Fine dining at MoMA. Impressive setting for a special occasion."
-            },
-            {
-              "name": "BLACKBARN",
-              "cuisine": "Farm-to-table American",
-              "privateDining": "Yes (12-300)",
-              "location": "Midtown",
-              "vegetarianOptions": "Excellent -- seasonal vegetarian dishes built into menu",
-              "notes": "Locally sourced, relaxed but upscale. Multiple private spaces."
+              "name": "Lulla",
+              "cuisine": "TBD",
+              "privateDining": "TBD",
+              "location": "NYC",
+              "vegetarianOptions": "TBD",
+              "notes": "SELECTED — OpenTable reservation confirmed 3/24 for 8 guests at 7pm.",
+              "selected": true
             },
             {
               "name": "Yara",
@@ -1621,21 +1625,41 @@
               "privateDining": "Yes (groups)",
               "location": "Midtown East",
               "vegetarianOptions": "Outstanding -- 18+ vegan dishes, shareable mezze",
-              "notes": "Great for diverse dietary needs. Fun shared-plates format like Denver dinner."
+              "notes": "Was booked then CANCELLED 3/24 in favor of Lulla.",
+              "selected": false,
+              "cancelled": true
+            },
+            {
+              "name": "The Modern",
+              "cuisine": "French / New American",
+              "privateDining": "Yes (large groups)",
+              "location": "MoMA, Midtown",
+              "vegetarianOptions": "Excellent -- seasonal vegetable-forward menu",
+              "notes": "Fine dining at MoMA. Impressive setting for a special occasion.",
+              "selected": false
+            },
+            {
+              "name": "BLACKBARN",
+              "cuisine": "Farm-to-table American",
+              "privateDining": "Yes (12-300)",
+              "location": "Midtown",
+              "vegetarianOptions": "Excellent -- seasonal vegetarian dishes built into menu",
+              "notes": "Locally sourced, relaxed but upscale. Multiple private spaces.",
+              "selected": false
             }
           ],
           "dinner": {
-            "name": "Restaurant (booked)",
-            "options": [
-              "The Modern",
-              "BLACKBARN",
-              "Yara"
-            ],
+            "name": "Lulla",
+            "reservationDate": "April 20, 2026 at 7:00 PM ET",
+            "partySize": 8,
+            "partySizeNote": "8 guests booked — need to update to 9 if all attending, or adjust for locals not joining",
+            "bookedVia": "OpenTable",
             "confirmed": true,
             "requirement": "Strong vegetarian options + private dining",
             "status": "Booked",
+            "statusDetail": "OpenTable reservation confirmed 3/24. Previously had Yara reserved, cancelled same day in favor of Lulla.",
             "selectedOption": null,
-            "confirmationDetails": "Restaurant confirmed"
+            "confirmationDetails": "OpenTable confirmation received 3/24"
           },
           "activityResearch": [
             {

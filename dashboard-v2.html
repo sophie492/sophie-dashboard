@@ -3527,11 +3527,11 @@ function renderOffsite() {
   <div class="offsite-tab-pane" data-offsite-pane="logistics">
     <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px">
       ${logCard('Hotel', '&#127976;', ['<strong>' + (hotel.name || 'TBD') + '</strong>', 'Rate: $' + (hotel.rate || '?') + '/night x ' + (hotel.nights || '?') + ' nights', 'Rooms: ' + (hotel.rooms || '?'), 'Contact: ' + (hotel.contactPerson || 'N/A')], hotel.confirmed)}
-      ${logCard('Venue', '&#127970;', ['<strong>' + (venue.name || 'TBD') + '</strong>', 'Address: ' + (venue.address || 'TBD'), 'Capacity: ' + (venue.capacity || 'N/A'), 'Est. Cost: $' + (venue.estimatedCost || '?')], venue.confirmed)}
+      ${logCard('Venue', '&#127970;', ['<strong>' + (venue.name || 'TBD') + '</strong>', 'Address: ' + (venue.address || 'TBD'), venue.statusDetail ? '<span style="color:' + (venue.status === 'Confirmed' || venue.status === 'Booked' ? 'var(--green)' : 'var(--yellow)') + '">' + venue.statusDetail + '</span>' : 'Est. Cost: $' + (venue.estimatedCost || '?')], venue.confirmed)}
     </div>
     <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px">
-      ${logCard('Dinner', '&#127869;', ['<strong>' + (dinner.name || 'TBD') + '</strong>', 'Options: ' + (dinner.options ? dinner.options.join(', ') : 'None yet')], dinner.confirmed)}
-      ${logCard('Activity', '&#127918;', ['<strong>' + (activity.name || 'TBD') + '</strong>', 'Options: ' + (activity.options ? activity.options.join(', ') : 'None yet')], activity.confirmed)}
+      ${logCard('Dinner', '&#127869;', ['<strong>' + (dinner.name || 'TBD') + '</strong>', dinner.reservationDate ? dinner.reservationDate + ' — ' + (dinner.partySize || '?') + ' guests' : '', dinner.statusDetail ? '<span style="font-size:10px;color:var(--text-muted)">' + dinner.statusDetail + '</span>' : (dinner.options ? 'Options: ' + dinner.options.join(', ') : '')].filter(Boolean), dinner.confirmed)}
+      ${logCard('Activity', '&#127918;', ['<strong>' + (activity.name || 'TBD') + '</strong>', activity.statusDetail ? '<span style="color:' + (activity.status === 'Not Started' ? 'var(--red)' : 'var(--yellow)') + '">' + activity.statusDetail + '</span>' : (activity.options ? 'Options: ' + activity.options.join(', ') : 'No research yet')], activity.confirmed)}
     </div>
     <div class="card">
       <div class="card-head"><div class="card-title">&#128176; Budget</div>
