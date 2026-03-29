@@ -5396,7 +5396,7 @@ function fetchLiveCalendar(){
 }
 
 // ── Live FPPC votes from FPPC dashboard API ──
-const FPPC_API_URL='https://fppc-dashboard-production-52d3.up.railway.app/api/fppc-votes';
+const FPPC_API_URL='/api/fppc-votes';
 
 async function fetchLiveFPPC(){
   try{
@@ -6468,6 +6468,9 @@ async function renderMarketingHubPage(){
   var campaigns=mkt.campaigns||[];
   var reviews=mkt.reviews||[];
   var schedule=config.standupSchedule||{};
+  var owners={monday:schedule.monday||'Saunder',wednesday:schedule.wednesday||'Jennifer',friday:schedule.friday||'Maya'};
+  // Clean owner names (might have description like "Saunder (campaigns, ABM)")
+  Object.keys(owners).forEach(function(k){owners[k]=owners[k].split('(')[0].trim().split(' ')[0];});
 
   // Determine next standup
   const dayNames=['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];

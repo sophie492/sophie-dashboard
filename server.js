@@ -785,6 +785,17 @@ app.post('/api/marketing/campaigns', (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// ── FPPC Proxy (avoids CORS) ──
+app.get('/api/fppc-votes', async (req, res) => {
+  try {
+    const resp = await fetch('https://fppc-dashboard-production-52d3.up.railway.app/api/fppc-votes');
+    const data = await resp.json();
+    res.json(data);
+  } catch (e) {
+    res.status(502).json({ error: 'FPPC server unreachable' });
+  }
+});
+
 // ── CEO Brief Data Storage ──
 const BRIEF_PATH = path.join(__dirname, 'data', 'ceo-brief.json');
 
