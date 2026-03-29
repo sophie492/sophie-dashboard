@@ -1562,7 +1562,10 @@
             "roomsNote": "8 rooms needed -- Isabel is NYC-based",
             "confirmed": false,
             "contactPerson": "Alice Zhao (travel agent, alice.zhao@fora.travel)",
-            "roomsNeeded": 6
+            "roomsNeeded": 6,
+            "status": "Researching",
+            "selectedOption": 3,
+            "confirmationDetails": ""
           },
           "weworkResearch": [
             {
@@ -1590,7 +1593,10 @@
             "confirmed": true,
             "capacity": "10+",
             "estimatedCost": "$1,500-2,000",
-            "costNote": "Day pass conference rooms start ~$10/seat/hr. 10-person room for 2 full days."
+            "costNote": "Day pass conference rooms start ~$10/seat/hr. 10-person room for 2 full days.",
+            "status": "Booked",
+            "selectedOption": null,
+            "confirmationDetails": "WeWork confirmed"
           },
           "dinnerResearch": [
             {
@@ -1626,7 +1632,10 @@
               "Yara"
             ],
             "confirmed": true,
-            "requirement": "Strong vegetarian options + private dining"
+            "requirement": "Strong vegetarian options + private dining",
+            "status": "Booked",
+            "selectedOption": null,
+            "confirmationDetails": "Restaurant confirmed"
           },
           "activityResearch": [
             {
@@ -1659,7 +1668,14 @@
               "Improv Workshop"
             ],
             "confirmed": false,
-            "lesson": "Group activity + dinner is a proven combo. Escape room was a hit in Denver."
+            "lesson": "Group activity + dinner is a proven combo. Escape room was a hit in Denver.",
+            "status": "Not Started",
+            "selectedOption": null,
+            "confirmationDetails": ""
+          },
+          "meals": {
+            "day1Lunch": { "link": "", "notes": "" },
+            "day2Lunch": { "link": "", "notes": "" }
           },
           "budget": {
             "estimated": null,

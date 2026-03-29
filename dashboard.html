@@ -4276,116 +4276,111 @@ function renderOffsiteDetailView(el, OFFSITE, ALLDATA) {
 
   // ── Logistics tab ──
   function renderLogisticsTab() {
-    // Hotel comparison card
-    var hotelCard = '<div class="card offsite-logistics-card">' +
-      '<div class="card-head"><div class="card-title">&#127976; Hotel</div>' + statusBadge(hotel.confirmed) + '</div>' +
-      '<div class="card-body" style="padding:0;overflow-x:auto">' +
-        '<table style="width:100%;border-collapse:collapse;font-size:11px">' +
-          '<thead><tr style="border-bottom:2px solid var(--border);font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px">' +
-            '<th style="padding:6px 8px;text-align:left">Hotel</th>' +
-            '<th style="padding:6px 8px;text-align:left">Location</th>' +
-            '<th style="padding:6px 8px;text-align:left">Rate</th>' +
-            '<th style="padding:6px 8px;text-align:left">Pros</th>' +
-            '<th style="padding:6px 8px;text-align:left">Paired WeWork</th>' +
-          '</tr></thead><tbody>' +
-          hotelResearch.map(function(h) {
-            var isFront = h.currentFrontrunner;
-            return '<tr style="border-bottom:1px solid var(--border);' + (isFront ? 'background:var(--glow-gold)' : '') + '">' +
-              '<td style="padding:6px 8px;font-weight:' + (isFront ? '700' : '500') + ';color:' + (isFront ? 'var(--gold)' : 'var(--text)') + '">' + h.name + (isFront ? ' <span style="font-size:8px;color:var(--gold)">&#9733; FRONTRUNNER</span>' : '') + '</td>' +
-              '<td style="padding:6px 8px;color:var(--text-muted)">' + h.location + '</td>' +
-              '<td style="padding:6px 8px;color:var(--text-dim)">' + h.pricePerNight + '</td>' +
-              '<td style="padding:6px 8px;color:var(--text-dim);font-size:10px">' + h.pros + '</td>' +
-              '<td style="padding:6px 8px;color:var(--text-muted);font-size:10px">' + h.bestPairedWith + '</td>' +
-            '</tr>';
-          }).join('') +
-          '</tbody></table>' +
-        '</div>' +
-        '<div class="card-foot">' +
-          '<strong>Contact:</strong> ' + (hotel.contactPerson || 'N/A') +
+    var meals = logistics.meals || { day1Lunch: { link: '', notes: '' }, day2Lunch: { link: '', notes: '' } };
+
+    // Status dropdown helper
+    function statusDropdown(category, currentStatus) {
+      var statuses = ['Not Started', 'Researching', 'Decided', 'Booked'];
+      var colors = { 'Not Started': 'var(--text-muted)', 'Researching': 'var(--yellow)', 'Decided': 'var(--blue)', 'Booked': 'var(--green)' };
+      var opts = statuses.map(function(s) { return '<option value="' + s + '"' + (s === currentStatus ? ' selected' : '') + '>' + s + '</option>'; }).join('');
+      return '<select style="font-size:10px;padding:2px 6px;border-radius:5px;border:1px solid var(--border-light);background:var(--surface);color:' + (colors[currentStatus] || 'var(--text)') + ';font-family:inherit;font-weight:600;cursor:pointer" onchange="updateLogisticsStatus(\'' + category + '\',this.value)">' + opts + '</select>';
+    }
+
+    // Render a single option card
+    function renderOptionCard(opt, idx, category, isSelected, isCollapsed) {
+      var borderColor = isSelected ? 'var(--green)' : 'var(--border-light)';
+      var bgColor = isSelected ? 'rgba(72,187,120,.06)' : 'transparent';
+      var nameField = opt.name || '';
+      var details = [];
+      if (opt.pricePerNight) details.push(opt.pricePerNight);
+      if (opt.location) details.push(opt.location);
+      if (opt.pros) details.push(opt.pros);
+      if (opt.cuisine) details.push(opt.cuisine);
+      if (opt.privateDining) details.push('Private dining: ' + opt.privateDining);
+      if (opt.vegetarianOptions) details.push('Veg: ' + opt.vegetarianOptions);
+      if (opt.type) details.push(opt.type);
+      if (opt.groupSize) details.push('Group: ' + opt.groupSize);
+      if (opt.estimatedCost) details.push(opt.estimatedCost);
+      if (opt.why) details.push(opt.why);
+      if (opt.bestPairedWith) details.push('Paired with: ' + opt.bestPairedWith);
+      var detailsHtml = details.map(function(d) { return '<span style="font-size:10px;color:var(--text-muted)">' + d + '</span>'; }).join(' &middot; ');
+      var selectBtn = isSelected ? '' : '<button style="font-size:10px;padding:3px 10px;border-radius:5px;border:1px solid var(--green);background:var(--green-soft);color:var(--green);font-family:inherit;font-weight:600;cursor:pointer;margin-top:6px" onclick="selectLogisticsOption(\'' + category + '\',' + idx + ')">This one &#10003;</button>';
+      return '<div style="border:1px solid ' + borderColor + ';border-radius:8px;padding:10px 14px;margin-bottom:8px;background:' + bgColor + '">' +
+        '<div style="font-size:12px;font-weight:700;color:' + (isSelected ? 'var(--green)' : 'var(--text)') + '">' + nameField + '</div>' +
+        '<div style="margin-top:4px;line-height:1.6">' + detailsHtml + '</div>' +
+        selectBtn +
+      '</div>';
+    }
+
+    // Build a logistics category card
+    function renderCategoryCard(icon, label, category, catData, options) {
+      var catStatus = (catData && catData.status) || 'Not Started';
+      var selectedIdx = (catData && catData.selectedOption !== undefined && catData.selectedOption !== null) ? catData.selectedOption : null;
+      var confDetails = (catData && catData.confirmationDetails) || '';
+      var isBooked = catStatus === 'Booked' || catStatus === 'Decided';
+
+      var confirmedHtml = '';
+      var otherOptionsHtml = '';
+
+      if (selectedIdx !== null && options[selectedIdx]) {
+        confirmedHtml = '<div style="margin-bottom:8px">' +
+          '<div style="font-size:10px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">&#10003; CONFIRMED</div>' +
+          renderOptionCard(options[selectedIdx], selectedIdx, category, true, false) +
+          '<div style="margin-top:4px"><input class="offsite-budget-input" style="width:100%" value="' + confDetails.replace(/"/g, '&quot;') + '" placeholder="Confirmation #, reservation time, etc." onblur="updateLogisticsConfirmation(\'' + category + '\',this.value)"></div>' +
+        '</div>';
+        // Collapsible other options
+        var others = options.map(function(o, i) { return i !== selectedIdx ? renderOptionCard(o, i, category, false, true) : ''; }).join('');
+        if (others.replace(/<[^>]*>/g, '').trim()) {
+          otherOptionsHtml = '<details style="margin-top:8px"><summary style="font-size:11px;color:var(--text-muted);cursor:pointer;font-weight:600">Other options considered</summary><div style="margin-top:8px">' + others + '</div></details>';
+        }
+      } else {
+        // No selection yet -- show all options
+        confirmedHtml = options.map(function(o, i) { return renderOptionCard(o, i, category, false, false); }).join('');
+      }
+
+      return '<div class="card offsite-logistics-card" id="logistics-card-' + category + '" style="margin-bottom:14px">' +
+        '<div class="card-head"><div class="card-title">' + icon + ' ' + label + '</div>' + statusDropdown(category, catStatus) + '</div>' +
+        '<div class="card-body" style="padding:12px 14px">' + confirmedHtml + otherOptionsHtml + '</div>' +
+        (catData && catData.contactPerson ? '<div class="card-foot"><strong>Contact:</strong> ' + catData.contactPerson +
           (aliceCorr.summary ? '<div style="margin-top:6px;font-size:10px;color:var(--text-dim);line-height:1.4"><strong>Latest:</strong> ' + aliceCorr.summary + '</div>' : '') +
           (aliceCorr.nextStep ? '<div style="margin-top:4px;font-size:10px;color:var(--gold)"><strong>Next step:</strong> ' + aliceCorr.nextStep + '</div>' : '') +
-        '</div>' +
+        '</div>' : '') +
       '</div>';
+    }
 
-    // WeWork card
-    var weworkCard = '<div class="card offsite-logistics-card">' +
-      '<div class="card-head"><div class="card-title">&#127970; WeWork</div>' + statusBadge(venue.confirmed) + '</div>' +
-      '<div class="card-body" style="padding:0;overflow-x:auto">' +
-        '<table style="width:100%;border-collapse:collapse;font-size:11px">' +
-          '<thead><tr style="border-bottom:2px solid var(--border);font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px">' +
-            '<th style="padding:6px 8px;text-align:left">Location</th>' +
-            '<th style="padding:6px 8px;text-align:left">Area</th>' +
-            '<th style="padding:6px 8px;text-align:left">Best Paired With</th>' +
-            '<th style="padding:6px 8px;text-align:left">Notes</th>' +
-          '</tr></thead><tbody>' +
-          weworkResearch.map(function(w) {
-            return '<tr style="border-bottom:1px solid var(--border)">' +
-              '<td style="padding:6px 8px;font-weight:600;color:var(--text)">' + w.name + '</td>' +
-              '<td style="padding:6px 8px;color:var(--text-muted)">' + w.location + '</td>' +
-              '<td style="padding:6px 8px;color:var(--text-dim)">' + w.bestPairedWith + '</td>' +
-              '<td style="padding:6px 8px;color:var(--text-muted);font-size:10px">' + w.notes + '</td>' +
-            '</tr>';
-          }).join('') +
-          '</tbody></table>' +
+    var hotelCard = renderCategoryCard('&#127976;', 'Hotel', 'hotel', hotel, hotelResearch);
+    var venueCard = renderCategoryCard('&#127970;', 'Venue (WeWork)', 'venue', venue, weworkResearch);
+    var dinnerCard = renderCategoryCard('&#127869;', 'Dinner', 'dinner', dinner, dinnerResearch);
+    var activityCard = renderCategoryCard('&#127918;', 'Activity', 'activity', activity, activityResearch);
+
+    // Meal planning card
+    var mealCard = '<div class="card offsite-logistics-card" style="margin-bottom:14px">' +
+      '<div class="card-head"><div class="card-title">&#127869; Meal Planning</div></div>' +
+      '<div class="card-body" style="padding:12px 14px">' +
+        '<div style="margin-bottom:10px">' +
+          '<div style="font-size:11px;font-weight:600;color:var(--text);margin-bottom:4px">Day 1 Lunch (Mon 4/20):</div>' +
+          '<input class="offsite-budget-input" style="width:100%" value="' + ((meals.day1Lunch && meals.day1Lunch.link) || '').replace(/"/g, '&quot;') + '" placeholder="DoorDash group order link..." onblur="updateMealLink(\'day1Lunch\',this.value)">' +
         '</div>' +
-        '<div class="card-foot">Est. Cost: ' + (venue.estimatedCost || '$1,500-2,000') + ' &mdash; Day pass conference rooms ~$10/seat/hr</div>' +
-      '</div>';
-
-    // Dinner card
-    var dinnerCard = '<div class="card offsite-logistics-card">' +
-      '<div class="card-head"><div class="card-title">&#127869; Dinner</div>' + statusBadge(dinner.confirmed) + '</div>' +
-      '<div class="card-body" style="padding:0;overflow-x:auto">' +
-        '<table style="width:100%;border-collapse:collapse;font-size:11px">' +
-          '<thead><tr style="border-bottom:2px solid var(--border);font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px">' +
-            '<th style="padding:6px 8px;text-align:left">Restaurant</th>' +
-            '<th style="padding:6px 8px;text-align:left">Cuisine</th>' +
-            '<th style="padding:6px 8px;text-align:left">Private Dining</th>' +
-            '<th style="padding:6px 8px;text-align:left">Vegetarian</th>' +
-            '<th style="padding:6px 8px;text-align:left">Location</th>' +
-          '</tr></thead><tbody>' +
-          dinnerResearch.map(function(d) {
-            return '<tr style="border-bottom:1px solid var(--border)">' +
-              '<td style="padding:6px 8px;font-weight:600;color:var(--text)">' + d.name + '</td>' +
-              '<td style="padding:6px 8px;color:var(--text-dim)">' + d.cuisine + '</td>' +
-              '<td style="padding:6px 8px;color:var(--text-muted)">' + d.privateDining + '</td>' +
-              '<td style="padding:6px 8px;color:var(--text-muted);font-size:10px">' + d.vegetarianOptions + '</td>' +
-              '<td style="padding:6px 8px;color:var(--text-muted)">' + d.location + '</td>' +
-            '</tr>';
-          }).join('') +
-          '</tbody></table>' +
+        '<div>' +
+          '<div style="font-size:11px;font-weight:600;color:var(--text);margin-bottom:4px">Day 2 Lunch (Tue 4/21):</div>' +
+          '<input class="offsite-budget-input" style="width:100%" value="' + ((meals.day2Lunch && meals.day2Lunch.link) || '').replace(/"/g, '&quot;') + '" placeholder="DoorDash group order link..." onblur="updateMealLink(\'day2Lunch\',this.value)">' +
         '</div>' +
-        '<div class="card-foot">Requirement: ' + (dinner.requirement || 'Strong vegetarian options + private dining') + '</div>' +
-      '</div>';
+      '</div>' +
+    '</div>';
 
-    // Activity card
-    var activityCard = '<div class="card offsite-logistics-card">' +
-      '<div class="card-head"><div class="card-title">&#127918; Activity</div>' + statusBadge(activity.confirmed) + '</div>' +
-      '<div class="card-body" style="padding:0;overflow-x:auto">' +
-        '<table style="width:100%;border-collapse:collapse;font-size:11px">' +
-          '<thead><tr style="border-bottom:2px solid var(--border);font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px">' +
-            '<th style="padding:6px 8px;text-align:left">Activity</th>' +
-            '<th style="padding:6px 8px;text-align:left">Type</th>' +
-            '<th style="padding:6px 8px;text-align:left">Group Size</th>' +
-            '<th style="padding:6px 8px;text-align:left">Cost</th>' +
-            '<th style="padding:6px 8px;text-align:left">Why</th>' +
-          '</tr></thead><tbody>' +
-          activityResearch.map(function(a) {
-            return '<tr style="border-bottom:1px solid var(--border)">' +
-              '<td style="padding:6px 8px;font-weight:600;color:var(--text)">' + a.name + '</td>' +
-              '<td style="padding:6px 8px;color:var(--text-dim)">' + a.type + '</td>' +
-              '<td style="padding:6px 8px;color:var(--text-muted)">' + a.groupSize + '</td>' +
-              '<td style="padding:6px 8px;color:var(--text-dim)">' + a.estimatedCost + '</td>' +
-              '<td style="padding:6px 8px;color:var(--text-muted);font-size:10px">' + a.why + '</td>' +
-            '</tr>';
-          }).join('') +
-          '</tbody></table>' +
-        '</div>' +
-        '<div class="card-foot">' + (activity.lesson || 'Group activity + dinner is a proven combo.') + '</div>' +
-      '</div>';
-
-    // Budget card
+    // Budget card with color coding
+    function budgetRowColor(est, act) {
+      if (!est || !act) return '';
+      var ratio = act / est;
+      if (ratio > 1) return 'background:var(--red-soft)';
+      if (ratio >= 0.8) return 'background:var(--yellow-soft)';
+      return 'background:var(--green-soft)';
+    }
     var budgetRows = budgetCategories.map(function(c) {
-      return '<tr style="border-bottom:1px solid var(--border)">' +
+      var est = parseFloat(c.estimated) || 0;
+      var act = parseFloat(c.actual) || 0;
+      var rowStyle = (est && act) ? budgetRowColor(est, act) : '';
+      return '<tr style="border-bottom:1px solid var(--border);' + rowStyle + '">' +
         '<td style="padding:6px 8px;font-weight:600;color:var(--text);font-size:11px">' + c.category + '</td>' +
         '<td style="padding:6px 8px"><input class="offsite-budget-input" value="' + (c.estimated || '') + '" onchange="updateOffsiteBudget(\'' + c.category.replace(/'/g, "\\'") + '\',\'estimated\',this.value)" placeholder="--"></td>' +
         '<td style="padding:6px 8px"><input class="offsite-budget-input" value="' + (c.committed || '') + '" onchange="updateOffsiteBudget(\'' + c.category.replace(/'/g, "\\'") + '\',\'committed\',this.value)" placeholder="--"></td>' +
@@ -4397,6 +4392,13 @@ function renderOffsiteDetailView(el, OFFSITE, ALLDATA) {
     var totalEst = budgetCategories.reduce(function(s,c) { return s + (parseFloat(c.estimated) || 0); }, 0);
     var totalComm = budgetCategories.reduce(function(s,c) { return s + (parseFloat(c.committed) || 0); }, 0);
     var totalAct = budgetCategories.reduce(function(s,c) { return s + (parseFloat(c.actual) || 0); }, 0);
+    var totalColor = '';
+    if (totalEst && totalAct) {
+      var totalRatio = totalAct / totalEst;
+      totalColor = totalRatio > 1 ? 'var(--red)' : totalRatio >= 0.8 ? 'var(--yellow)' : 'var(--green)';
+    } else {
+      totalColor = 'var(--green)';
+    }
 
     var budgetCard = '<div class="card offsite-logistics-card">' +
       '<div class="card-head"><div class="card-title">&#128176; Budget</div>' +
@@ -4416,16 +4418,18 @@ function renderOffsiteDetailView(el, OFFSITE, ALLDATA) {
               '<td style="padding:6px 8px;color:var(--text)">TOTAL</td>' +
               '<td style="padding:6px 8px;text-align:right;color:var(--text)">$' + totalEst.toLocaleString() + '</td>' +
               '<td style="padding:6px 8px;text-align:right;color:var(--gold)">$' + totalComm.toLocaleString() + '</td>' +
-              '<td style="padding:6px 8px;text-align:right;color:var(--green)">$' + totalAct.toLocaleString() + '</td>' +
+              '<td style="padding:6px 8px;text-align:right;color:' + totalColor + '">$' + totalAct.toLocaleString() + '</td>' +
               '<td style="padding:6px 8px"></td>' +
             '</tr>' +
           '</tbody>' +
         '</table>' +
       '</div>' +
-      '<div class="card-foot">Approver: <strong>' + (budget.approver || 'Evelyn') + '</strong></div>' +
+      '<div class="card-foot">Approver: <strong>' + (budget.approver || 'Evelyn') + '</strong>' +
+        '<div style="margin-top:4px;font-size:9px;color:var(--text-muted)">Row colors: <span style="color:var(--green)">&#9679;</span> under budget &middot; <span style="color:var(--yellow)">&#9679;</span> near budget (80-100%) &middot; <span style="color:var(--red)">&#9679;</span> over budget</div>' +
+      '</div>' +
     '</div>';
 
-    return '<div class="offsite-tab-pane" id="offsite-logistics">' + hotelCard + weworkCard + dinnerCard + activityCard + budgetCard + '</div>';
+    return '<div class="offsite-tab-pane" id="offsite-logistics">' + hotelCard + venueCard + dinnerCard + activityCard + mealCard + budgetCard + '</div>';
   }
 
   // ── Agenda tab ──
@@ -4650,6 +4654,83 @@ function updateOffsiteBudget(category, field, value) {
   }).then(function(r) { return r.json(); }).then(function(d) {
     if (d.ok) console.log('[Offsite] Budget updated: ' + category + ' ' + field + ' = ' + value);
   }).catch(function(e) { console.error('[Offsite] Budget update failed:', e); });
+}
+
+// Select a logistics option (e.g., pick a hotel)
+function selectLogisticsOption(category, optionIndex) {
+  if (!_offsiteApiData || !_activeOffsiteId) return;
+  var offsite = getOffsiteById(_activeOffsiteId);
+  if (!offsite || !offsite.logistics) return;
+  var catData = offsite.logistics[category];
+  if (!catData) return;
+  catData.selectedOption = optionIndex;
+  catData.status = 'Decided';
+  // Re-render just the category card
+  var cardEl = document.getElementById('logistics-card-' + category);
+  if (cardEl) {
+    // Re-render the full logistics tab to update the card
+    renderOffsitePage();
+  }
+  // Save to server
+  fetch('/api/offsite/' + _activeOffsiteId, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer sophie-dashboard-secret-change-me'},
+    body: JSON.stringify({ logistics: offsite.logistics })
+  }).then(function(r) { return r.json(); }).then(function(d) {
+    if (d.ok) console.log('[Offsite] Selected ' + category + ' option ' + optionIndex);
+  }).catch(function(e) { console.error('[Offsite] Select failed:', e); });
+}
+
+// Update logistics status dropdown
+function updateLogisticsStatus(category, status) {
+  if (!_offsiteApiData || !_activeOffsiteId) return;
+  var offsite = getOffsiteById(_activeOffsiteId);
+  if (!offsite || !offsite.logistics) return;
+  var catData = offsite.logistics[category];
+  if (!catData) return;
+  catData.status = status;
+  fetch('/api/offsite/' + _activeOffsiteId, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer sophie-dashboard-secret-change-me'},
+    body: JSON.stringify({ logistics: offsite.logistics })
+  }).then(function(r) { return r.json(); }).then(function(d) {
+    if (d.ok) console.log('[Offsite] Status updated: ' + category + ' = ' + status);
+  }).catch(function(e) { console.error('[Offsite] Status update failed:', e); });
+}
+
+// Update confirmation details for a logistics category
+function updateLogisticsConfirmation(category, value) {
+  if (!_offsiteApiData || !_activeOffsiteId) return;
+  var offsite = getOffsiteById(_activeOffsiteId);
+  if (!offsite || !offsite.logistics) return;
+  var catData = offsite.logistics[category];
+  if (!catData) return;
+  catData.confirmationDetails = value;
+  if (value && value.trim()) catData.status = 'Booked';
+  fetch('/api/offsite/' + _activeOffsiteId, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer sophie-dashboard-secret-change-me'},
+    body: JSON.stringify({ logistics: offsite.logistics })
+  }).then(function(r) { return r.json(); }).then(function(d) {
+    if (d.ok) console.log('[Offsite] Confirmation updated: ' + category + ' = ' + value);
+  }).catch(function(e) { console.error('[Offsite] Confirmation update failed:', e); });
+}
+
+// Update meal DoorDash link
+function updateMealLink(day, value) {
+  if (!_offsiteApiData || !_activeOffsiteId) return;
+  var offsite = getOffsiteById(_activeOffsiteId);
+  if (!offsite || !offsite.logistics) return;
+  if (!offsite.logistics.meals) offsite.logistics.meals = { day1Lunch: { link: '', notes: '' }, day2Lunch: { link: '', notes: '' } };
+  if (!offsite.logistics.meals[day]) offsite.logistics.meals[day] = { link: '', notes: '' };
+  offsite.logistics.meals[day].link = value;
+  fetch('/api/offsite/' + _activeOffsiteId, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer sophie-dashboard-secret-change-me'},
+    body: JSON.stringify({ logistics: offsite.logistics })
+  }).then(function(r) { return r.json(); }).then(function(d) {
+    if (d.ok) console.log('[Offsite] Meal link updated: ' + day + ' = ' + value);
+  }).catch(function(e) { console.error('[Offsite] Meal link update failed:', e); });
 }
 
 function renderHackWeek() {
