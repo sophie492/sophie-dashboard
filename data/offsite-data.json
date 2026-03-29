@@ -65,7 +65,7 @@
       "role": "Product",
       "email": "isabel@fermatcommerce.com",
       "marriottNum": "634278963",
-      "location": "Denver, CO",
+      "location": "New York, NY",
       "title": "Product",
       "needsHotel": true,
       "needsFlight": true
@@ -1068,7 +1068,7 @@
             "travelCardIssued": false,
             "dietaryNeeds": "",
             "notes": "",
-            "location": "Denver, CO",
+            "location": "New York, NY",
             "needsFlight": true,
             "travelNotes": "DEN -> JFK/EWR (~4h flight)"
           },
