@@ -269,6 +269,43 @@ app.post('/api/action-items/create', async (req, res) => {
   }
 });
 
+// ── CEO Brief Data Storage ──
+const BRIEF_PATH = path.join(__dirname, 'data', 'ceo-brief.json');
+
+app.get('/api/ceo-brief', (req, res) => {
+  // No auth required — read-only summary data
+  try {
+    if (fs.existsSync(BRIEF_PATH)) {
+      const data = JSON.parse(fs.readFileSync(BRIEF_PATH, 'utf8'));
+      res.json(data);
+    } else {
+      res.json({ flagged: [], priorities: [], actionItems: [], lastUpdated: null });
+    }
+  } catch (err) {
+    console.error('Error reading CEO brief:', err);
+    res.status(500).json({ error: 'Failed to read brief data' });
+  }
+});
+
+app.post('/api/ceo-brief', (req, res) => {
+  const authHeader = req.headers.authorization || '';
+  const token = authHeader.replace('Bearer ', '');
+  if (token !== (process.env.DASHBOARD_API_KEY || 'sophie-dashboard-secret-change-me')) {
+    return res.status(401).json({ error: 'Invalid API key' });
+  }
+  try {
+    const dir = path.dirname(BRIEF_PATH);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    const data = { ...req.body, lastUpdated: new Date().toISOString() };
+    fs.writeFileSync(BRIEF_PATH, JSON.stringify(data, null, 2));
+    console.log('[CEO Brief] Data saved:', data.flagged?.length, 'flagged,', data.priorities?.length, 'priorities');
+    res.json({ ok: true, savedAt: data.lastUpdated });
+  } catch (err) {
+    console.error('Error writing CEO brief:', err);
+    res.status(500).json({ error: 'Failed to write brief data' });
+  }
+});
+
 // Notion write test (remove after debugging)
 app.get('/health/notion-test', async (req, res) => {
   if (!notion) return res.json({ error: 'notion client is null', NOTION_TOKEN: !!NOTION_TOKEN });
