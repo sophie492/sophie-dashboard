@@ -4595,13 +4595,30 @@ function toggleAttendeeStatus(name, field) {
   var attendee = offsite.attendees.find(function(a) { return a.name === name; });
   if (!attendee) return;
   attendee[field] = !attendee[field];
-  // Save full data structure
+  var val = attendee[field];
+
+  // Update DOM in place — stay on Attendees tab
+  // Find the button that was clicked by matching onclick text
+  var allBtns = document.querySelectorAll('.offsite-status-toggle');
+  var btn = null;
+  allBtns.forEach(function(b) {
+    var onclick = b.getAttribute('onclick') || '';
+    if (onclick.includes(name) && onclick.includes(field)) btn = b;
+  });
+  if (btn) {
+    btn.style.background = val ? 'var(--green-soft)' : 'var(--surface)';
+    btn.style.color = val ? 'var(--green)' : 'var(--text-muted)';
+    btn.style.borderColor = val ? 'var(--green)' : 'var(--border)';
+    btn.textContent = val ? '\u2713' : '\u2014';
+  }
+
+  // Save to server (fire and forget — no re-render)
   fetch('/api/offsite', {
     method: 'POST',
     headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer sophie-dashboard-secret-change-me'},
     body: JSON.stringify(_offsiteApiData)
   }).then(function(r) { return r.json(); }).then(function(d) {
-    if (d.ok) { console.log('[Offsite] Attendee ' + name + ' ' + field + ' toggled'); renderOffsitePage(); }
+    if (d.ok) console.log('[Offsite] ' + name + ' ' + field + ' \u2192 ' + val);
   }).catch(function(e) { console.error('[Offsite] Toggle failed:', e); });
 }
 
