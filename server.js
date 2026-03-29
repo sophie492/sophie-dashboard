@@ -383,6 +383,79 @@ app.post('/api/notion/toggle-todo', async (req, res) => {
   }
 });
 
+// ── Leadership Offsite API ──
+const OFFSITE_PATH = path.join(__dirname, 'data', 'offsite-data.json');
+
+app.get('/api/offsite', (req, res) => {
+  try {
+    if (fs.existsSync(OFFSITE_PATH)) {
+      const data = JSON.parse(fs.readFileSync(OFFSITE_PATH, 'utf8'));
+      data.config.daysUntil = Math.ceil((new Date('2026-04-20') - new Date()) / 86400000);
+      res.json(data);
+    } else {
+      res.json({ config: {}, attendees: [], agenda: [], logistics: {}, themes: [], reviews: [] });
+    }
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/offsite', (req, res) => {
+  const authHeader = req.headers.authorization || '';
+  const token = authHeader.replace('Bearer ', '');
+  if (token !== (process.env.DASHBOARD_API_KEY || 'sophie-dashboard-secret-change-me')) {
+    return res.status(401).json({ error: 'Invalid API key' });
+  }
+  try {
+    const dir = path.dirname(OFFSITE_PATH);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(OFFSITE_PATH, JSON.stringify({ ...req.body, lastSynced: new Date().toISOString() }, null, 2));
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ── BD Ownership API ──
+const BD_PATH = path.join(__dirname, 'data', 'bd-data.json');
+
+app.get('/api/bd', (req, res) => {
+  try {
+    if (fs.existsSync(BD_PATH)) {
+      res.json(JSON.parse(fs.readFileSync(BD_PATH, 'utf8')));
+    } else {
+      res.json({ config: {}, relationships: [], followUps: [], reviews: [] });
+    }
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/bd', (req, res) => {
+  const authHeader = req.headers.authorization || '';
+  const token = authHeader.replace('Bearer ', '');
+  if (token !== (process.env.DASHBOARD_API_KEY || 'sophie-dashboard-secret-change-me')) {
+    return res.status(401).json({ error: 'Invalid API key' });
+  }
+  try {
+    const dir = path.dirname(BD_PATH);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(BD_PATH, JSON.stringify({ ...req.body, lastSynced: new Date().toISOString() }, null, 2));
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.patch('/api/bd/relationships/:id', (req, res) => {
+  const authHeader = req.headers.authorization || '';
+  const token = authHeader.replace('Bearer ', '');
+  if (token !== (process.env.DASHBOARD_API_KEY || 'sophie-dashboard-secret-change-me')) {
+    return res.status(401).json({ error: 'Invalid API key' });
+  }
+  try {
+    const data = fs.existsSync(BD_PATH) ? JSON.parse(fs.readFileSync(BD_PATH, 'utf8')) : { relationships: [] };
+    const rel = data.relationships.find(r => r.id === req.params.id);
+    if (!rel) return res.status(404).json({ error: 'Relationship not found' });
+    Object.assign(rel, req.body);
+    data.lastSynced = new Date().toISOString();
+    fs.writeFileSync(BD_PATH, JSON.stringify(data, null, 2));
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 // ── CEO Brief Data Storage ──
 const BRIEF_PATH = path.join(__dirname, 'data', 'ceo-brief.json');
 

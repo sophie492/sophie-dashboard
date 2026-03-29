@@ -1,0 +1,23 @@
+{
+  "config": {
+    "name": "CEO Relationships Tracker",
+    "notionHub": "https://www.notion.so/3321ad76fd2a816ba9faed76ba2f0a7c",
+    "slackChannel": "#enterprise",
+    "owner": "Sophie"
+  },
+  "relationships": [
+    {"id":"r1","company":"Criteo","contact":"Mehdi Atoui","contactTitle":"Partnership Manager","type":"partner","status":"Active Conversation","tier":"Tier 1","lastTouch":"2026-03-27","nextAction":"Demo Mon 3/30 11:30-12:15 PT","nextActionDate":"2026-03-30","owner":"Rishabh","notes":"Mehdi sending Zoom invite"},
+    {"id":"r2","company":"MoMA","contact":"Jillian Chisari","contactTitle":"","type":"partner","status":"Active","tier":"Tier 1","lastTouch":"2026-03-27","nextAction":"Follow-up meeting Apr 13 with site merch lead","nextActionDate":"2026-04-13","owner":"Gillian","notes":"AI search audit + site behavior analysis committed"},
+    {"id":"r3","company":"Bissell","contact":"Matt Kruer","contactTitle":"","type":"prospect","status":"New Intro","tier":"Tier 2","lastTouch":"2026-03-27","nextAction":"Sophie scheduling intro call","nextActionDate":null,"owner":"Sophie","notes":"Intro via Jacob Posel (Enabled AI)"},
+    {"id":"r4","company":"GNC","contact":"Anshuman","contactTitle":"CDO","type":"customer","status":"Active","tier":"Tier 1","lastTouch":"2026-03-27","nextAction":"Lock Pittsburgh date May 18/19","nextActionDate":"2026-03-31","owner":"Daniel","notes":"Amanda wants FERMAT as fast testing ground"},
+    {"id":"r5","company":"Stripe Ventures","contact":"Matt Yalowitz","contactTitle":"","type":"investor","status":"Active","tier":"Tier 1","lastTouch":"2026-03-23","nextAction":"Model check-in recurring","nextActionDate":null,"owner":"Rishabh","notes":""},
+    {"id":"r6","company":"Greylock","contact":"Saam Motamedi","contactTitle":"","type":"investor","status":"Active","tier":"Tier 1","lastTouch":"2026-03-26","nextAction":"1:1 Thu Apr 16 2:30-3:30 PM at Greylock SF","nextActionDate":"2026-04-16","owner":"Rishabh","notes":"Corinne Riley also attending. Madissen sent invite."},
+    {"id":"r7","company":"VMG Partners","contact":"Indy Guha, Sam Shapiro","contactTitle":"","type":"investor","status":"Active","tier":"Tier 1","lastTouch":"2026-03-23","nextAction":"Recurring model check-ins","nextActionDate":null,"owner":"Rishabh","notes":""},
+    {"id":"r8","company":"Tapestry","contact":"Gillian thread","contactTitle":"","type":"customer","status":"Active","tier":"Tier 1","lastTouch":"2026-03-27","nextAction":"MSA redlines — Kira sent revised agreement","nextActionDate":null,"owner":"Gillian","notes":"Ready to send to Tapestry"},
+    {"id":"r9","company":"","contact":"Dan Ross","contactTitle":"","type":"advisor","status":"Active","tier":"Tier 2","lastTouch":"2026-03-27","nextAction":"Call recording debrief done","nextActionDate":null,"owner":"Rishabh","notes":""},
+    {"id":"r10","company":"Salesforce","contact":"Connor Marsden","contactTitle":"","type":"partner","status":"Active","tier":"Tier 2","lastTouch":"2026-03-20","nextAction":"","nextActionDate":null,"owner":"Jess","notes":""}
+  ],
+  "followUps": [],
+  "reviews": [],
+  "lastSynced": "2026-03-28T00:00:00.000Z"
+}

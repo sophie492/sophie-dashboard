@@ -460,6 +460,19 @@ a.loop-row:hover .loop-source{color:var(--gold)}
 .pod-tier-badge{font-size:9px;padding:2px 6px;border-radius:4px;font-weight:700}
 .pod-owner-badge{font-size:9px;padding:2px 6px;border-radius:4px;font-weight:600}
 .pod-priority-dot{width:6px;height:6px;border-radius:50%;display:inline-block}
+.offsite-nav{display:flex;gap:8px;border-bottom:1px solid var(--border);margin-bottom:16px;flex-wrap:wrap}
+.offsite-nav-btn{padding:10px 20px;font-size:13px;font-weight:700;color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;letter-spacing:-.2px;background:none;border-top:none;border-left:none;border-right:none;font-family:inherit}
+.offsite-nav-btn.active{color:var(--gold);border-bottom-color:var(--gold)}
+.offsite-nav-btn:hover{color:var(--text)}
+.offsite-tab-pane{display:none}
+.offsite-tab-pane.active{display:block}
+.bd-nav{display:flex;gap:8px;border-bottom:1px solid var(--border);margin-bottom:16px;flex-wrap:wrap}
+.bd-nav-btn{padding:10px 20px;font-size:13px;font-weight:700;color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;letter-spacing:-.2px;background:none;border-top:none;border-left:none;border-right:none;font-family:inherit}
+.bd-nav-btn.active{color:var(--gold);border-bottom-color:var(--gold)}
+.bd-nav-btn:hover{color:var(--text)}
+.bd-tab-pane{display:none}
+.bd-tab-pane.active{display:block}
+#page-bd .card{height:auto}
 </style>
 </head>
 <body>
@@ -488,6 +501,7 @@ a.loop-row:hover .loop-source{color:var(--gold)}
   <div class="page" id="page-projects"></div>
   <div class="page" id="page-system"></div>
   <div class="page" id="page-podcast"></div>
+  <div class="page" id="page-bd"></div>
 </main>
 
 <script>
@@ -1723,6 +1737,7 @@ function renderSidebar(){
     <div class="sidebar-group">My Work</div>
     <div class="sidebar-item" data-page="tasks"><span class="si-icon">&#128142;</span><span class="si-label">Tasks</span><span class="si-badge gold">${openTasks}</span></div>
     <div class="sidebar-item" data-page="podcast"><span class="si-icon">&#127908;</span><span class="si-label">Podcast</span></div>
+    <div class="sidebar-item" data-page="bd"><span class="si-icon">&#129309;</span><span class="si-label">BD Tracker</span></div>
     <div class="sidebar-item" data-page="project-offsite"><span class="si-icon">✈️</span><span class="si-label">Leadership Offsite</span><span style="font-size:8px;color:var(--text-muted);margin-left:auto">${offsitePct}%</span></div>
     <div class="sidebar-item" data-page="project-hackweek"><span class="si-icon">🧪</span><span class="si-label">Hack Week</span><span style="font-size:8px;color:var(--text-muted);margin-left:auto">${hwPct}%</span></div>
     <div class="sidebar-item" data-page="project-bd"><span class="si-icon">🤝</span><span class="si-label">BD Ownership</span><span style="font-size:8px;color:var(--text-muted);margin-left:auto">${bdPct}%</span></div>
@@ -3228,6 +3243,15 @@ function renderEventsPage(){
 }
 
 // -- Projects Page --
+let _offsiteApiData = null;
+
+async function fetchOffsiteData() {
+  try {
+    const res = await fetch('/api/offsite');
+    if (res.ok) { _offsiteApiData = await res.json(); }
+  } catch(e) { console.warn('[Offsite] API fetch failed:', e.message); }
+}
+
 function renderOffsite() {
   const o = DATA.leadershipOffsite;
   if(!o) return '';
@@ -3235,24 +3259,22 @@ function renderOffsite() {
   const totalTasks = o.phases.reduce((s,p) => s + p.tasks.length, 0);
   const doneTasks = o.phases.reduce((s,p) => s + p.tasks.filter(t=>t.done).length, 0);
   const pct = totalTasks ? Math.round((doneTasks/totalTasks)*100) : 0;
+  const daysUntil = _offsiteApiData?.config?.daysUntil ?? Math.ceil((new Date('2026-04-20') - new Date()) / 86400000);
+  const api = _offsiteApiData || {};
+  const attendees = api.attendees || [];
+  const logistics = api.logistics || {};
+  const themes = api.themes || [];
+  const reviews = api.reviews || [];
+  const agenda = api.agenda || [];
+  const config = api.config || {};
 
-  const today = new Date().toISOString().slice(0,10);
-  const daysUntil = Math.ceil((new Date('2026-04-20') - new Date()) / 86400000);
-
-  function phaseStatus(p) {
-    const allDone = p.tasks.every(t => t.done);
-    if(allDone) return 'done';
-    return 'active';
-  }
-
+  // Build phased checklist HTML (preserved from original)
   let phaseHtml = '';
   o.phases.forEach((p, pi) => {
     const pDone = p.tasks.filter(t=>t.done).length;
     const pTotal = p.tasks.length;
-    const pPct = pTotal ? Math.round((pDone/pTotal)*100) : 0;
     const allDone = pDone === pTotal;
     const isFirst = pi === 0;
-
     phaseHtml += `
       <div class="offsite-phase${allDone?' phase-done':''}" data-phase="${pi}">
         <div class="offsite-phase-head" onclick="toggleOffsitePhase(this)" style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)">
@@ -3262,9 +3284,7 @@ function renderOffsite() {
           <span style="font-size:9px;padding:2px 6px;border-radius:4px;font-weight:700;${allDone?'background:var(--green-soft);color:var(--green)':'background:var(--surface);color:var(--text-muted)'}">${pDone}/${pTotal}</span>
         </div>
         <div class="offsite-phase-body" style="display:${isFirst?'block':'none'};padding:4px 0 4px 18px">`;
-
     p.tasks.forEach((t, ti) => {
-      const taskId = 'offsite-'+pi+'-'+ti;
       phaseHtml += `
           <div class="offsite-task${t.done?' checked':''}" data-phase="${pi}" data-task="${ti}" onclick="toggleOffsiteTask(this)" style="display:flex;align-items:flex-start;gap:8px;padding:5px 4px;border-radius:5px;cursor:pointer;transition:background .15s;font-size:11px">
             <div class="task-checkbox${t.done?' checked':''}"></div>
@@ -3276,33 +3296,169 @@ function renderOffsite() {
 
   const barColor = pct >= 75 ? 'var(--green)' : pct >= 40 ? 'var(--yellow)' : 'var(--accent)';
 
+  // Attendee status helpers
+  function statusDot(val) { return val ? '<span style="color:var(--green);font-weight:700">&#10003;</span>' : '<span style="color:var(--yellow)">&#9679;</span>'; }
+  function statusBg(val) { return val ? 'background:var(--green-soft)' : 'background:var(--surface)'; }
+
+  // Attendees table rows
+  let attendeeRows = attendees.map(a => '<tr style="border-bottom:1px solid var(--border);font-size:11px"><td style="padding:6px 8px;font-weight:600;color:var(--text)">' + a.name + '</td><td style="padding:6px 8px;color:var(--text-muted);font-family:monospace;font-size:10px">' + (a.marriottNum || '<span style="color:var(--accent)">missing</span>') + '</td><td style="padding:6px 8px;text-align:center;' + statusBg(a.hotelConfirmed) + ';border-radius:4px">' + statusDot(a.hotelConfirmed) + '</td><td style="padding:6px 8px;text-align:center;' + statusBg(a.flightBooked) + ';border-radius:4px">' + statusDot(a.flightBooked) + '</td><td style="padding:6px 8px;text-align:center;' + statusBg(a.travelCardIssued) + ';border-radius:4px">' + statusDot(a.travelCardIssued) + '</td><td style="padding:6px 8px;color:var(--text-muted);font-size:10px">' + (a.dietaryNeeds || '--') + '</td></tr>').join('');
+
+  // Logistics card helper
+  const hotel = logistics.hotel || {};
+  const venue = logistics.venue || {};
+  const dinner = logistics.dinner || {};
+  const activity = logistics.activity || {};
+  const budget = logistics.budget || {};
+
+  function logCard(title, icon, lines, confirmed) {
+    return '<div class="card" style="flex:1;min-width:220px"><div class="card-head"><div class="card-title">' + icon + ' ' + title + '</div><span class="badge ' + (confirmed?'tag-green':'tag-yellow') + '">' + (confirmed?'Confirmed':'Pending') + '</span></div><div class="card-body" style="padding:10px 14px;font-size:11px;color:var(--text-dim)">' + lines.join('<br>') + '</div></div>';
+  }
+
+  // Budget bar
+  const budgetPct = budget.estimated ? Math.round((budget.committed / budget.estimated) * 100) : 0;
+  const budgetActPct = budget.estimated ? Math.round((budget.actual / budget.estimated) * 100) : 0;
+
   return `
-  <div class="card">
-    <div class="card-head">
-      <div class="card-title">&#9992;&#65039; Leadership Offsite</div>
-      <div class="card-badges">
-        <span class="badge ${daysUntil<=7?'tag-red':daysUntil<=14?'tag-yellow':'tag-blue'}">${daysUntil}d away</span>
-        <button onclick="syncOffsiteToNotion()" style="font-size:9px;padding:2px 8px;border-radius:5px;border:1px solid var(--leaf);background:var(--green-soft);color:var(--green);font-family:inherit;font-weight:700;cursor:pointer;transition:all .15s" onmouseover="this.style.background='var(--green)';this.style.color='var(--bg)'" onmouseout="this.style.background='var(--green-soft)';this.style.color='var(--green)'" id="offsite-sync-btn">Sync to Notion</button>
-        <a href="${o.notionUrl}" target="_blank" style="font-size:10px;color:var(--gold)">Notion &#8599;</a>
+  <div class="offsite-nav">
+    <button class="offsite-nav-btn active" data-offsite-tab="current">Current Offsite</button>
+    <button class="offsite-nav-btn" data-offsite-tab="attendees">Attendees</button>
+    <button class="offsite-nav-btn" data-offsite-tab="agenda">Agenda</button>
+    <button class="offsite-nav-btn" data-offsite-tab="logistics">Logistics</button>
+    <button class="offsite-nav-btn" data-offsite-tab="reviews">Reviews</button>
+  </div>
+
+  <!-- TAB: Current Offsite -->
+  <div class="offsite-tab-pane active" data-offsite-pane="current">
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">&#9992;&#65039; Q2 Leadership Offsite</div>
+        <div class="card-badges">
+          <span class="badge ${daysUntil<=7?'tag-red':daysUntil<=14?'tag-yellow':'tag-blue'}">${daysUntil}d away</span>
+          <button onclick="syncOffsiteToNotion()" style="font-size:9px;padding:2px 8px;border-radius:5px;border:1px solid var(--leaf);background:var(--green-soft);color:var(--green);font-family:inherit;font-weight:700;cursor:pointer;transition:all .15s" onmouseover="this.style.background='var(--green)';this.style.color='var(--bg)'" onmouseout="this.style.background='var(--green-soft)';this.style.color='var(--green)'" id="offsite-sync-btn">Sync to Notion</button>
+          <a href="${o.notionUrl || config.notionHub || ''}" target="_blank" style="font-size:10px;color:var(--gold)">Notion &#8599;</a>
+        </div>
+      </div>
+      <div class="card-body" style="padding:10px 14px">
+        <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:12px">
+          <div style="font-size:11px;color:var(--text-muted)"><strong style="color:var(--text)">Dates:</strong> ${config.dates || o.dates}</div>
+          <div style="font-size:11px;color:var(--text-muted)"><strong style="color:var(--text)">Location:</strong> ${config.location || 'TBD'}</div>
+          <div style="font-size:11px;color:var(--text-muted)"><strong style="color:var(--text)">Attendees:</strong> ${attendees.length || o.attendees?.length || 0}</div>
+          <div style="font-size:11px;color:var(--text-muted)"><strong style="color:var(--text)">Slack:</strong> ${config.slackChannel || '#leadership'}</div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <span style="font-size:12px;font-weight:700;color:var(--text)">Planning Progress</span>
+          <span style="font-size:10px;color:var(--text-muted)">${doneTasks}/${totalTasks} tasks (${pct}%)</span>
+        </div>
+        <div style="height:6px;background:var(--surface);border-radius:3px;overflow:hidden;border:1px solid var(--border);margin-bottom:10px">
+          <div style="height:100%;width:${pct}%;background:${barColor};border-radius:3px;transition:width .5s"></div>
+        </div>
+        <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px">
+          ${(attendees.length ? attendees.map(a => '<span style="font-size:9px;padding:2px 6px;border-radius:4px;background:var(--surface);border:1px solid var(--border);color:var(--text-dim)">' + a.name.split(' ')[0] + '</span>') : o.attendees.map(a => '<span style="font-size:9px;padding:2px 6px;border-radius:4px;background:var(--surface);border:1px solid var(--border);color:var(--text-dim)">' + a.split(' ')[0] + '</span>')).join('')}
+        </div>
+        <div>${phaseHtml}</div>
       </div>
     </div>
-    <div class="card-body" style="padding:10px 14px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-        <span style="font-size:12px;font-weight:700;color:var(--text)">${o.dates}</span>
-        <span style="font-size:10px;color:var(--text-muted)">${doneTasks}/${totalTasks} tasks (${pct}%)</span>
+  </div>
+
+  <!-- TAB: Attendees -->
+  <div class="offsite-tab-pane" data-offsite-pane="attendees">
+    <div class="card">
+      <div class="card-head"><div class="card-title">Attendees (${attendees.length})</div></div>
+      <div class="card-body" style="padding:0;overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse">
+          <thead>
+            <tr style="border-bottom:2px solid var(--border);font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px">
+              <th style="padding:8px;text-align:left">Name</th>
+              <th style="padding:8px;text-align:left">Marriott #</th>
+              <th style="padding:8px;text-align:center">Hotel</th>
+              <th style="padding:8px;text-align:center">Flight</th>
+              <th style="padding:8px;text-align:center">Travel Card</th>
+              <th style="padding:8px;text-align:left">Notes</th>
+            </tr>
+          </thead>
+          <tbody>${attendeeRows}</tbody>
+        </table>
       </div>
-      <div style="height:6px;background:var(--surface);border-radius:3px;overflow:hidden;border:1px solid var(--border);margin-bottom:10px">
-        <div style="height:100%;width:${pct}%;background:${barColor};border-radius:3px;transition:width .5s"></div>
+    </div>
+    <div style="margin-top:12px;font-size:10px;color:var(--text-muted);display:flex;gap:16px">
+      <span><span style="color:var(--green)">&#10003;</span> Confirmed</span>
+      <span><span style="color:var(--yellow)">&#9679;</span> Pending</span>
+      <span><span style="color:var(--accent)">missing</span> Not provided</span>
+    </div>
+  </div>
+
+  <!-- TAB: Agenda -->
+  <div class="offsite-tab-pane" data-offsite-pane="agenda">
+    <div class="card">
+      <div class="card-head"><div class="card-title">Discussion Themes</div></div>
+      <div class="card-body" style="padding:10px 14px">
+        ${themes.length ? themes.map(function(t,i) { return '<div style="display:flex;align-items:flex-start;gap:8px;padding:6px 4px;border-bottom:1px solid var(--border)"><span style="font-size:10px;color:var(--gold);font-weight:700;min-width:18px">' + (i+1) + '.</span><span style="font-size:11px;color:var(--text-dim);line-height:1.4">' + t + '</span></div>'; }).join('') : '<div style="font-size:11px;color:var(--text-muted);padding:12px">No themes identified yet. These will be populated from Slack and Granola notes.</div>'}
       </div>
-      <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px">
-        ${o.attendees.map(a => `<span style="font-size:9px;padding:2px 6px;border-radius:4px;background:var(--surface);border:1px solid var(--border);color:var(--text-dim)">${a.split(' ')[0]}</span>`).join('')}
+    </div>
+    ${agenda.length ? '<div class="card" style="margin-top:12px"><div class="card-head"><div class="card-title">Session Timeline</div></div><div class="card-body" style="padding:10px 14px">' + agenda.map(function(s) { return '<div style="display:flex;align-items:center;gap:12px;padding:6px 4px;border-bottom:1px solid var(--border)"><span style="font-size:10px;font-weight:700;color:var(--gold);min-width:60px">' + (s.time||'') + '</span><span style="font-size:11px;color:var(--text);font-weight:600;flex:1">' + (s.topic||'') + '</span><span style="font-size:10px;color:var(--text-muted)">' + (s.owner||'') + '</span><span style="font-size:9px;color:var(--text-muted)">' + (s.duration||'') + '</span>' + (s.preReadUrl ? '<span style="font-size:9px;color:var(--green)">Pre-read sent</span>' : '<span style="font-size:9px;color:var(--text-muted)">No pre-read</span>') + '</div>'; }).join('') + '</div></div>' : '<div class="card" style="margin-top:12px"><div class="card-body" style="padding:12px 14px;font-size:11px;color:var(--text-muted)">Session timeline will be built once agenda is finalized. Pre-reads will be tracked here.</div></div>'}
+  </div>
+
+  <!-- TAB: Logistics -->
+  <div class="offsite-tab-pane" data-offsite-pane="logistics">
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px">
+      ${logCard('Hotel', '&#127976;', ['<strong>' + (hotel.name || 'TBD') + '</strong>', 'Rate: $' + (hotel.rate || '?') + '/night x ' + (hotel.nights || '?') + ' nights', 'Rooms: ' + (hotel.rooms || '?'), 'Contact: ' + (hotel.contactPerson || 'N/A')], hotel.confirmed)}
+      ${logCard('Venue', '&#127970;', ['<strong>' + (venue.name || 'TBD') + '</strong>', 'Address: ' + (venue.address || 'TBD'), 'Capacity: ' + (venue.capacity || 'N/A'), 'Est. Cost: $' + (venue.estimatedCost || '?')], venue.confirmed)}
+    </div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px">
+      ${logCard('Dinner', '&#127869;', ['<strong>' + (dinner.name || 'TBD') + '</strong>', 'Options: ' + (dinner.options ? dinner.options.join(', ') : 'None yet')], dinner.confirmed)}
+      ${logCard('Activity', '&#127918;', ['<strong>' + (activity.name || 'TBD') + '</strong>', 'Options: ' + (activity.options ? activity.options.join(', ') : 'None yet')], activity.confirmed)}
+    </div>
+    <div class="card">
+      <div class="card-head"><div class="card-title">&#128176; Budget</div>
+        <span class="badge ${budget.approved?'tag-green':'tag-yellow'}">${budget.approved?'Approved':'Pending Approval'}</span>
       </div>
-      <div>
-        ${phaseHtml}
+      <div class="card-body" style="padding:10px 14px">
+        <div style="display:flex;gap:24px;margin-bottom:10px;font-size:11px;flex-wrap:wrap">
+          <div><span style="color:var(--text-muted)">Estimated:</span> <strong style="color:var(--text)">$${(budget.estimated||0).toLocaleString()}</strong></div>
+          <div><span style="color:var(--text-muted)">Committed:</span> <strong style="color:var(--gold)">$${(budget.committed||0).toLocaleString()}</strong></div>
+          <div><span style="color:var(--text-muted)">Actual:</span> <strong style="color:var(--green)">$${(budget.actual||0).toLocaleString()}</strong></div>
+          <div><span style="color:var(--text-muted)">Approver:</span> <strong style="color:var(--text)">${budget.approver||'TBD'}</strong></div>
+        </div>
+        <div style="height:6px;background:var(--surface);border-radius:3px;overflow:hidden;border:1px solid var(--border);position:relative">
+          <div style="height:100%;width:${budgetPct}%;background:var(--gold);border-radius:3px;transition:width .5s;position:absolute;top:0;left:0"></div>
+          <div style="height:100%;width:${budgetActPct}%;background:var(--green);border-radius:3px;transition:width .5s;position:absolute;top:0;left:0"></div>
+        </div>
+        <div style="display:flex;gap:12px;margin-top:6px;font-size:9px;color:var(--text-muted)">
+          <span><span style="display:inline-block;width:8px;height:8px;background:var(--gold);border-radius:2px;vertical-align:middle"></span> Committed (${budgetPct}%)</span>
+          <span><span style="display:inline-block;width:8px;height:8px;background:var(--green);border-radius:2px;vertical-align:middle"></span> Actual (${budgetActPct}%)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: Reviews -->
+  <div class="offsite-tab-pane" data-offsite-pane="reviews">
+    <div class="card">
+      <div class="card-head"><div class="card-title">Post-Offsite Reviews</div></div>
+      <div class="card-body" style="padding:12px 14px">
+        ${reviews.length ? reviews.map(function(r) { return '<div style="padding:8px;border-bottom:1px solid var(--border)"><div style="font-size:11px;font-weight:600;color:var(--text)">' + (r.title||'Review') + '</div><div style="font-size:10px;color:var(--text-muted);margin-top:4px">' + (r.notes||'') + '</div></div>'; }).join('') : '<div style="font-size:11px;color:var(--text-muted)">Lessons learned and action items will be captured here after the offsite concludes on April 21.</div>'}
       </div>
     </div>
   </div>`;
 }
+
+// Wire offsite sub-tab switching
+document.addEventListener('click', function(e) {
+  var btn = e.target.closest('.offsite-nav-btn');
+  if (!btn) return;
+  var tab = btn.dataset.offsiteTab;
+  var nav = btn.closest('.offsite-nav');
+  if (!nav) return;
+  var container = nav.parentElement;
+  nav.querySelectorAll('.offsite-nav-btn').forEach(function(b) { b.classList.remove('active'); });
+  btn.classList.add('active');
+  container.querySelectorAll('.offsite-tab-pane').forEach(function(p) { p.classList.remove('active'); });
+  var pane = container.querySelector('[data-offsite-pane="'+tab+'"]');
+  if (pane) pane.classList.add('active');
+});
+
+// Fetch offsite API data on load
+fetchOffsiteData();
 
 function syncOffsiteToNotion() {
   const btn = document.getElementById('offsite-sync-btn');
@@ -4457,6 +4613,7 @@ async function init(){
   renderProjectsPage();
   renderSystemPage();
   renderPodcastPage();
+  renderBDPage();
 
   const lastPage=loadActivePage();
   if(lastPage&&lastPage!=='overview')navigateTo(lastPage);
@@ -5024,6 +5181,196 @@ async function renderPodcastPage(){
     if (barEl) { barEl.style.width = pct+'%'; barEl.style.background = pct>=75?'var(--green)':pct>=40?'var(--yellow)':'var(--red)'; }
     if (countEl) countEl.textContent = done+' of '+total+' tasks done';
   }
+}
+
+// ── BD Ownership Page ──
+async function renderBDPage(){
+  const el=document.getElementById('page-bd');
+  if(!el) return;
+  let bd;
+  try {
+    const resp=await fetch('/api/bd');
+    bd=await resp.json();
+  } catch(e) {
+    bd={config:{},relationships:[],followUps:[],reviews:[]};
+  }
+  const rels=bd.relationships||[];
+  const config=bd.config||{};
+
+  const bdTabs=[
+    {id:'bd-active',label:'Active Relationships'},
+    {id:'bd-pipeline',label:'Pipeline'},
+    {id:'bd-contacts',label:'Contacts'},
+    {id:'bd-followups',label:'Follow-ups'},
+    {id:'bd-reviews',label:'Reviews'}
+  ];
+
+  function tierColor(tier){
+    if(tier==='Tier 1') return '#d4af37';
+    if(tier==='Tier 2') return '#7c8cf8';
+    if(tier==='Tier 3') return '#4ecdc4';
+    return '#666';
+  }
+  function tierBadge(tier){
+    return '<span style="font-size:9px;padding:2px 8px;border-radius:4px;font-weight:700;background:'+tierColor(tier)+'22;color:'+tierColor(tier)+'">'+tier+'</span>';
+  }
+  function statusBadge(status){
+    const colors={'Active Conversation':'#d4af37','Active':'#4ecdc4','New Intro':'#7c8cf8','Nurturing':'#a78bfa','Dormant':'#666'};
+    const c=colors[status]||'#888';
+    return '<span style="font-size:9px;padding:2px 8px;border-radius:4px;font-weight:700;background:'+c+'22;color:'+c+'">'+status+'</span>';
+  }
+  function typeBadge(type){
+    const colors={partner:'#d4af37',customer:'#4ecdc4',investor:'#7c8cf8',prospect:'#a78bfa',advisor:'#f472b6'};
+    const c=colors[type]||'#888';
+    return '<span style="font-size:9px;padding:2px 8px;border-radius:4px;font-weight:700;background:'+c+'22;color:'+c+'">'+type+'</span>';
+  }
+  function daysSince(dateStr){
+    if(!dateStr) return '—';
+    const d=new Date(dateStr);
+    const now=new Date();
+    const diff=Math.floor((now-d)/(1000*60*60*24));
+    if(diff===0) return 'Today';
+    if(diff===1) return '1d ago';
+    return diff+'d ago';
+  }
+
+  // Active Relationships tab
+  function renderActiveTab(){
+    const rows=rels.map(r=>'<tr>'+
+      '<td style="font-weight:600">'+(r.company||'—')+'</td>'+
+      '<td>'+r.contact+'</td>'+
+      '<td>'+typeBadge(r.type)+'</td>'+
+      '<td>'+statusBadge(r.status)+'</td>'+
+      '<td style="font-size:11px;color:var(--text-muted)">'+daysSince(r.lastTouch)+'</td>'+
+      '<td style="font-size:11px">'+(r.nextAction||'—')+'</td>'+
+      '<td>'+tierBadge(r.tier)+'</td>'+
+      '<td style="font-size:11px;color:var(--text-muted)">'+(r.owner||'—')+'</td>'+
+    '</tr>').join('');
+    return '<div class="bd-tab-pane active" id="bd-active">'+
+      '<div class="card"><div class="card-head"><span>All Relationships</span><span style="font-size:11px;color:var(--text-muted)">'+rels.length+' total</span></div>'+
+      '<div class="card-body" style="overflow-x:auto;padding:0">'+
+      '<table style="width:100%;border-collapse:collapse;font-size:12px">'+
+      '<thead><tr style="border-bottom:1px solid var(--border);color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:.5px">'+
+      '<th style="padding:8px 12px;text-align:left">Company</th>'+
+      '<th style="padding:8px 12px;text-align:left">Contact</th>'+
+      '<th style="padding:8px 12px;text-align:left">Type</th>'+
+      '<th style="padding:8px 12px;text-align:left">Status</th>'+
+      '<th style="padding:8px 12px;text-align:left">Last Touch</th>'+
+      '<th style="padding:8px 12px;text-align:left">Next Action</th>'+
+      '<th style="padding:8px 12px;text-align:left">Tier</th>'+
+      '<th style="padding:8px 12px;text-align:left">Owner</th>'+
+      '</tr></thead><tbody>'+rows+'</tbody></table></div></div></div>';
+  }
+
+  // Pipeline tab - group by status
+  function renderPipelineTab(){
+    const statuses=['Active Conversation','New Intro','Active','Nurturing','Dormant'];
+    let html='<div class="bd-tab-pane" id="bd-pipeline">';
+    statuses.forEach(s=>{
+      const group=rels.filter(r=>r.status===s);
+      if(group.length===0) return;
+      html+='<div class="card" style="margin-bottom:12px"><div class="card-head"><span>'+statusBadge(s)+'</span><span style="font-size:11px;color:var(--text-muted)">'+group.length+'</span></div>';
+      html+='<div class="card-body" style="padding:8px 12px">';
+      group.forEach(r=>{
+        html+='<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border)">'+
+          '<span style="font-weight:600;min-width:100px">'+(r.company||'—')+'</span>'+
+          '<span style="color:var(--text-muted);font-size:12px">'+r.contact+'</span>'+
+          '<span style="margin-left:auto;font-size:11px">'+(r.nextAction||'—')+'</span>'+
+          tierBadge(r.tier)+
+        '</div>';
+      });
+      html+='</div></div>';
+    });
+    html+='</div>';
+    return html;
+  }
+
+  // Contacts tab - group by tier
+  function renderContactsTab(){
+    const tiers=['Tier 1','Tier 2','Tier 3','Tier 4'];
+    let html='<div class="bd-tab-pane" id="bd-contacts">';
+    tiers.forEach(t=>{
+      const group=rels.filter(r=>r.tier===t);
+      if(group.length===0) return;
+      html+='<div class="card" style="margin-bottom:12px"><div class="card-head"><span>'+tierBadge(t)+'</span><span style="font-size:11px;color:var(--text-muted)">'+group.length+' relationships</span></div>';
+      html+='<div class="card-body" style="padding:8px 12px">';
+      group.forEach(r=>{
+        html+='<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border)">'+
+          '<span style="font-weight:600;min-width:120px">'+(r.company||'—')+'</span>'+
+          '<span style="font-size:12px">'+r.contact+(r.contactTitle?' <span style="color:var(--text-muted)">('+r.contactTitle+')</span>':'')+'</span>'+
+          '<span style="margin-left:auto">'+typeBadge(r.type)+'</span>'+
+          statusBadge(r.status)+
+        '</div>';
+      });
+      html+='</div></div>';
+    });
+    html+='</div>';
+    return html;
+  }
+
+  // Follow-ups tab
+  function renderFollowupsTab(){
+    const upcoming=rels.filter(r=>r.nextActionDate).sort((a,b)=>new Date(a.nextActionDate)-new Date(b.nextActionDate));
+    let html='<div class="bd-tab-pane" id="bd-followups"><div class="card"><div class="card-head"><span>Upcoming Follow-ups</span><span style="font-size:11px;color:var(--text-muted)">'+upcoming.length+' scheduled</span></div>';
+    html+='<div class="card-body" style="padding:8px 12px">';
+    if(upcoming.length===0){
+      html+='<div style="padding:20px;text-align:center;color:var(--text-muted)">No upcoming follow-ups</div>';
+    } else {
+      upcoming.forEach(r=>{
+        const d=new Date(r.nextActionDate);
+        const dateStr=d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+        const isPast=d<new Date();
+        html+='<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">'+
+          '<span style="min-width:100px;font-size:12px;font-weight:600;color:'+(isPast?'var(--red)':'var(--gold)')+'">'+dateStr+'</span>'+
+          '<span style="font-weight:600">'+(r.company||'—')+'</span>'+
+          '<span style="color:var(--text-muted);font-size:12px">'+r.contact+'</span>'+
+          '<span style="margin-left:auto;font-size:12px">'+r.nextAction+'</span>'+
+          '<span style="font-size:10px;color:var(--text-muted)">'+r.owner+'</span>'+
+        '</div>';
+      });
+    }
+    html+='</div></div></div>';
+    return html;
+  }
+
+  // Reviews tab
+  function renderReviewsTab(){
+    return '<div class="bd-tab-pane" id="bd-reviews"><div class="card"><div class="card-head"><span>Weekly Reviews</span></div>'+
+      '<div class="card-body" style="padding:40px;text-align:center;color:var(--text-muted)">'+
+      '<div style="font-size:24px;margin-bottom:8px">&#128203;</div>'+
+      '<div>Weekly relationship status digests will appear here.</div>'+
+      '<div style="font-size:11px;margin-top:4px">Sophie reviews every Friday afternoon.</div>'+
+      '</div></div></div>';
+  }
+
+  el.innerHTML=
+    '<div style="padding:24px 28px">'+
+    '<div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">'+
+    '<span style="font-size:24px">&#129309;</span>'+
+    '<div><h2 style="margin:0;font-size:18px;font-weight:800;letter-spacing:-.3px">'+(config.name||'BD Tracker')+'</h2>'+
+    '<div style="font-size:11px;color:var(--text-muted)">'+rels.length+' relationships &middot; '+(config.slackChannel||'#enterprise')+
+    (config.notionHub?' &middot; <a href="'+config.notionHub+'" target="_blank" style="color:var(--gold)">Notion Hub</a>':'')+
+    '</div></div></div>'+
+    '<nav class="bd-nav">'+
+    bdTabs.map((t,i)=>'<button class="bd-nav-btn '+(i===0?'active':'')+'" data-bd-tab="'+t.id+'">'+t.label+'</button>').join('')+
+    '</nav>'+
+    renderActiveTab()+
+    renderPipelineTab()+
+    renderContactsTab()+
+    renderFollowupsTab()+
+    renderReviewsTab()+
+    '</div>';
+
+  // Tab switching
+  el.querySelectorAll('.bd-nav-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      el.querySelectorAll('.bd-nav-btn').forEach(b=>b.classList.remove('active'));
+      el.querySelectorAll('.bd-tab-pane').forEach(p=>p.classList.remove('active'));
+      btn.classList.add('active');
+      const pane=el.querySelector('#'+btn.dataset.bdTab);
+      if(pane) pane.classList.add('active');
+    });
+  });
 }
 
 document.addEventListener('DOMContentLoaded',init);
