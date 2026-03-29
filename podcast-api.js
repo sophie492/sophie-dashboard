@@ -105,6 +105,21 @@ module.exports = function createPodcastRouter(notion) {
           todo.status = status;
           todo.done = status === 'Done';
           saveData(data);
+
+          if (notion) {
+            const epRef = data.episodes.find(e => e.id === req.params.episodeId);
+            if (epRef && epRef.notionLink) {
+              const nPageId = epRef.notionLink.replace('https://www.notion.so/fermat-commerce/', '').replace('https://notion.so/', '').split('?')[0].split('/').pop();
+              notion.blocks.children.list({ block_id: nPageId, page_size: 100 }).then(blocks => {
+                const todoBlock = blocks.results.find(b => b.type === 'to_do' && b.to_do.rich_text.some(t => t.plain_text.includes(todo.text.slice(0, 20))));
+                if (todoBlock) {
+                  notion.blocks.update({ block_id: todoBlock.id, to_do: { checked: status === 'Done' } });
+                  console.log('[Podcast] Notion todo synced:', todo.text.slice(0, 30));
+                }
+              }).catch(e => console.warn('[Podcast] Notion sync failed:', e.message));
+            }
+          }
+
           return res.json({ ok: true });
         }
       }
@@ -128,6 +143,12 @@ module.exports = function createPodcastRouter(notion) {
         task.status = status;
         task._done = status === 'Done';
         saveData(data);
+
+        if (notion) {
+          // Log launch task status change
+          console.log('[Podcast] Launch task toggled:', task.text ? task.text.slice(0, 30) : req.params.taskId, status);
+        }
+
         return res.json({ ok: true });
       }
       res.status(404).json({ error: 'Task not found' });

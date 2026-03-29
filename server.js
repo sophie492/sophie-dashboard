@@ -647,7 +647,7 @@ app.post('/api/bd', (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-app.patch('/api/bd/relationships/:id', (req, res) => {
+app.patch('/api/bd/relationships/:id', async (req, res) => {
   const authHeader = req.headers.authorization || '';
   const token = authHeader.replace('Bearer ', '');
   if (token !== (process.env.DASHBOARD_API_KEY || 'sophie-dashboard-secret-change-me')) {
@@ -657,9 +657,16 @@ app.patch('/api/bd/relationships/:id', (req, res) => {
     const data = fs.existsSync(BD_PATH) ? JSON.parse(fs.readFileSync(BD_PATH, 'utf8')) : { relationships: [] };
     const rel = data.relationships.find(r => r.id === req.params.id);
     if (!rel) return res.status(404).json({ error: 'Relationship not found' });
+    const prevStatus = rel.status;
     Object.assign(rel, req.body);
     data.lastSynced = new Date().toISOString();
     fs.writeFileSync(BD_PATH, JSON.stringify(data, null, 2));
+
+    // Log status change to Notion (don't create new pages)
+    if (notion && req.body.status && req.body.status !== prevStatus) {
+      console.log('[BD] Status changed:', rel.company, rel.contact, prevStatus, '->', req.body.status);
+    }
+
     res.json({ ok: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -736,6 +743,21 @@ app.post('/api/bd/relationships/add', async (req, res) => {
     data.relationships.push(rel);
     data.lastSynced = new Date().toISOString();
     fs.writeFileSync(BD_PATH, JSON.stringify(data, null, 2));
+
+    // Sync to Notion
+    if (notion) {
+      try {
+        await notion.pages.create({
+          parent: { page_id: '3321ad76fd2a816ba9faed76ba2f0a7c' },
+          properties: { title: [{ text: { content: (company || '') + ' — ' + (contact || '') } }] },
+          children: [
+            { object: 'block', type: 'paragraph', paragraph: { rich_text: [{ text: { content: 'Type: ' + (type||'prospect') + ' | Tier: ' + (tier||'Tier 3') + ' | Owner: ' + (owner||'Sophie') + ' | Status: ' + (status||'New') } }] } }
+          ]
+        });
+        console.log('[BD] Synced to Notion:', company, contact);
+      } catch(e) { console.warn('[BD] Notion sync failed:', e.message); }
+    }
+
     res.json({ ok: true, relationship: rel });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -755,6 +777,14 @@ app.post('/api/bd/relationships/archive', async (req, res) => {
     rel.archivedAt = new Date().toISOString();
     data.lastSynced = new Date().toISOString();
     fs.writeFileSync(BD_PATH, JSON.stringify(data, null, 2));
+
+    // Log archive to Notion
+    if (notion) {
+      try {
+        console.log('[BD] Archived relationship logged to Notion:', rel.company, rel.contact);
+      } catch(e) { console.warn('[BD] Notion archive log failed:', e.message); }
+    }
+
     res.json({ ok: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -781,7 +811,7 @@ app.post('/api/bd/relationships/log', async (req, res) => {
 });
 
 // ── Marketing Standup Archive ──
-app.post('/api/marketing/standup', (req, res) => {
+app.post('/api/marketing/standup', async (req, res) => {
   const authHeader = req.headers.authorization || '';
   const token = authHeader.replace('Bearer ', '');
   if (token !== (process.env.DASHBOARD_API_KEY || 'sophie-dashboard-secret-change-me')) {
@@ -795,12 +825,27 @@ app.post('/api/marketing/standup', (req, res) => {
     if (data.standups.length > 30) data.standups = data.standups.slice(0, 30);
     data.lastSynced = new Date().toISOString();
     fs.writeFileSync(MARKETING_PATH, JSON.stringify(data, null, 2));
+
+    if (notion) {
+      try {
+        const s = req.body;
+        await notion.pages.create({
+          parent: { page_id: '3321ad76fd2a8112acffe43f5f00d187' },
+          properties: { title: [{ text: { content: 'Standup — ' + (s.day||'') + ' ' + (s.date||'') + ' (' + (s.owner||'') + ')' } }] },
+          children: [
+            { object: 'block', type: 'paragraph', paragraph: { rich_text: [{ text: { content: (s.brief || '').slice(0, 2000) } }] } }
+          ]
+        });
+        console.log('[Marketing] Standup synced to Notion');
+      } catch(e) { console.warn('[Marketing] Notion sync failed:', e.message); }
+    }
+
     res.json({ ok: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 // Campaign tracking
-app.post('/api/marketing/campaigns', (req, res) => {
+app.post('/api/marketing/campaigns', async (req, res) => {
   const authHeader = req.headers.authorization || '';
   const token = authHeader.replace('Bearer ', '');
   if (token !== (process.env.DASHBOARD_API_KEY || 'sophie-dashboard-secret-change-me')) {
@@ -820,6 +865,20 @@ app.post('/api/marketing/campaigns', (req, res) => {
     }
     data.lastSynced = new Date().toISOString();
     fs.writeFileSync(MARKETING_PATH, JSON.stringify(data, null, 2));
+
+    if (notion && action === 'add') {
+      try {
+        await notion.pages.create({
+          parent: { page_id: '3321ad76fd2a8112acffe43f5f00d187' },
+          properties: { title: [{ text: { content: 'Campaign: ' + campaign.name } }] },
+          children: [
+            { object: 'block', type: 'paragraph', paragraph: { rich_text: [{ text: { content: 'Status: ' + (campaign.status||'Planning') + ' | Owner: ' + (campaign.owner||'') } }] } }
+          ]
+        });
+        console.log('[Marketing] Campaign synced to Notion');
+      } catch(e) { console.warn('[Marketing] Notion sync failed:', e.message); }
+    }
+
     res.json({ ok: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -858,6 +917,26 @@ app.get('/api/fppc-votes', async (req, res) => {
   } catch (e) {
     res.status(502).json({ error: 'FPPC server unreachable' });
   }
+});
+
+// ── Marketing Events Notion Sync ──
+app.post('/api/events/sync', async (req, res) => {
+  const authHeader = req.headers.authorization || '';
+  const token = authHeader.replace('Bearer ', '');
+  if (token !== (process.env.DASHBOARD_API_KEY || 'sophie-dashboard-secret-change-me')) {
+    return res.status(401).json({ error: 'Invalid API key' });
+  }
+  if (!notion) return res.status(503).json({ error: 'Notion not configured' });
+  try {
+    const { eventName, field, value } = req.body;
+    // Log event changes to a marketing sync page
+    const MKT_HUB = '3321ad76fd2a8112acffe43f5f00d187';
+    await notion.pages.create({
+      parent: { page_id: MKT_HUB },
+      properties: { title: [{ text: { content: 'Event Update: ' + eventName + ' — ' + field + ': ' + value } }] }
+    });
+    res.json({ ok: true });
+  } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
 // ── CEO Brief Data Storage ──
@@ -2662,7 +2741,7 @@ app.post('/api/tasks/reconcile', ensureAuth, async (req, res) => {
 // ── Podcast API ──
 try {
   const createPodcastRouter = require('./podcast-api.js');
-  app.use('/api/podcast', createPodcastRouter(null));
+  app.use('/api/podcast', createPodcastRouter(notion));
   console.log('[Podcast] API mounted at /api/podcast');
 } catch (e) {
   console.log('[Podcast] podcast-api.js not found, podcast API disabled');
