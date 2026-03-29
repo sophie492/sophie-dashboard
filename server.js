@@ -269,6 +269,40 @@ app.post('/api/action-items/create', async (req, res) => {
   }
 });
 
+// ── Checkbox State Persistence (all task lists) ──
+const CHECKBOX_PATH = path.join(__dirname, 'data', 'checkbox-states.json');
+
+function loadCheckboxStates() {
+  try { return fs.existsSync(CHECKBOX_PATH) ? JSON.parse(fs.readFileSync(CHECKBOX_PATH, 'utf8')) : {}; } catch(e) { return {}; }
+}
+function saveCheckboxStates(states) {
+  const dir = path.dirname(CHECKBOX_PATH);
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(CHECKBOX_PATH, JSON.stringify(states, null, 2));
+}
+
+app.get('/api/checkbox-states', (req, res) => {
+  res.json(loadCheckboxStates());
+});
+
+app.post('/api/checkbox-states', (req, res) => {
+  const authHeader = req.headers.authorization || '';
+  const token = authHeader.replace('Bearer ', '');
+  if (token !== (process.env.DASHBOARD_API_KEY || 'sophie-dashboard-secret-change-me')) {
+    return res.status(401).json({ error: 'Invalid API key' });
+  }
+  try {
+    const { key, checked } = req.body;
+    if (!key) return res.status(400).json({ error: 'key required' });
+    const states = loadCheckboxStates();
+    states[key] = { checked: !!checked, updatedAt: new Date().toISOString() };
+    saveCheckboxStates(states);
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // ── CEO Brief Data Storage ──
 const BRIEF_PATH = path.join(__dirname, 'data', 'ceo-brief.json');
 

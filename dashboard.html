@@ -3147,6 +3147,7 @@ function renderEventsPage(){
         if (!state[evId]) state[evId] = {};
         state[evId][todoIdx] = isChecked;
         saveMktEventTodos(state);
+        syncCheckbox('mkt-'+evId+'-'+todoIdx, isChecked);
       }
       updateTodoProgress(evId);
     });
@@ -3202,6 +3203,7 @@ function renderEventsPage(){
           if (!state[evId]) state[evId] = {};
           state[evId][idx] = isChecked;
           saveMktEventTodos(state);
+          syncCheckbox('mkt-'+evId+'-'+idx, isChecked);
         }
         updateTodoProgress(evId);
       });
@@ -3368,6 +3370,7 @@ function toggleOffsiteTask(el) {
     if(idx >= 0) doneKeys.splice(idx, 1);
   }
   saveOffsiteDone(doneKeys);
+  syncCheckbox('offsite-'+pi+'-'+ti, isChecked);
 
   const cb = el.querySelector('.task-checkbox');
   const textSpan = el.querySelector('span:last-child');
@@ -3501,6 +3504,7 @@ function toggleHWTask(el) {
     if(idx >= 0) doneKeys.splice(idx, 1);
   }
   saveHackWeekDone(doneKeys);
+  syncCheckbox('hackweek-'+pi+'-'+ti, isChecked);
 
   const cb = el.querySelector('.task-checkbox');
   const label = el.querySelector('span:last-child');
@@ -4326,6 +4330,50 @@ async function reconcileTasks(){
   }catch(e){console.warn('[Reconcile] Failed:',e.message);}
 }
 
+// ── Checkbox state sync (all task lists) ──
+function syncCheckbox(key, checked) {
+  fetch('/api/checkbox-states', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json','Authorization':'Bearer sophie-dashboard-secret-change-me'},
+    body: JSON.stringify({ key, checked })
+  }).catch(e => console.warn('[Checkbox] Sync failed:', e.message));
+}
+
+// Load server checkbox states on startup and apply
+async function loadServerCheckboxStates() {
+  try {
+    const res = await fetch('/api/checkbox-states');
+    if (!res.ok) return;
+    const states = await res.json();
+    // Apply to offsite tasks
+    if (DATA.leadershipOffsite) {
+      DATA.leadershipOffsite.phases.forEach((p, pi) => {
+        p.tasks.forEach((t, ti) => {
+          const s = states['offsite-' + pi + '-' + ti];
+          if (s) t.done = s.checked;
+        });
+      });
+    }
+    // Apply to hack week tasks
+    if (DATA.hackWeek) {
+      DATA.hackWeek.phases.forEach((p, pi) => {
+        p.tasks.forEach((t, ti) => {
+          const s = states['hackweek-' + pi + '-' + ti];
+          if (s) t.done = s.checked;
+        });
+      });
+    }
+    // Apply to marketing event todos
+    MKT_EVENTS.forEach(ev => {
+      ev.todos.forEach((t, ti) => {
+        const s = states['mkt-' + ev.id + '-' + ti];
+        if (s) t.done = s.checked;
+      });
+    });
+    console.log('[Checkbox] Server states loaded:', Object.keys(states).length, 'keys');
+  } catch (e) { console.warn('[Checkbox] Load failed:', e.message); }
+}
+
 // ── Action Item resolve/create → Notion ──
 function resolveActionItem(btn,notionId){
   const row=btn.closest('.ai-row');
@@ -4382,8 +4430,9 @@ function startAutoRefresh(){
 
 // ── Init ──
 
-function init(){
+async function init(){
   applyPersistedState();
+  await loadServerCheckboxStates();
   renderSidebar();
   updateFreshness();
   renderOverview();
