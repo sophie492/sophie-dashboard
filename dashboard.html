@@ -3481,20 +3481,7 @@ function renderOffsite() {
   </div>`;
 }
 
-// Wire offsite sub-tab switching
-document.addEventListener('click', function(e) {
-  var btn = e.target.closest('.offsite-nav-btn');
-  if (!btn) return;
-  var tab = btn.dataset.offsiteTab;
-  var nav = btn.closest('.offsite-nav');
-  if (!nav) return;
-  var container = nav.parentElement;
-  nav.querySelectorAll('.offsite-nav-btn').forEach(function(b) { b.classList.remove('active'); });
-  btn.classList.add('active');
-  container.querySelectorAll('.offsite-tab-pane').forEach(function(p) { p.classList.remove('active'); });
-  var pane = container.querySelector('[data-offsite-pane="'+tab+'"]');
-  if (pane) pane.classList.add('active');
-});
+// Old offsite tab switching removed — offsite is now a standalone page (renderOffsitePage)
 
 // Offsite API data loaded by renderOffsitePage()
 
