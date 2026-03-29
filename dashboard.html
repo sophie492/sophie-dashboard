@@ -466,6 +466,22 @@ a.loop-row:hover .loop-source{color:var(--gold)}
 .offsite-nav-btn:hover{color:var(--text)}
 .offsite-tab-pane{display:none}
 .offsite-tab-pane.active{display:block}
+#page-offsite .card{height:auto}
+#page-offsite .card-head{padding:10px 14px}
+#page-offsite .card-body{padding:10px 14px}
+#page-offsite .task-check-item{padding:5px 8px;margin-bottom:1px}
+#page-offsite .task-checklist{margin:0;padding:0}
+.offsite-owner-badge{font-size:9px;padding:2px 6px;border-radius:4px;font-weight:600}
+.offsite-status-toggle{cursor:pointer;padding:4px 8px;border-radius:4px;font-size:10px;font-weight:600;border:none;font-family:inherit;transition:all .15s}
+.offsite-status-toggle:hover{filter:brightness(1.2)}
+.offsite-logistics-card{margin-bottom:12px}
+.offsite-logistics-card .card-head{display:flex;justify-content:space-between;align-items:center}
+.offsite-budget-input{background:var(--surface);border:1px solid var(--border);color:var(--text);font-size:11px;padding:4px 6px;border-radius:4px;width:80px;font-family:inherit;text-align:right}
+.offsite-budget-input:focus{border-color:var(--gold);outline:none}
+.offsite-theme-card{border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:8px;cursor:pointer;transition:all .15s;background:var(--surface)}
+.offsite-theme-card:hover{border-color:var(--border-light);background:var(--card-hover)}
+.offsite-theme-desc{display:none;margin-top:8px;font-size:11px;color:var(--text-dim);line-height:1.5;padding-top:8px;border-top:1px solid var(--border)}
+.offsite-theme-card.expanded .offsite-theme-desc{display:block}
 .bd-nav{display:flex;gap:8px;border-bottom:1px solid var(--border);margin-bottom:16px;flex-wrap:wrap}
 .bd-nav-btn{padding:10px 20px;font-size:13px;font-weight:700;color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;letter-spacing:-.2px;background:none;border-top:none;border-left:none;border-right:none;font-family:inherit}
 .bd-nav-btn.active{color:var(--gold);border-bottom-color:var(--gold)}
@@ -510,6 +526,7 @@ a.loop-row:hover .loop-source{color:var(--gold)}
   <div class="page" id="page-tasks"></div>
   <div class="page" id="page-news"></div>
   <div class="page" id="page-events"></div>
+  <div class="page" id="page-offsite"></div>
   <div class="page" id="page-projects"></div>
   <div class="page" id="page-system"></div>
   <div class="page" id="page-podcast"></div>
@@ -1750,9 +1767,9 @@ function renderSidebar(){
     <div class="sidebar-group">My Work</div>
     <div class="sidebar-item" data-page="tasks"><span class="si-icon">&#128142;</span><span class="si-label">Tasks</span><span class="si-badge gold">${openTasks}</span></div>
     <div class="sidebar-item" data-page="podcast"><span class="si-icon">&#127908;</span><span class="si-label">Podcast</span></div>
+    <div class="sidebar-item" data-page="offsite"><span class="si-icon">&#9992;&#65039;</span><span class="si-label">Leadership Offsite</span><span class="si-badge gold">${Math.ceil((new Date('2026-04-20') - new Date()) / 86400000)}d</span></div>
     <div class="sidebar-item" data-page="bd"><span class="si-icon">&#129309;</span><span class="si-label">BD Tracker</span></div>
     <div class="sidebar-item" data-page="marketing-hub"><span class="si-icon">&#128202;</span><span class="si-label">Marketing</span></div>
-    <div class="sidebar-item" data-page="project-offsite"><span class="si-icon">✈️</span><span class="si-label">Leadership Offsite</span><span style="font-size:8px;color:var(--text-muted);margin-left:auto">${offsitePct}%</span></div>
     <div class="sidebar-item" data-page="project-hackweek"><span class="si-icon">🧪</span><span class="si-label">Hack Week</span><span style="font-size:8px;color:var(--text-muted);margin-left:auto">${hwPct}%</span></div>
     <div class="sidebar-item" data-page="project-bd"><span class="si-icon">🤝</span><span class="si-label">BD Ownership</span><span style="font-size:8px;color:var(--text-muted);margin-left:auto">${bdPct}%</span></div>
     <div class="sidebar-item" data-page="project-marketing"><span class="si-icon">📊</span><span class="si-label">Marketing Reporting</span><span style="font-size:8px;color:var(--text-muted);margin-left:auto">${mktPct}%</span></div>
@@ -3479,8 +3496,7 @@ document.addEventListener('click', function(e) {
   if (pane) pane.classList.add('active');
 });
 
-// Fetch offsite API data on load
-fetchOffsiteData();
+// Offsite API data loaded by renderOffsitePage()
 
 // Wire hack week sub-tab switching
 document.addEventListener('click', function(e) {
@@ -3609,6 +3625,605 @@ function toggleOffsiteTask(el) {
   if(progressBar) progressBar.style.width = pct+'%';
   const progressText = card.querySelector('.card-body > div:first-child > span:last-child');
   if(progressText) progressText.textContent = totalDone+'/'+totalAll+' tasks ('+pct+'%)';
+}
+
+// ── Standalone Offsite Page ──
+
+async function renderOffsitePage() {
+  const el = document.getElementById('page-offsite');
+  el.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:200px;color:var(--text-muted)">Loading offsite data...</div>';
+
+  let OFFSITE = null;
+  try {
+    const res = await fetch('/api/offsite');
+    if (res.ok) OFFSITE = await res.json();
+  } catch(e) { console.warn('[Offsite] API fetch failed:', e.message); }
+  if (!OFFSITE) OFFSITE = _offsiteApiData || {};
+  _offsiteApiData = OFFSITE;
+
+  const config = OFFSITE.config || {};
+  const attendees = OFFSITE.attendees || [];
+  const phases = OFFSITE.phases || [];
+  const checklist = OFFSITE.checklist || {};
+  const logistics = OFFSITE.logistics || {};
+  const themes = OFFSITE.themes || [];
+  const lessonsLearned = OFFSITE.lessonsLearned || [];
+  const reviews = OFFSITE.reviews || [];
+  const agenda = OFFSITE.agenda || [];
+  const contacts = OFFSITE.coordinationContacts || [];
+  const aliceCorr = OFFSITE.aliceCorrespondence || {};
+
+  const hotel = logistics.hotel || {};
+  const venue = logistics.venue || {};
+  const dinner = logistics.dinner || {};
+  const activity = logistics.activity || {};
+  const budget = logistics.budget || {};
+  const hotelResearch = logistics.hotelResearch || [];
+  const weworkResearch = logistics.weworkResearch || [];
+  const dinnerResearch = logistics.dinnerResearch || [];
+  const activityResearch = logistics.activityResearch || [];
+  const budgetCategories = budget.categories || [];
+
+  // Days until
+  const daysUntil = Math.ceil((new Date('2026-04-20') - new Date()) / 86400000);
+
+  // Count tasks across checklist
+  function countChecklist(obj) {
+    let total = 0, done = 0;
+    function walk(v) {
+      if (Array.isArray(v)) { v.forEach(function(item) { if (typeof item === 'object' && item.item !== undefined) { total++; if (item.done) done++; } else { walk(item); } }); }
+      else if (typeof v === 'object' && v !== null) { Object.values(v).forEach(walk); }
+    }
+    walk(obj);
+    return { total: total, done: done };
+  }
+  const taskCounts = countChecklist(checklist);
+  const taskPct = taskCounts.total ? Math.round((taskCounts.done / taskCounts.total) * 100) : 0;
+
+  // Budget estimate
+  const budgetEstimate = budgetCategories.reduce(function(s,c) { return s + (c.estimated || 0); }, 0) || 13500;
+
+  // Attendees ready (both hotel + flight)
+  const attendeesReady = attendees.filter(function(a) { return a.hotelConfirmed && a.flightBooked; }).length;
+
+  // Phase colors
+  function phaseColor(name) {
+    if (/kickoff/i.test(name)) return { bg: 'rgba(72,187,120,.15)', fg: 'var(--green)' };
+    if (/logistics/i.test(name)) return { bg: 'rgba(219,203,119,.15)', fg: 'var(--gold)' };
+    if (/agenda/i.test(name)) return { bg: 'rgba(193,177,213,.15)', fg: 'var(--lavender)' };
+    if (/final|comms/i.test(name)) return { bg: 'rgba(66,153,225,.15)', fg: '#4299E1' };
+    if (/day/i.test(name) && !/post/i.test(name)) return { bg: 'rgba(202,152,63,.15)', fg: 'var(--orange)' };
+    return { bg: 'rgba(160,174,192,.15)', fg: '#A0AEC0' };
+  }
+
+  function statusBadge(confirmed, label) {
+    if (confirmed) return '<span class="badge tag-green">' + (label || 'Booked') + '</span>';
+    return '<span class="badge tag-yellow">' + (label || 'Pending') + '</span>';
+  }
+
+  function statusDot(val) {
+    if (val === true) return '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--green)"></span>';
+    if (val === false) return '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--yellow)"></span>';
+    return '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--red)"></span>';
+  }
+
+  // Sub-tabs
+  var offsiteTabs = [
+    { id: 'offsite-overview', label: 'Overview' },
+    { id: 'offsite-checklist', label: 'Checklist' },
+    { id: 'offsite-attendees', label: 'Attendees' },
+    { id: 'offsite-logistics', label: 'Logistics' },
+    { id: 'offsite-agenda', label: 'Agenda' },
+    { id: 'offsite-reviews', label: 'Reviews' }
+  ];
+
+  // ── Build checklist HTML from DATA.leadershipOffsite (for Notion sync) ──
+  var o = DATA.leadershipOffsite;
+  var phaseHtml = '';
+  if (o && o.phases) {
+    var phaseNames = ['Phase 1: Kickoff', 'Phase 2: Logistics', 'Phase 3: Agenda', 'Pre-reads sent', 'Phase 4: Final Comms', 'Day Before', 'Day 1', 'Day 2', 'Post-Offsite'];
+    o.phases.forEach(function(p, pi) {
+      var pDone = p.tasks.filter(function(t) { return t.done; }).length;
+      var pTotal = p.tasks.length;
+      var allDone = pDone === pTotal;
+      var isFirst = pi === 0;
+      var pc = phaseColor(p.name);
+      phaseHtml += '<div class="offsite-phase' + (allDone ? ' phase-done' : '') + '" data-phase="' + pi + '">' +
+        '<div class="offsite-phase-head" onclick="toggleOffsitePhase(this)" style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:6px;margin-bottom:2px;background:' + pc.bg + '">' +
+          '<span class="offsite-chevron" style="font-size:10px;color:var(--text-muted);transition:transform .2s;transform:rotate(' + (isFirst ? '90' : '0') + 'deg)">&#9654;</span>' +
+          '<span style="font-size:11px;font-weight:700;color:' + (allDone ? 'var(--green)' : pc.fg) + ';flex:1">' + p.name + '</span>' +
+          '<span style="font-size:9px;color:var(--text-muted);font-weight:600">' + (p.deadline || '') + '</span>' +
+          '<span style="font-size:9px;padding:2px 6px;border-radius:4px;font-weight:700;' + (allDone ? 'background:var(--green-soft);color:var(--green)' : 'background:var(--surface);color:var(--text-muted)') + '">' + pDone + '/' + pTotal + '</span>' +
+        '</div>' +
+        '<div class="offsite-phase-body" style="display:' + (isFirst ? 'block' : 'none') + ';padding:4px 0 4px 18px">';
+      p.tasks.forEach(function(t, ti) {
+        phaseHtml += '<div class="offsite-task' + (t.done ? ' checked' : '') + '" data-phase="' + pi + '" data-task="' + ti + '" onclick="toggleOffsiteTask(this)" style="display:flex;align-items:flex-start;gap:8px;padding:5px 4px;border-radius:5px;cursor:pointer;transition:background .15s;font-size:11px">' +
+          '<div class="task-checkbox' + (t.done ? ' checked' : '') + '"></div>' +
+          '<span style="color:' + (t.done ? 'var(--text-muted)' : 'var(--text-dim)') + ';' + (t.done ? 'text-decoration:line-through;opacity:.5' : '') + ';line-height:1.3">' + t.text + '</span>' +
+        '</div>';
+      });
+      // Progress bar per phase
+      var ppct = pTotal ? Math.round((pDone / pTotal) * 100) : 0;
+      phaseHtml += '<div style="margin:6px 0 8px;display:flex;align-items:center;gap:8px">' +
+        '<div style="flex:1;height:3px;background:var(--surface);border-radius:2px;overflow:hidden"><div style="height:100%;width:' + ppct + '%;background:' + pc.fg + ';border-radius:2px;transition:width .3s"></div></div>' +
+        '<span style="font-size:9px;color:var(--text-muted)">' + ppct + '%</span></div>';
+      phaseHtml += '</div></div>';
+    });
+  }
+
+  // ── Overview tab ──
+  function renderOverviewTab() {
+    // Timeline at a Glance
+    var timelineRows = phases.map(function(p) {
+      var statusColor = p.status === 'mostly_done' ? 'var(--green)' : p.status === 'in_progress' ? 'var(--gold)' : 'var(--text-muted)';
+      var isNext = p.status === 'in_progress';
+      return '<tr style="border-bottom:1px solid var(--border);' + (isNext ? 'background:var(--glow-gold)' : '') + '">' +
+        '<td style="padding:6px 8px;font-size:11px;font-weight:600;color:var(--text)">' + p.phase + '</td>' +
+        '<td style="padding:6px 8px;font-size:10px;color:var(--text-muted)">' + p.deadline + '</td>' +
+        '<td style="padding:6px 8px;font-size:10px;color:var(--text-dim)">' + p.what + '</td>' +
+        '<td style="padding:6px 8px;text-align:center"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + statusColor + '"></span></td>' +
+      '</tr>';
+    }).join('');
+
+    var barColor = taskPct >= 75 ? 'var(--green)' : taskPct >= 40 ? 'var(--yellow)' : 'var(--accent)';
+
+    return '<div class="offsite-tab-pane active" id="offsite-overview">' +
+      '<div style="display:grid;grid-template-columns:2fr 1fr;gap:16px">' +
+        '<div>' +
+          '<div class="card" style="margin-bottom:12px">' +
+            '<div class="card-head"><div class="card-title">Timeline at a Glance</div></div>' +
+            '<div class="card-body" style="padding:0;overflow-x:auto">' +
+              '<table style="width:100%;border-collapse:collapse">' +
+                '<thead><tr style="border-bottom:2px solid var(--border);font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px">' +
+                  '<th style="padding:8px;text-align:left">Phase</th>' +
+                  '<th style="padding:8px;text-align:left">Deadline</th>' +
+                  '<th style="padding:8px;text-align:left">What</th>' +
+                  '<th style="padding:8px;text-align:center">Status</th>' +
+                '</tr></thead>' +
+                '<tbody>' + timelineRows + '</tbody>' +
+              '</table>' +
+            '</div>' +
+          '</div>' +
+          '<div class="card">' +
+            '<div class="card-head"><div class="card-title">Overall Progress</div></div>' +
+            '<div class="card-body">' +
+              '<div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-muted);margin-bottom:4px"><span>Planning Progress</span><span>' + taskCounts.done + '/' + taskCounts.total + ' (' + taskPct + '%)</span></div>' +
+              '<div style="height:6px;background:var(--surface);border-radius:3px;overflow:hidden"><div style="height:100%;width:' + taskPct + '%;background:' + barColor + ';border-radius:3px;transition:width .3s"></div></div>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div style="display:flex;flex-direction:column;gap:10px">' +
+          '<div class="card" style="padding:12px">' +
+            '<div class="card-head"><div class="card-title">Quick Links</div></div>' +
+            '<div class="card-body compact" style="font-size:12px;line-height:2">' +
+              '<div><a href="' + (config.notionHub || '#') + '" target="_blank" style="color:var(--gold)">Notion Hub &#8599;</a></div>' +
+              '<div><a href="https://www.notion.so/3291ad76fd2a8104b8d6f8c8dac57f4d" target="_blank" style="color:var(--gold)">Planning Hub &#8599;</a></div>' +
+              '<div><a href="#" style="color:var(--gold)">Slack #leadership &#8599;</a></div>' +
+              '<div><a href="https://docs.google.com/document/d/13LCRtXHWH9v1FkeJy6AVJROfKRxTti3VRdh8xUkWUy4/edit" target="_blank" style="color:var(--gold)">Rishabh\'s Strategy Doc &#8599;</a></div>' +
+              '<div><a href="#" style="color:var(--gold)">Calendar Event &#8599;</a></div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="card" style="padding:12px">' +
+            '<div class="card-head"><div class="card-title">Key Dates</div></div>' +
+            '<div class="card-body compact" style="font-size:12px;line-height:2;color:var(--text-dim)">' +
+              '<div>Offsite: <strong style="color:var(--text)">' + (config.dates || 'April 20-21, 2026') + '</strong></div>' +
+              '<div>Pre-reads due: <strong style="color:var(--text)">Mon Apr 13</strong></div>' +
+              '<div>Budget deadline: <strong style="color:var(--text)">Wed Mar 25</strong></div>' +
+              '<div>Location: <strong style="color:var(--text)">' + (config.location || 'New York City') + '</strong></div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="card" style="padding:12px">' +
+            '<div class="card-head"><div class="card-title">Coordination Contacts</div></div>' +
+            '<div class="card-body compact" style="font-size:12px;color:var(--text-dim)">' +
+              contacts.map(function(c) {
+                return '<div style="padding:4px 0;border-bottom:1px solid var(--border)">' +
+                  '<strong style="color:var(--text)">' + c.name + '</strong> <span style="font-size:10px;color:var(--text-muted)">(' + c.role + ')</span>' +
+                  '<div style="font-size:10px;color:var(--text-muted)">' + c.reachOutFor + '</div>' +
+                '</div>';
+              }).join('') +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }
+
+  // ── Checklist tab ──
+  function renderChecklistTab() {
+    return '<div class="offsite-tab-pane" id="offsite-checklist">' +
+      '<div class="card">' +
+        '<div class="card-head">' +
+          '<div class="card-title">&#9992;&#65039; Planning Checklist</div>' +
+          '<div class="card-badges">' +
+            '<span class="badge ' + (taskPct >= 100 ? 'tag-green' : 'tag-yellow') + '">' + taskCounts.done + '/' + taskCounts.total + ' done</span>' +
+            '<button onclick="syncOffsiteToNotion()" style="font-size:9px;padding:2px 8px;border-radius:5px;border:1px solid var(--leaf);background:var(--green-soft);color:var(--green);font-family:inherit;font-weight:700;cursor:pointer;transition:all .15s" onmouseover="this.style.background=\'var(--green)\';this.style.color=\'var(--bg)\'" onmouseout="this.style.background=\'var(--green-soft)\';this.style.color=\'var(--green)\'" id="offsite-sync-btn">Sync to Notion</button>' +
+          '</div>' +
+        '</div>' +
+        '<div class="card-body" style="padding:10px 14px">' +
+          phaseHtml +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }
+
+  // ── Attendees tab ──
+  function renderAttendeesTab() {
+    var confirmed = attendees.filter(function(a) { return a.hotelConfirmed && a.flightBooked; }).length;
+    var attendeeRows = attendees.map(function(a, ai) {
+      return '<tr style="border-bottom:1px solid var(--border);font-size:11px">' +
+        '<td style="padding:6px 8px;font-weight:600;color:var(--text)">' + a.name + (a.notes ? '<div style="font-size:9px;color:var(--yellow);margin-top:2px">' + a.notes + '</div>' : '') + '</td>' +
+        '<td style="padding:6px 8px;color:var(--text-muted);font-size:10px">' + (a.email || '') + '</td>' +
+        '<td style="padding:6px 8px;color:var(--text-muted);font-family:monospace;font-size:10px">' + (a.marriottNum || '<span style="color:var(--red)">missing</span>') + '</td>' +
+        '<td style="padding:6px 8px;text-align:center"><button class="offsite-status-toggle" onclick="toggleAttendeeStatus(\'' + a.name.replace(/'/g, "\\'") + '\',\'hotelConfirmed\')" style="background:' + (a.hotelConfirmed ? 'var(--green-soft)' : 'var(--surface)') + ';color:' + (a.hotelConfirmed ? 'var(--green)' : 'var(--yellow)') + '">' + (a.hotelConfirmed ? '&#10003;' : '&#9679;') + '</button></td>' +
+        '<td style="padding:6px 8px;text-align:center"><button class="offsite-status-toggle" onclick="toggleAttendeeStatus(\'' + a.name.replace(/'/g, "\\'") + '\',\'flightBooked\')" style="background:' + (a.flightBooked ? 'var(--green-soft)' : 'var(--surface)') + ';color:' + (a.flightBooked ? 'var(--green)' : 'var(--yellow)') + '">' + (a.flightBooked ? '&#10003;' : '&#9679;') + '</button></td>' +
+        '<td style="padding:6px 8px;text-align:center"><button class="offsite-status-toggle" onclick="toggleAttendeeStatus(\'' + a.name.replace(/'/g, "\\'") + '\',\'travelCardIssued\')" style="background:' + (a.travelCardIssued ? 'var(--green-soft)' : 'var(--surface)') + ';color:' + (a.travelCardIssued ? 'var(--green)' : 'var(--yellow)') + '">' + (a.travelCardIssued ? '&#10003;' : '&#9679;') + '</button></td>' +
+        '<td style="padding:6px 8px;color:var(--text-muted);font-size:10px">' + (a.dietaryNeeds || '--') + '</td>' +
+      '</tr>';
+    }).join('');
+
+    return '<div class="offsite-tab-pane" id="offsite-attendees">' +
+      '<div style="display:flex;align-items:center;gap:16px;margin-bottom:12px">' +
+        '<div style="font-size:13px;font-weight:700;color:var(--text)">' + confirmed + '/' + attendees.length + ' fully confirmed</div>' +
+        '<div style="flex:1;height:6px;background:var(--surface);border-radius:3px;overflow:hidden;max-width:300px"><div style="height:100%;width:' + (attendees.length ? Math.round(confirmed/attendees.length*100) : 0) + '%;background:var(--green);border-radius:3px;transition:width .3s"></div></div>' +
+      '</div>' +
+      '<div class="card">' +
+        '<div class="card-head"><div class="card-title">Attendees (' + attendees.length + ')</div></div>' +
+        '<div class="card-body" style="padding:0;overflow-x:auto">' +
+          '<table style="width:100%;border-collapse:collapse">' +
+            '<thead><tr style="border-bottom:2px solid var(--border);font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px">' +
+              '<th style="padding:8px;text-align:left">Name</th>' +
+              '<th style="padding:8px;text-align:left">Email</th>' +
+              '<th style="padding:8px;text-align:left">Marriott #</th>' +
+              '<th style="padding:8px;text-align:center">Hotel</th>' +
+              '<th style="padding:8px;text-align:center">Flight</th>' +
+              '<th style="padding:8px;text-align:center">Travel Card</th>' +
+              '<th style="padding:8px;text-align:left">Notes</th>' +
+            '</tr></thead>' +
+            '<tbody>' + attendeeRows + '</tbody>' +
+          '</table>' +
+        '</div>' +
+      '</div>' +
+      '<div style="margin-top:12px;font-size:10px;color:var(--text-muted);display:flex;gap:16px">' +
+        '<span>' + statusDot(true) + ' Confirmed</span>' +
+        '<span>' + statusDot(false) + ' Pending</span>' +
+        '<span style="color:var(--red)">missing = Not provided</span>' +
+      '</div>' +
+    '</div>';
+  }
+
+  // ── Logistics tab ──
+  function renderLogisticsTab() {
+    // Hotel comparison card
+    var hotelCard = '<div class="card offsite-logistics-card">' +
+      '<div class="card-head"><div class="card-title">&#127976; Hotel</div>' + statusBadge(hotel.confirmed) + '</div>' +
+      '<div class="card-body" style="padding:0;overflow-x:auto">' +
+        '<table style="width:100%;border-collapse:collapse;font-size:11px">' +
+          '<thead><tr style="border-bottom:2px solid var(--border);font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px">' +
+            '<th style="padding:6px 8px;text-align:left">Hotel</th>' +
+            '<th style="padding:6px 8px;text-align:left">Location</th>' +
+            '<th style="padding:6px 8px;text-align:left">Rate</th>' +
+            '<th style="padding:6px 8px;text-align:left">Pros</th>' +
+            '<th style="padding:6px 8px;text-align:left">Paired WeWork</th>' +
+          '</tr></thead><tbody>' +
+          hotelResearch.map(function(h) {
+            var isFront = h.currentFrontrunner;
+            return '<tr style="border-bottom:1px solid var(--border);' + (isFront ? 'background:var(--glow-gold)' : '') + '">' +
+              '<td style="padding:6px 8px;font-weight:' + (isFront ? '700' : '500') + ';color:' + (isFront ? 'var(--gold)' : 'var(--text)') + '">' + h.name + (isFront ? ' <span style="font-size:8px;color:var(--gold)">&#9733; FRONTRUNNER</span>' : '') + '</td>' +
+              '<td style="padding:6px 8px;color:var(--text-muted)">' + h.location + '</td>' +
+              '<td style="padding:6px 8px;color:var(--text-dim)">' + h.pricePerNight + '</td>' +
+              '<td style="padding:6px 8px;color:var(--text-dim);font-size:10px">' + h.pros + '</td>' +
+              '<td style="padding:6px 8px;color:var(--text-muted);font-size:10px">' + h.bestPairedWith + '</td>' +
+            '</tr>';
+          }).join('') +
+          '</tbody></table>' +
+        '</div>' +
+        '<div class="card-foot">' +
+          '<strong>Contact:</strong> ' + (hotel.contactPerson || 'N/A') +
+          (aliceCorr.summary ? '<div style="margin-top:6px;font-size:10px;color:var(--text-dim);line-height:1.4"><strong>Latest:</strong> ' + aliceCorr.summary + '</div>' : '') +
+          (aliceCorr.nextStep ? '<div style="margin-top:4px;font-size:10px;color:var(--gold)"><strong>Next step:</strong> ' + aliceCorr.nextStep + '</div>' : '') +
+        '</div>' +
+      '</div>';
+
+    // WeWork card
+    var weworkCard = '<div class="card offsite-logistics-card">' +
+      '<div class="card-head"><div class="card-title">&#127970; WeWork</div>' + statusBadge(venue.confirmed) + '</div>' +
+      '<div class="card-body" style="padding:0;overflow-x:auto">' +
+        '<table style="width:100%;border-collapse:collapse;font-size:11px">' +
+          '<thead><tr style="border-bottom:2px solid var(--border);font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px">' +
+            '<th style="padding:6px 8px;text-align:left">Location</th>' +
+            '<th style="padding:6px 8px;text-align:left">Area</th>' +
+            '<th style="padding:6px 8px;text-align:left">Best Paired With</th>' +
+            '<th style="padding:6px 8px;text-align:left">Notes</th>' +
+          '</tr></thead><tbody>' +
+          weworkResearch.map(function(w) {
+            return '<tr style="border-bottom:1px solid var(--border)">' +
+              '<td style="padding:6px 8px;font-weight:600;color:var(--text)">' + w.name + '</td>' +
+              '<td style="padding:6px 8px;color:var(--text-muted)">' + w.location + '</td>' +
+              '<td style="padding:6px 8px;color:var(--text-dim)">' + w.bestPairedWith + '</td>' +
+              '<td style="padding:6px 8px;color:var(--text-muted);font-size:10px">' + w.notes + '</td>' +
+            '</tr>';
+          }).join('') +
+          '</tbody></table>' +
+        '</div>' +
+        '<div class="card-foot">Est. Cost: ' + (venue.estimatedCost || '$1,500-2,000') + ' &mdash; Day pass conference rooms ~$10/seat/hr</div>' +
+      '</div>';
+
+    // Dinner card
+    var dinnerCard = '<div class="card offsite-logistics-card">' +
+      '<div class="card-head"><div class="card-title">&#127869; Dinner</div>' + statusBadge(dinner.confirmed) + '</div>' +
+      '<div class="card-body" style="padding:0;overflow-x:auto">' +
+        '<table style="width:100%;border-collapse:collapse;font-size:11px">' +
+          '<thead><tr style="border-bottom:2px solid var(--border);font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px">' +
+            '<th style="padding:6px 8px;text-align:left">Restaurant</th>' +
+            '<th style="padding:6px 8px;text-align:left">Cuisine</th>' +
+            '<th style="padding:6px 8px;text-align:left">Private Dining</th>' +
+            '<th style="padding:6px 8px;text-align:left">Vegetarian</th>' +
+            '<th style="padding:6px 8px;text-align:left">Location</th>' +
+          '</tr></thead><tbody>' +
+          dinnerResearch.map(function(d) {
+            return '<tr style="border-bottom:1px solid var(--border)">' +
+              '<td style="padding:6px 8px;font-weight:600;color:var(--text)">' + d.name + '</td>' +
+              '<td style="padding:6px 8px;color:var(--text-dim)">' + d.cuisine + '</td>' +
+              '<td style="padding:6px 8px;color:var(--text-muted)">' + d.privateDining + '</td>' +
+              '<td style="padding:6px 8px;color:var(--text-muted);font-size:10px">' + d.vegetarianOptions + '</td>' +
+              '<td style="padding:6px 8px;color:var(--text-muted)">' + d.location + '</td>' +
+            '</tr>';
+          }).join('') +
+          '</tbody></table>' +
+        '</div>' +
+        '<div class="card-foot">Requirement: ' + (dinner.requirement || 'Strong vegetarian options + private dining') + '</div>' +
+      '</div>';
+
+    // Activity card
+    var activityCard = '<div class="card offsite-logistics-card">' +
+      '<div class="card-head"><div class="card-title">&#127918; Activity</div>' + statusBadge(activity.confirmed) + '</div>' +
+      '<div class="card-body" style="padding:0;overflow-x:auto">' +
+        '<table style="width:100%;border-collapse:collapse;font-size:11px">' +
+          '<thead><tr style="border-bottom:2px solid var(--border);font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px">' +
+            '<th style="padding:6px 8px;text-align:left">Activity</th>' +
+            '<th style="padding:6px 8px;text-align:left">Type</th>' +
+            '<th style="padding:6px 8px;text-align:left">Group Size</th>' +
+            '<th style="padding:6px 8px;text-align:left">Cost</th>' +
+            '<th style="padding:6px 8px;text-align:left">Why</th>' +
+          '</tr></thead><tbody>' +
+          activityResearch.map(function(a) {
+            return '<tr style="border-bottom:1px solid var(--border)">' +
+              '<td style="padding:6px 8px;font-weight:600;color:var(--text)">' + a.name + '</td>' +
+              '<td style="padding:6px 8px;color:var(--text-dim)">' + a.type + '</td>' +
+              '<td style="padding:6px 8px;color:var(--text-muted)">' + a.groupSize + '</td>' +
+              '<td style="padding:6px 8px;color:var(--text-dim)">' + a.estimatedCost + '</td>' +
+              '<td style="padding:6px 8px;color:var(--text-muted);font-size:10px">' + a.why + '</td>' +
+            '</tr>';
+          }).join('') +
+          '</tbody></table>' +
+        '</div>' +
+        '<div class="card-foot">' + (activity.lesson || 'Group activity + dinner is a proven combo.') + '</div>' +
+      '</div>';
+
+    // Budget card
+    var budgetRows = budgetCategories.map(function(c) {
+      return '<tr style="border-bottom:1px solid var(--border)">' +
+        '<td style="padding:6px 8px;font-weight:600;color:var(--text);font-size:11px">' + c.category + '</td>' +
+        '<td style="padding:6px 8px"><input class="offsite-budget-input" value="' + (c.estimated || '') + '" onchange="updateOffsiteBudget(\'' + c.category.replace(/'/g, "\\'") + '\',\'estimated\',this.value)" placeholder="--"></td>' +
+        '<td style="padding:6px 8px"><input class="offsite-budget-input" value="' + (c.committed || '') + '" onchange="updateOffsiteBudget(\'' + c.category.replace(/'/g, "\\'") + '\',\'committed\',this.value)" placeholder="--"></td>' +
+        '<td style="padding:6px 8px"><input class="offsite-budget-input" value="' + (c.actual || '') + '" onchange="updateOffsiteBudget(\'' + c.category.replace(/'/g, "\\'") + '\',\'actual\',this.value)" placeholder="--"></td>' +
+        '<td style="padding:6px 8px;font-size:10px;color:var(--text-muted)">' + (c.notes || '') + '</td>' +
+      '</tr>';
+    }).join('');
+
+    var totalEst = budgetCategories.reduce(function(s,c) { return s + (parseFloat(c.estimated) || 0); }, 0);
+    var totalComm = budgetCategories.reduce(function(s,c) { return s + (parseFloat(c.committed) || 0); }, 0);
+    var totalAct = budgetCategories.reduce(function(s,c) { return s + (parseFloat(c.actual) || 0); }, 0);
+
+    var budgetCard = '<div class="card offsite-logistics-card">' +
+      '<div class="card-head"><div class="card-title">&#128176; Budget</div>' +
+        '<span class="badge ' + (budget.approved ? 'tag-green' : 'tag-red') + '">' + (budget.approved ? 'Approved' : 'Pending Approval') + '</span>' +
+      '</div>' +
+      '<div class="card-body" style="padding:0;overflow-x:auto">' +
+        '<table style="width:100%;border-collapse:collapse">' +
+          '<thead><tr style="border-bottom:2px solid var(--border);font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px">' +
+            '<th style="padding:6px 8px;text-align:left">Category</th>' +
+            '<th style="padding:6px 8px;text-align:right">Estimated</th>' +
+            '<th style="padding:6px 8px;text-align:right">Committed</th>' +
+            '<th style="padding:6px 8px;text-align:right">Actual</th>' +
+            '<th style="padding:6px 8px;text-align:left">Notes</th>' +
+          '</tr></thead>' +
+          '<tbody>' + budgetRows +
+            '<tr style="border-top:2px solid var(--border);font-weight:700">' +
+              '<td style="padding:6px 8px;color:var(--text)">TOTAL</td>' +
+              '<td style="padding:6px 8px;text-align:right;color:var(--text)">$' + totalEst.toLocaleString() + '</td>' +
+              '<td style="padding:6px 8px;text-align:right;color:var(--gold)">$' + totalComm.toLocaleString() + '</td>' +
+              '<td style="padding:6px 8px;text-align:right;color:var(--green)">$' + totalAct.toLocaleString() + '</td>' +
+              '<td style="padding:6px 8px"></td>' +
+            '</tr>' +
+          '</tbody>' +
+        '</table>' +
+      '</div>' +
+      '<div class="card-foot">Approver: <strong>' + (budget.approver || 'Evelyn') + '</strong></div>' +
+    '</div>';
+
+    return '<div class="offsite-tab-pane" id="offsite-logistics">' + hotelCard + weworkCard + dinnerCard + activityCard + budgetCard + '</div>';
+  }
+
+  // ── Agenda tab ──
+  function renderAgendaTab() {
+    var themeCards = themes.map(function(t, i) {
+      return '<div class="offsite-theme-card" onclick="this.classList.toggle(\'expanded\')">' +
+        '<div style="display:flex;align-items:center;gap:8px">' +
+          '<span style="font-size:11px;color:var(--gold);font-weight:700;min-width:24px">' + (i+1) + '.</span>' +
+          '<span style="font-size:12px;font-weight:600;color:var(--text);flex:1">' + t.title + '</span>' +
+          '<span style="font-size:10px;color:var(--text-muted)">&#9654;</span>' +
+        '</div>' +
+        '<div class="offsite-theme-desc">' + t.description +
+          (t.strategyDocLink ? '<div style="margin-top:6px"><a href="' + t.strategyDocLink + '" target="_blank" style="color:var(--gold);font-size:10px">Strategy Doc &#8599;</a></div>' : '') +
+        '</div>' +
+      '</div>';
+    }).join('');
+
+    var preReadStatuses = [
+      { name: 'AI-First Strategy Doc', status: 'Collecting' },
+      { name: 'Outcome Ownership Frameworks', status: 'Not Started' },
+      { name: 'Team performance data', status: 'Not Started' }
+    ];
+    var preReadHtml = preReadStatuses.map(function(pr) {
+      var col = pr.status === 'Sent' ? 'var(--green)' : pr.status === 'Collecting' ? 'var(--gold)' : 'var(--text-muted)';
+      return '<div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid var(--border)">' +
+        '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + col + '"></span>' +
+        '<span style="font-size:11px;color:var(--text-dim);flex:1">' + pr.name + '</span>' +
+        '<span style="font-size:10px;color:' + col + ';font-weight:600">' + pr.status + '</span>' +
+      '</div>';
+    }).join('');
+
+    return '<div class="offsite-tab-pane" id="offsite-agenda">' +
+      '<div class="card" style="margin-bottom:12px">' +
+        '<div class="card-head"><div class="card-title">Discussion Themes (' + themes.length + ')</div></div>' +
+        '<div class="card-body" style="padding:10px 14px">' + themeCards + '</div>' +
+      '</div>' +
+      '<div class="card" style="margin-bottom:12px">' +
+        '<div class="card-head"><div class="card-title">Session Timeline</div></div>' +
+        '<div class="card-body" style="padding:12px 14px">' +
+          (agenda.length ? agenda.map(function(s) {
+            return '<div style="display:flex;align-items:center;gap:12px;padding:6px 4px;border-bottom:1px solid var(--border)">' +
+              '<span style="font-size:10px;font-weight:700;color:var(--gold);min-width:60px">' + (s.time || '') + '</span>' +
+              '<span style="font-size:11px;color:var(--text);font-weight:600;flex:1">' + (s.topic || '') + '</span>' +
+              '<span style="font-size:10px;color:var(--text-muted)">' + (s.owner || '') + '</span>' +
+            '</div>';
+          }).join('') : '<div style="font-size:11px;color:var(--text-muted);text-align:center;padding:16px">Session timeline will be built once agenda is finalized with leadership.<br>Placeholder for Mon Apr 20 / Tue Apr 21 schedule.</div>') +
+        '</div>' +
+      '</div>' +
+      '<div class="card" style="margin-bottom:12px">' +
+        '<div class="card-head"><div class="card-title">Pre-reads Tracker</div></div>' +
+        '<div class="card-body" style="padding:10px 14px">' + preReadHtml + '</div>' +
+      '</div>' +
+      '<div style="text-align:center;margin-top:12px">' +
+        '<a href="https://docs.google.com/document/d/13LCRtXHWH9v1FkeJy6AVJROfKRxTti3VRdh8xUkWUy4/edit" target="_blank" style="font-size:13px;font-weight:700;color:var(--gold);padding:10px 20px;border:1px solid var(--gold);border-radius:8px;display:inline-block;transition:all .15s" onmouseover="this.style.background=\'var(--gold)\';this.style.color=\'var(--bg)\'" onmouseout="this.style.background=\'none\';this.style.color=\'var(--gold)\'">Rishabh\'s Strategy Doc &#8599;</a>' +
+      '</div>' +
+      '<div style="margin-top:12px;font-size:10px;color:var(--text-muted);text-align:center;font-style:italic">Agenda topics come from Evelyn and leadership -- Sophie coordinates</div>' +
+    '</div>';
+  }
+
+  // ── Reviews tab ──
+  function renderReviewsTab() {
+    var lessonsHtml = lessonsLearned.map(function(l) {
+      return '<div style="display:flex;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:11px;color:var(--text-dim);line-height:1.4">' +
+        '<span style="color:var(--gold);font-weight:700;flex-shrink:0">&#8226;</span>' +
+        '<span>' + l + '</span>' +
+      '</div>';
+    }).join('');
+
+    return '<div class="offsite-tab-pane" id="offsite-reviews">' +
+      '<div class="card" style="margin-bottom:12px">' +
+        '<div class="card-head"><div class="card-title">Lessons Learned (Previous Offsites)</div></div>' +
+        '<div class="card-body" style="padding:10px 14px">' +
+          (lessonsHtml || '<div style="font-size:11px;color:var(--text-muted)">No lessons recorded yet.</div>') +
+        '</div>' +
+      '</div>' +
+      '<div class="card" style="margin-bottom:12px">' +
+        '<div class="card-head"><div class="card-title">Post-Offsite Action Items</div></div>' +
+        '<div class="card-body" style="padding:12px 14px;font-size:11px;color:var(--text-muted)">' +
+          (reviews.length ? reviews.map(function(r) {
+            return '<div style="padding:8px;border-bottom:1px solid var(--border)"><div style="font-weight:600;color:var(--text)">' + (r.title || 'Item') + '</div><div style="color:var(--text-muted);margin-top:4px">' + (r.notes || '') + '</div></div>';
+          }).join('') : 'Action items will be captured here after the offsite concludes on April 21.') +
+        '</div>' +
+      '</div>' +
+      '<div class="card">' +
+        '<div class="card-head"><div class="card-title">Rating Table</div></div>' +
+        '<div class="card-body" style="padding:0;overflow-x:auto">' +
+          '<table style="width:100%;border-collapse:collapse;font-size:11px">' +
+            '<thead><tr style="border-bottom:2px solid var(--border);font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px">' +
+              '<th style="padding:6px 8px;text-align:left">Leader</th>' +
+              '<th style="padding:6px 8px;text-align:center">Rating</th>' +
+              '<th style="padding:6px 8px;text-align:center">LQ Rating</th>' +
+              '<th style="padding:6px 8px;text-align:left">Feedback</th>' +
+            '</tr></thead>' +
+            '<tbody><tr><td colspan="4" style="padding:12px 8px;text-align:center;color:var(--text-muted);font-size:11px">Rating data will be populated from Q2 planning hub after offsite.</td></tr></tbody>' +
+          '</table>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }
+
+  // ── Render page ──
+  el.innerHTML =
+    '<div class="page-header"><div class="page-title">&#9992;&#65039; Leadership Offsite</div>' +
+      '<div class="page-kpis">' +
+        '<a href="' + (config.notionHub || '#') + '" target="_blank" style="font-size:11px;color:var(--gold)">Notion Hub &#8599;</a>' +
+      '</div>' +
+    '</div>' +
+
+    // Summary stat cards
+    '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px">' +
+      '<div class="card" style="padding:10px 14px;border-left:3px solid var(--gold)">' +
+        '<div style="font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);font-weight:700">Days Until</div>' +
+        '<div style="font-size:18px;font-weight:800;color:var(--gold);margin-top:2px">' + daysUntil + ' <span style="font-size:11px;font-weight:500;color:var(--text-dim)">days to offsite</span></div>' +
+      '</div>' +
+      '<div class="card" style="padding:10px 14px;border-left:3px solid var(--green)">' +
+        '<div style="font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);font-weight:700">Tasks Done</div>' +
+        '<div style="font-size:18px;font-weight:800;color:var(--green);margin-top:2px">' + taskCounts.done + '/' + taskCounts.total + ' <span style="font-size:11px;font-weight:500;color:var(--text-dim)">' + taskPct + '% complete</span></div>' +
+      '</div>' +
+      '<div class="card" style="padding:10px 14px;border-left:3px solid ' + (budget.approved ? 'var(--green)' : 'var(--red)') + '">' +
+        '<div style="font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);font-weight:700">Budget</div>' +
+        '<div style="font-size:18px;font-weight:800;color:' + (budget.approved ? 'var(--green)' : 'var(--red)') + ';margin-top:2px">~$' + budgetEstimate.toLocaleString() + ' <span style="font-size:11px;font-weight:500;color:var(--text-dim)">' + (budget.approved ? 'approved' : 'pending approval') + '</span></div>' +
+      '</div>' +
+      '<div class="card" style="padding:10px 14px;border-left:3px solid var(--blue)">' +
+        '<div style="font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);font-weight:700">Attendees Ready</div>' +
+        '<div style="font-size:18px;font-weight:800;color:var(--blue);margin-top:2px">' + attendeesReady + '/' + attendees.length + ' <span style="font-size:11px;font-weight:500;color:var(--text-dim)">hotel+flight</span></div>' +
+      '</div>' +
+    '</div>' +
+
+    // Sub-tabs
+    '<div class="offsite-nav" id="offsite-page-nav">' +
+      offsiteTabs.map(function(t, i) { return '<button class="offsite-nav-btn ' + (i === 0 ? 'active' : '') + '" data-offsite-page-tab="' + t.id + '">' + t.label + '</button>'; }).join('') +
+    '</div>' +
+
+    // Tab panes
+    renderOverviewTab() +
+    renderChecklistTab() +
+    renderAttendeesTab() +
+    renderLogisticsTab() +
+    renderAgendaTab() +
+    renderReviewsTab();
+
+  // Wire sub-tab switching for standalone page
+  document.querySelectorAll('#offsite-page-nav .offsite-nav-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('#offsite-page-nav .offsite-nav-btn').forEach(function(b) { b.classList.remove('active'); });
+      document.querySelectorAll('#page-offsite .offsite-tab-pane').forEach(function(p) { p.classList.remove('active'); });
+      btn.classList.add('active');
+      var pane = document.getElementById(btn.dataset.offsitePageTab);
+      if (pane) pane.classList.add('active');
+    });
+  });
+}
+
+// Toggle attendee status
+function toggleAttendeeStatus(name, field) {
+  if (!_offsiteApiData || !_offsiteApiData.attendees) return;
+  var attendee = _offsiteApiData.attendees.find(function(a) { return a.name === name; });
+  if (!attendee) return;
+  attendee[field] = !attendee[field];
+  fetch('/api/offsite', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer sophie-dashboard-secret-change-me'},
+    body: JSON.stringify(_offsiteApiData)
+  }).then(function(r) { return r.json(); }).then(function(d) {
+    if (d.ok) { console.log('[Offsite] Attendee ' + name + ' ' + field + ' toggled'); renderOffsitePage(); }
+  }).catch(function(e) { console.error('[Offsite] Toggle failed:', e); });
+}
+
+// Update budget line items
+function updateOffsiteBudget(category, field, value) {
+  if (!_offsiteApiData || !_offsiteApiData.logistics || !_offsiteApiData.logistics.budget) return;
+  var cat = _offsiteApiData.logistics.budget.categories.find(function(c) { return c.category === category; });
+  if (!cat) return;
+  cat[field] = parseFloat(value) || null;
+  fetch('/api/offsite', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer sophie-dashboard-secret-change-me'},
+    body: JSON.stringify(_offsiteApiData)
+  }).then(function(r) { return r.json(); }).then(function(d) {
+    if (d.ok) console.log('[Offsite] Budget updated: ' + category + ' ' + field + ' = ' + value);
+  }).catch(function(e) { console.error('[Offsite] Budget update failed:', e); });
 }
 
 function renderHackWeek() {
@@ -4020,14 +4635,11 @@ function renderProjectsPage(){
   const el=document.getElementById('page-projects');
   // Determine which pane to show based on saved page
   const activePage=loadActivePage();
-  const activeProject=activePage.startsWith('project-')?activePage.replace('project-',''):'offsite';
+  let activeProject=activePage.startsWith('project-')?activePage.replace('project-',''):'hackweek';
 
+  if(activeProject==='offsite') activeProject='hackweek';
   el.innerHTML=`
     <div class="project-content">
-      <div class="project-pane ${activeProject==='offsite'?'active':''}" id="pane-offsite">
-        <div class="page-header"><div class="page-title">&#9992;&#65039; Leadership Offsite</div></div>
-        ${renderOffsite()}
-      </div>
       <div class="project-pane ${activeProject==='hackweek'?'active':''}" id="pane-hackweek">
         <div class="page-header"><div class="page-title">&#129470; Hack Week #3</div></div>
         ${renderHackWeek()}
@@ -4753,6 +5365,7 @@ async function init(){
 
   // Async pages — each wrapped independently so one failure doesn't block others
   renderPodcastPage().catch(e=>console.warn('[Init] Podcast failed:',e.message));
+  renderOffsitePage().catch(e=>console.warn('[Init] Offsite failed:',e.message));
   renderBDPage().catch(e=>console.warn('[Init] BD failed:',e.message));
   renderMarketingHubPage().catch(e=>console.warn('[Init] Marketing failed:',e.message));
 
