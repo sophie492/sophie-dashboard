@@ -3651,11 +3651,9 @@ function toggleOffsiteTask(el) {
 }
 
 // ── Standalone Offsite Page (Multi-Quarter) ──
-// NOTE: Full multi-quarter offsite code is in dashboard.html (primary file).
-// This v2 backup delegates to the same functions.
 
-var _activeOffsiteId = null;
-var _activeOffsiteYear = '2026';
+var _activeOffsiteId = null; // Tracks which offsite detail view is open
+var _activeOffsiteYear = '2026'; // Tracks which year tab is selected
 
 function getOffsiteById(id) {
   if (!_offsiteApiData || !_offsiteApiData.offsites) return null;
@@ -3689,6 +3687,7 @@ async function renderOffsitePage() {
   if (!ALLDATA) ALLDATA = _offsiteApiData || { offsites: {} };
   _offsiteApiData = ALLDATA;
 
+  // Update sidebar badge
   var nextUp = getNextUpcomingOffsite();
   var sidebarBadge = document.getElementById('offsite-sidebar-badge');
   if (sidebarBadge && nextUp && nextUp.dates && nextUp.dates !== 'TBD') {
@@ -3696,6 +3695,7 @@ async function renderOffsitePage() {
     sidebarBadge.textContent = dUntil + 'd';
   }
 
+  // If we have an active detail view, show that
   if (_activeOffsiteId) {
     var offsite = getOffsiteById(_activeOffsiteId);
     if (offsite) {
@@ -3711,6 +3711,7 @@ async function renderOffsitePage() {
     }
     _activeOffsiteId = null;
   }
+
   renderOffsiteGridView(el, ALLDATA);
 }
 
@@ -3718,64 +3719,244 @@ function renderOffsiteGridView(el, ALLDATA) {
   var offsites = ALLDATA.offsites || {};
   var years = Object.keys(offsites).sort().reverse();
   if (years.indexOf(_activeOffsiteYear) < 0 && years.length) _activeOffsiteYear = years[0];
-  var yearTabsHtml = '<div class="offsite-year-tabs">' + years.map(function(y) { return '<button class="offsite-year-btn ' + (y === _activeOffsiteYear ? 'active' : '') + '" data-year="' + y + '">' + y + '</button>'; }).join('') + '</div>';
+
+  var yearTabsHtml = '<div class="offsite-year-tabs">' +
+    years.map(function(y) {
+      return '<button class="offsite-year-btn ' + (y === _activeOffsiteYear ? 'active' : '') + '" data-year="' + y + '">' + y + '</button>';
+    }).join('') +
+  '</div>';
+
   var yearPanelsHtml = '';
   years.forEach(function(y) {
     var quarters = offsites[y] || [];
-    var cardsHtml = quarters.map(function(q) {
+    var cardsHtml = '';
+    quarters.forEach(function(q) {
       var statusClass = 'status-' + q.status.toLowerCase();
-      var badgeHtml = '', actionHtml = '', infoHtml = '';
+      var badgeHtml = '';
+      var actionHtml = '';
+      var infoHtml = '';
+
       if (q.status === 'Complete') {
         badgeHtml = '<span class="offsite-q-badge tag-green">&#10003; Complete</span>';
-        infoHtml = '<div class="offsite-q-city">' + (q.city || '') + '</div><div class="offsite-q-dates">' + (q.dates || '') + '</div>' + (q.rating ? '<div class="offsite-q-rating">Rating: <strong style="color:var(--green)">' + q.rating + '/10</strong></div>' : '');
+        infoHtml = '<div class="offsite-q-city">' + (q.city || '') + '</div>' +
+          '<div class="offsite-q-dates">' + (q.dates || '') + '</div>' +
+          (q.rating ? '<div class="offsite-q-rating">Rating: <strong style="color:var(--green)">' + q.rating + '/10</strong></div>' : '') +
+          (q.attendees ? '<div style="font-size:9px;color:var(--text-muted);margin-top:4px">' + (Array.isArray(q.attendees) ? q.attendees.length : 0) + ' attendees</div>' : '');
         actionHtml = '<div class="offsite-q-action">View Details &#8594;</div>';
       } else if (q.status === 'Planning') {
         var dLeft = Math.ceil((new Date('2026-04-20') - new Date()) / 86400000);
         badgeHtml = '<span class="offsite-q-badge tag-yellow">' + dLeft + 'd away</span>';
-        infoHtml = '<div class="offsite-q-city">' + (q.city || '') + '</div><div class="offsite-q-dates">' + (q.dates || '') + '</div>';
+        infoHtml = '<div class="offsite-q-city">' + (q.city || '') + '</div>' +
+          '<div class="offsite-q-dates">' + (q.dates || '') + '</div>';
+        // Mini progress
         var tc = 0, td = 0;
-        if (q.checklist) { (function walk(v) { if (Array.isArray(v)) v.forEach(function(i) { if (typeof i === 'object' && i.item !== undefined) { tc++; if (i.done) td++; } else walk(i); }); else if (typeof v === 'object' && v !== null) Object.values(v).forEach(walk); })(q.checklist); }
+        if (q.checklist) {
+          (function walk(v) {
+            if (Array.isArray(v)) v.forEach(function(i) { if (typeof i === 'object' && i.item !== undefined) { tc++; if (i.done) td++; } else walk(i); });
+            else if (typeof v === 'object' && v !== null) Object.values(v).forEach(walk);
+          })(q.checklist);
+        }
         var pp = tc ? Math.round(td/tc*100) : 0;
         infoHtml += '<div style="margin-top:6px"><div style="height:4px;background:var(--surface);border-radius:2px;overflow:hidden"><div style="height:100%;width:' + pp + '%;background:var(--gold);border-radius:2px"></div></div><div style="font-size:9px;color:var(--text-muted);margin-top:2px">' + td + '/' + tc + ' tasks (' + pp + '%)</div></div>';
         actionHtml = '<div class="offsite-q-action">View Details &#8594;</div>';
       } else {
         badgeHtml = '<span class="offsite-q-badge tag-gray">Placeholder</span>';
-        infoHtml = '<div class="offsite-q-city" style="color:var(--text-muted)">City TBD</div><div class="offsite-q-dates">Dates TBD</div>';
+        infoHtml = '<div class="offsite-q-city" style="color:var(--text-muted)">City TBD</div>' +
+          '<div class="offsite-q-dates">Dates TBD</div>';
         actionHtml = '<div class="offsite-q-action">Set Up &#8594;</div>';
       }
-      return '<div class="offsite-q-card ' + statusClass + '" data-offsite-id="' + q.id + '">' + badgeHtml + '<div class="offsite-q-label" style="color:' + (q.status === 'Complete' ? 'var(--green)' : q.status === 'Planning' ? 'var(--gold)' : 'var(--text-muted)') + '">' + q.quarter + '</div>' + infoHtml + actionHtml + '</div>';
-    }).join('');
-    yearPanelsHtml += '<div class="offsite-year-panel" data-year-panel="' + y + '" style="display:' + (y === _activeOffsiteYear ? 'block' : 'none') + '"><div class="offsite-quarter-grid">' + cardsHtml + '</div></div>';
+
+      cardsHtml += '<div class="offsite-q-card ' + statusClass + '" data-offsite-id="' + q.id + '">' +
+        badgeHtml +
+        '<div class="offsite-q-label" style="color:' + (q.status === 'Complete' ? 'var(--green)' : q.status === 'Planning' ? 'var(--gold)' : 'var(--text-muted)') + '">' + q.quarter + '</div>' +
+        infoHtml +
+        actionHtml +
+      '</div>';
+    });
+
+    yearPanelsHtml += '<div class="offsite-year-panel" data-year-panel="' + y + '" style="display:' + (y === _activeOffsiteYear ? 'block' : 'none') + '">' +
+      '<div class="offsite-quarter-grid">' + cardsHtml + '</div>' +
+    '</div>';
   });
+
+  // Accumulated lessons section
   var allLessons = (ALLDATA.template && ALLDATA.template.lessonsLearned) || [];
-  var lessonsHtml = allLessons.slice(0, 8).map(function(l) { var lesson = typeof l === 'string' ? l : l.lesson; var source = typeof l === 'object' ? l.source : ''; return '<div style="display:flex;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);font-size:11px;color:var(--text-dim);line-height:1.4"><span style="color:var(--gold);font-weight:700;flex-shrink:0">&#8226;</span><span style="flex:1">' + lesson + '</span>' + (source ? '<span style="font-size:9px;color:var(--text-muted);flex-shrink:0">' + source + '</span>' : '') + '</div>'; }).join('');
-  var allOffsites = []; Object.values(offsites).forEach(function(yr) { yr.forEach(function(o) { if (o.status === 'Complete' && o.rating) allOffsites.push(o); }); });
-  var ratingHtml = allOffsites.map(function(o) { var ratingColor = o.rating >= 8.5 ? 'var(--green)' : o.rating >= 7 ? 'var(--gold)' : 'var(--yellow)'; return '<div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid var(--border)"><span style="font-size:11px;font-weight:600;color:var(--text);min-width:60px">' + o.id + '</span><span style="font-size:10px;color:var(--text-muted);flex:1">' + (o.city || '') + '</span><span style="font-size:12px;font-weight:800;color:' + ratingColor + '">' + o.rating + '</span></div>'; }).join('');
-  el.innerHTML = '<div class="page-header"><div class="page-title">&#9992;&#65039; Leadership Offsites</div></div>' + yearTabsHtml + yearPanelsHtml + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:8px"><div class="card"><div class="card-head"><div class="card-title">Lessons Learned (All Offsites)</div></div><div class="card-body" style="padding:10px 14px;max-height:300px;overflow-y:auto">' + (lessonsHtml || '<div style="font-size:11px;color:var(--text-muted)">No lessons yet.</div>') + '</div></div><div class="card"><div class="card-head"><div class="card-title">Rating History</div></div><div class="card-body" style="padding:10px 14px;max-height:300px;overflow-y:auto">' + (ratingHtml || '<div style="font-size:11px;color:var(--text-muted)">No ratings yet.</div>') + '</div></div></div><div style="text-align:center"><button class="offsite-add-btn" id="offsite-add-btn">+ Add Offsite</button></div>';
-  el.querySelectorAll('.offsite-year-btn').forEach(function(btn) { btn.addEventListener('click', function() { _activeOffsiteYear = btn.dataset.year; el.querySelectorAll('.offsite-year-btn').forEach(function(b) { b.classList.remove('active'); }); btn.classList.add('active'); el.querySelectorAll('.offsite-year-panel').forEach(function(p) { p.style.display = 'none'; }); var panel = el.querySelector('[data-year-panel="' + _activeOffsiteYear + '"]'); if (panel) panel.style.display = 'block'; }); });
-  el.querySelectorAll('.offsite-q-card').forEach(function(card) { card.addEventListener('click', function() { var id = card.dataset.offsiteId; var offsite = getOffsiteById(id); if (!offsite) return; if (offsite.status === 'Placeholder') { showOffsiteSetupForm(card, offsite); } else { _activeOffsiteId = id; renderOffsitePage(); } }); });
+  var lessonsHtml = allLessons.slice(0, 8).map(function(l) {
+    var lesson = typeof l === 'string' ? l : l.lesson;
+    var source = typeof l === 'object' ? l.source : '';
+    return '<div style="display:flex;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);font-size:11px;color:var(--text-dim);line-height:1.4">' +
+      '<span style="color:var(--gold);font-weight:700;flex-shrink:0">&#8226;</span>' +
+      '<span style="flex:1">' + lesson + '</span>' +
+      (source ? '<span style="font-size:9px;color:var(--text-muted);flex-shrink:0">' + source + '</span>' : '') +
+    '</div>';
+  }).join('');
+
+  // Rating history
+  var allOffsites = [];
+  Object.values(offsites).forEach(function(yr) { yr.forEach(function(o) { if (o.status === 'Complete' && o.rating) allOffsites.push(o); }); });
+  allOffsites.sort(function(a,b) { return (a.year*10 + (a.quarter||'').charCodeAt(1)) - (b.year*10 + (b.quarter||'').charCodeAt(1)); });
+  var ratingHtml = allOffsites.map(function(o) {
+    var ratingColor = o.rating >= 8.5 ? 'var(--green)' : o.rating >= 7 ? 'var(--gold)' : 'var(--yellow)';
+    return '<div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid var(--border)">' +
+      '<span style="font-size:11px;font-weight:600;color:var(--text);min-width:60px">' + o.id + '</span>' +
+      '<span style="font-size:10px;color:var(--text-muted);flex:1">' + (o.city || '') + '</span>' +
+      '<span style="font-size:12px;font-weight:800;color:' + ratingColor + '">' + o.rating + '</span>' +
+    '</div>';
+  }).join('');
+
+  el.innerHTML =
+    '<div class="page-header"><div class="page-title">&#9992;&#65039; Leadership Offsites</div></div>' +
+    yearTabsHtml +
+    yearPanelsHtml +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:8px">' +
+      '<div class="card">' +
+        '<div class="card-head"><div class="card-title">Lessons Learned (All Offsites)</div></div>' +
+        '<div class="card-body" style="padding:10px 14px;max-height:300px;overflow-y:auto">' + (lessonsHtml || '<div style="font-size:11px;color:var(--text-muted)">No lessons yet.</div>') + '</div>' +
+      '</div>' +
+      '<div class="card">' +
+        '<div class="card-head"><div class="card-title">Rating History</div></div>' +
+        '<div class="card-body" style="padding:10px 14px;max-height:300px;overflow-y:auto">' + (ratingHtml || '<div style="font-size:11px;color:var(--text-muted)">No ratings yet.</div>') + '</div>' +
+      '</div>' +
+    '</div>' +
+    '<div style="text-align:center"><button class="offsite-add-btn" id="offsite-add-btn">+ Add Offsite</button></div>';
+
+  // Wire year tabs
+  el.querySelectorAll('.offsite-year-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      _activeOffsiteYear = btn.dataset.year;
+      el.querySelectorAll('.offsite-year-btn').forEach(function(b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      el.querySelectorAll('.offsite-year-panel').forEach(function(p) { p.style.display = 'none'; });
+      var panel = el.querySelector('[data-year-panel="' + _activeOffsiteYear + '"]');
+      if (panel) panel.style.display = 'block';
+    });
+  });
+
+  // Wire quarter cards
+  el.querySelectorAll('.offsite-q-card').forEach(function(card) {
+    card.addEventListener('click', function() {
+      var id = card.dataset.offsiteId;
+      var offsite = getOffsiteById(id);
+      if (!offsite) return;
+      if (offsite.status === 'Placeholder') {
+        showOffsiteSetupForm(card, offsite);
+      } else {
+        _activeOffsiteId = id;
+        renderOffsitePage();
+      }
+    });
+  });
+
+  // Wire add button
   var addBtn = document.getElementById('offsite-add-btn');
-  if (addBtn) { addBtn.addEventListener('click', function() { var existing = document.getElementById('offsite-add-form'); if (existing) { existing.remove(); return; } var form = document.createElement('div'); form.id = 'offsite-add-form'; form.className = 'offsite-setup-form'; form.style.maxWidth = '400px'; form.style.margin = '12px auto'; form.innerHTML = '<div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px">Add New Offsite</div><input id="offsite-add-year" placeholder="Year (e.g. 2027)" type="number"><input id="offsite-add-quarter" placeholder="Quarter (e.g. Q1)"><input id="offsite-add-city" placeholder="City (optional)"><input id="offsite-add-dates" placeholder="Dates (optional)"><button onclick="createNewOffsite()">Create</button>'; addBtn.parentElement.appendChild(form); }); }
+  if (addBtn) {
+    addBtn.addEventListener('click', function() {
+      var existing = document.getElementById('offsite-add-form');
+      if (existing) { existing.remove(); return; }
+      var form = document.createElement('div');
+      form.id = 'offsite-add-form';
+      form.className = 'offsite-setup-form';
+      form.style.maxWidth = '400px';
+      form.style.margin = '12px auto';
+      form.innerHTML = '<div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px">Add New Offsite</div>' +
+        '<input id="offsite-add-year" placeholder="Year (e.g. 2027)" type="number">' +
+        '<input id="offsite-add-quarter" placeholder="Quarter (e.g. Q1)">' +
+        '<input id="offsite-add-city" placeholder="City (optional)">' +
+        '<input id="offsite-add-dates" placeholder="Dates (optional, e.g. Jan 15-16, 2027)">' +
+        '<button onclick="createNewOffsite()">Create</button>';
+      addBtn.parentElement.appendChild(form);
+    });
+  }
 }
 
-function showOffsiteSetupForm(card, offsite) { var existing = card.querySelector('.offsite-setup-form'); if (existing) { existing.remove(); return; } var form = document.createElement('div'); form.className = 'offsite-setup-form'; form.innerHTML = '<div style="font-size:11px;font-weight:700;color:var(--text);margin-bottom:6px">Set up ' + offsite.quarter + ' ' + offsite.year + '</div><input id="setup-city-' + offsite.id + '" placeholder="City"><input id="setup-dates-' + offsite.id + '" placeholder="Dates"><button onclick="event.stopPropagation();setupOffsite(\'' + offsite.id + '\')">Create</button>'; form.addEventListener('click', function(e) { e.stopPropagation(); }); card.appendChild(form); }
-function setupOffsite(id) { var offsite = getOffsiteById(id); if (!offsite) return; var city = document.getElementById('setup-city-' + id).value || 'TBD'; var dates = document.getElementById('setup-dates-' + id).value || 'TBD'; fetch('/api/offsite/create', { method: 'POST', headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer sophie-dashboard-secret-change-me'}, body: JSON.stringify({ quarter: offsite.quarter, year: offsite.year, city: city, dates: dates }) }).then(function(r) { return r.json(); }).then(function(d) { if (d.ok) renderOffsitePage(); else alert('Error: ' + (d.error || 'Unknown')); }).catch(function(e) { alert('Error: ' + e.message); }); }
-function createNewOffsite() { var year = document.getElementById('offsite-add-year').value; var quarter = document.getElementById('offsite-add-quarter').value; var city = document.getElementById('offsite-add-city').value || 'TBD'; var dates = document.getElementById('offsite-add-dates').value || 'TBD'; if (!year || !quarter) { alert('Year and Quarter are required.'); return; } fetch('/api/offsite/create', { method: 'POST', headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer sophie-dashboard-secret-change-me'}, body: JSON.stringify({ quarter: quarter, year: year, city: city, dates: dates }) }).then(function(r) { return r.json(); }).then(function(d) { if (d.ok) { _activeOffsiteYear = String(year); renderOffsitePage(); } else alert('Error: ' + (d.error || 'Unknown')); }).catch(function(e) { alert('Error: ' + e.message); }); }
+function showOffsiteSetupForm(card, offsite) {
+  var existing = card.querySelector('.offsite-setup-form');
+  if (existing) { existing.remove(); return; }
+  var form = document.createElement('div');
+  form.className = 'offsite-setup-form';
+  form.innerHTML = '<div style="font-size:11px;font-weight:700;color:var(--text);margin-bottom:6px">Set up ' + offsite.quarter + ' ' + offsite.year + '</div>' +
+    '<input id="setup-city-' + offsite.id + '" placeholder="City">' +
+    '<input id="setup-dates-' + offsite.id + '" placeholder="Dates (e.g. Jul 15-16, 2026)">' +
+    '<button onclick="event.stopPropagation();setupOffsite(\'' + offsite.id + '\')">Create</button>';
+  form.addEventListener('click', function(e) { e.stopPropagation(); });
+  card.appendChild(form);
+}
+
+function setupOffsite(id) {
+  var offsite = getOffsiteById(id);
+  if (!offsite) return;
+  var city = document.getElementById('setup-city-' + id).value || 'TBD';
+  var dates = document.getElementById('setup-dates-' + id).value || 'TBD';
+  fetch('/api/offsite/create', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer sophie-dashboard-secret-change-me'},
+    body: JSON.stringify({ quarter: offsite.quarter, year: offsite.year, city: city, dates: dates })
+  }).then(function(r) { return r.json(); }).then(function(d) {
+    if (d.ok) { renderOffsitePage(); }
+    else { alert('Error: ' + (d.error || 'Unknown')); }
+  }).catch(function(e) { alert('Error: ' + e.message); });
+}
+
+function createNewOffsite() {
+  var year = document.getElementById('offsite-add-year').value;
+  var quarter = document.getElementById('offsite-add-quarter').value;
+  var city = document.getElementById('offsite-add-city').value || 'TBD';
+  var dates = document.getElementById('offsite-add-dates').value || 'TBD';
+  if (!year || !quarter) { alert('Year and Quarter are required.'); return; }
+  fetch('/api/offsite/create', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer sophie-dashboard-secret-change-me'},
+    body: JSON.stringify({ quarter: quarter, year: year, city: city, dates: dates })
+  }).then(function(r) { return r.json(); }).then(function(d) {
+    if (d.ok) { _activeOffsiteYear = String(year); renderOffsitePage(); }
+    else { alert('Error: ' + (d.error || 'Unknown')); }
+  }).catch(function(e) { alert('Error: ' + e.message); });
+}
 
 function renderOffsitePastDetail(el, offsite, ALLDATA) {
-  var ratingRows = (offsite.ratingDetails || []).map(function(r) { return '<tr style="border-bottom:1px solid var(--border);font-size:11px"><td style="padding:6px 8px;font-weight:600;color:var(--text)">' + r.name + '</td><td style="padding:6px 8px;text-align:center;color:var(--gold);font-weight:700">' + (r.rating || '--') + '</td><td style="padding:6px 8px;color:var(--text-dim)">' + (r.feedback || '') + '</td></tr>'; }).join('');
-  var localLessons = (offsite.lessonsLearned || []).map(function(l) { return '<div style="display:flex;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);font-size:11px;color:var(--text-dim)"><span style="color:var(--gold)">&#8226;</span><span>' + l + '</span></div>'; }).join('');
-  var outcomesHtml = (offsite.keyOutcomes || []).map(function(o) { return '<div style="display:flex;gap:8px;padding:4px 0;font-size:11px;color:var(--text-dim)"><span style="color:var(--green)">&#10003;</span><span>' + o + '</span></div>'; }).join('');
-  el.innerHTML = '<button class="offsite-back-btn" onclick="_activeOffsiteId=null;renderOffsitePage()">&#8592; Back to All Offsites</button>' +
-    '<div class="page-header"><div class="page-title" style="display:flex;align-items:center;gap:10px">&#9992;&#65039; ' + offsite.name + ' <span class="badge tag-green">Complete</span></div>' + (offsite.notionPageId ? '<div style="font-size:11px;color:var(--text-muted)"><a href="https://www.notion.so/' + offsite.notionPageId + '" target="_blank" style="color:var(--gold)">Notion &#8599;</a></div>' : '') + '</div>' +
-    '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px"><div class="card" style="padding:10px 14px"><div style="font-size:9px;text-transform:uppercase;color:var(--text-muted);font-weight:700">City</div><div style="font-size:16px;font-weight:800;color:var(--text);margin-top:2px">' + (offsite.city || 'N/A') + '</div></div><div class="card" style="padding:10px 14px"><div style="font-size:9px;text-transform:uppercase;color:var(--text-muted);font-weight:700">Dates</div><div style="font-size:14px;font-weight:700;color:var(--text);margin-top:2px">' + (offsite.dates || 'N/A') + '</div></div><div class="card" style="padding:10px 14px"><div style="font-size:9px;text-transform:uppercase;color:var(--text-muted);font-weight:700">Rating</div><div style="font-size:16px;font-weight:800;color:' + (offsite.rating >= 8 ? 'var(--green)' : 'var(--gold)') + ';margin-top:2px">' + (offsite.rating || 'N/A') + '<span style="font-size:11px;color:var(--text-muted)">/10</span></div></div><div class="card" style="padding:10px 14px"><div style="font-size:9px;text-transform:uppercase;color:var(--text-muted);font-weight:700">Attendees</div><div style="font-size:16px;font-weight:800;color:var(--blue);margin-top:2px">' + (offsite.attendees ? offsite.attendees.length : 0) + '</div></div></div>' +
+  var allLessons = (ALLDATA.template && ALLDATA.template.lessonsLearned) || [];
+  var ratingRows = (offsite.ratingDetails || []).map(function(r) {
+    return '<tr style="border-bottom:1px solid var(--border);font-size:11px">' +
+      '<td style="padding:6px 8px;font-weight:600;color:var(--text)">' + r.name + '</td>' +
+      '<td style="padding:6px 8px;text-align:center;color:var(--gold);font-weight:700">' + (r.rating || '--') + '</td>' +
+      (r.lqRating !== undefined ? '<td style="padding:6px 8px;text-align:center;color:var(--text-muted)">' + (r.lqRating || '--') + '</td>' : '') +
+      '<td style="padding:6px 8px;color:var(--text-dim)">' + (r.feedback || '') + '</td>' +
+    '</tr>';
+  }).join('');
+  var hasLqRating = (offsite.ratingDetails || []).some(function(r) { return r.lqRating !== undefined; });
+
+  var localLessons = (offsite.lessonsLearned || []).map(function(l) {
+    return '<div style="display:flex;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);font-size:11px;color:var(--text-dim)">' +
+      '<span style="color:var(--gold)">&#8226;</span><span>' + l + '</span></div>';
+  }).join('');
+
+  var outcomesHtml = (offsite.keyOutcomes || []).map(function(o) {
+    return '<div style="display:flex;gap:8px;padding:4px 0;font-size:11px;color:var(--text-dim)"><span style="color:var(--green)">&#10003;</span><span>' + o + '</span></div>';
+  }).join('');
+
+  el.innerHTML =
+    '<button class="offsite-back-btn" onclick="_activeOffsiteId=null;renderOffsitePage()">&#8592; Back to All Offsites</button>' +
+    '<div class="page-header"><div class="page-title" style="display:flex;align-items:center;gap:10px">&#9992;&#65039; ' + offsite.name + ' <span class="badge tag-green">Complete</span></div>' +
+      '<div style="font-size:11px;color:var(--text-muted)">' +
+        (offsite.notionPageId ? '<a href="https://www.notion.so/' + offsite.notionPageId + '" target="_blank" style="color:var(--gold)">Notion &#8599;</a>' : '') +
+      '</div>' +
+    '</div>' +
+    '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px">' +
+      '<div class="card" style="padding:10px 14px"><div style="font-size:9px;text-transform:uppercase;color:var(--text-muted);font-weight:700">City</div><div style="font-size:16px;font-weight:800;color:var(--text);margin-top:2px">' + (offsite.city || 'N/A') + '</div></div>' +
+      '<div class="card" style="padding:10px 14px"><div style="font-size:9px;text-transform:uppercase;color:var(--text-muted);font-weight:700">Dates</div><div style="font-size:14px;font-weight:700;color:var(--text);margin-top:2px">' + (offsite.dates || 'N/A') + '</div></div>' +
+      '<div class="card" style="padding:10px 14px"><div style="font-size:9px;text-transform:uppercase;color:var(--text-muted);font-weight:700">Rating</div><div style="font-size:16px;font-weight:800;color:' + (offsite.rating >= 8 ? 'var(--green)' : 'var(--gold)') + ';margin-top:2px">' + (offsite.rating || 'N/A') + '<span style="font-size:11px;color:var(--text-muted)">/10</span></div></div>' +
+      '<div class="card" style="padding:10px 14px"><div style="font-size:9px;text-transform:uppercase;color:var(--text-muted);font-weight:700">Attendees</div><div style="font-size:16px;font-weight:800;color:var(--blue);margin-top:2px">' + (offsite.attendees ? offsite.attendees.length : 0) + '</div></div>' +
+    '</div>' +
     (offsite.summary ? '<div class="card" style="margin-bottom:12px"><div class="card-head"><div class="card-title">Summary</div></div><div class="card-body" style="font-size:12px;color:var(--text-dim);line-height:1.5">' + offsite.summary + '</div></div>' : '') +
     (outcomesHtml ? '<div class="card" style="margin-bottom:12px"><div class="card-head"><div class="card-title">Key Outcomes</div></div><div class="card-body" style="padding:10px 14px">' + outcomesHtml + '</div></div>' : '') +
-    (ratingRows ? '<div class="card" style="margin-bottom:12px"><div class="card-head"><div class="card-title">Ratings</div></div><div class="card-body" style="padding:0;overflow-x:auto"><table style="width:100%;border-collapse:collapse"><thead><tr style="border-bottom:2px solid var(--border);font-size:10px;color:var(--text-muted);text-transform:uppercase"><th style="padding:6px 8px;text-align:left">Leader</th><th style="padding:6px 8px;text-align:center">Rating</th><th style="padding:6px 8px;text-align:left">Feedback</th></tr></thead><tbody>' + ratingRows + '</tbody></table></div></div>' : '') +
-    (localLessons ? '<div class="card" style="margin-bottom:12px"><div class="card-head"><div class="card-title">Lessons from This Offsite</div></div><div class="card-body" style="padding:10px 14px">' + localLessons + '</div></div>' : '');
+    (ratingRows ? '<div class="card" style="margin-bottom:12px"><div class="card-head"><div class="card-title">Ratings</div></div><div class="card-body" style="padding:0;overflow-x:auto"><table style="width:100%;border-collapse:collapse"><thead><tr style="border-bottom:2px solid var(--border);font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px"><th style="padding:6px 8px;text-align:left">Leader</th><th style="padding:6px 8px;text-align:center">Rating</th>' + (hasLqRating ? '<th style="padding:6px 8px;text-align:center">LQ Rating</th>' : '') + '<th style="padding:6px 8px;text-align:left">Feedback</th></tr></thead><tbody>' + ratingRows + '</tbody></table></div></div>' : '') +
+    (localLessons ? '<div class="card" style="margin-bottom:12px"><div class="card-head"><div class="card-title">Lessons from This Offsite</div></div><div class="card-body" style="padding:10px 14px">' + localLessons + '</div></div>' : '') +
+    '<div style="font-size:10px;color:var(--text-muted);text-align:center;margin-top:12px">' + (offsite.venue || '') + '</div>';
 }
 
 function renderOffsiteDetailView(el, OFFSITE, ALLDATA) {
+  // This is the full 6-tab view for Planning/Active offsites
+  // Pull data from the specific offsite object
   var attendees = OFFSITE.attendees || [];
   var phases = OFFSITE.phases || [];
   var checklist = OFFSITE.checklist || {};
@@ -3798,8 +3979,10 @@ function renderOffsiteDetailView(el, OFFSITE, ALLDATA) {
   var activityResearch = logistics.activityResearch || [];
   var budgetCategories = budget.categories || [];
 
+  // Days until
   var daysUntil = Math.ceil((new Date('2026-04-20') - new Date()) / 86400000);
 
+  // Count tasks across checklist
   function countChecklist(obj) {
     var total = 0, done = 0;
     function walk(v) {
@@ -3811,9 +3994,14 @@ function renderOffsiteDetailView(el, OFFSITE, ALLDATA) {
   }
   var taskCounts = countChecklist(checklist);
   var taskPct = taskCounts.total ? Math.round((taskCounts.done / taskCounts.total) * 100) : 0;
+
+  // Budget estimate
   var budgetEstimate = budgetCategories.reduce(function(s,c) { return s + (c.estimated || 0); }, 0) || 13500;
+
+  // Attendees ready (both hotel + flight)
   var attendeesReady = attendees.filter(function(a) { return a.hotelConfirmed && a.flightBooked; }).length;
 
+  // Phase colors
   function phaseColor(name) {
     if (/kickoff/i.test(name)) return { bg: 'rgba(72,187,120,.15)', fg: 'var(--green)' };
     if (/logistics/i.test(name)) return { bg: 'rgba(219,203,119,.15)', fg: 'var(--gold)' };
@@ -3834,6 +4022,7 @@ function renderOffsiteDetailView(el, OFFSITE, ALLDATA) {
     return '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--red)"></span>';
   }
 
+  // Sub-tabs
   var offsiteTabs = [
     { id: 'offsite-overview', label: 'Overview' },
     { id: 'offsite-checklist', label: 'Checklist' },
@@ -4230,30 +4419,108 @@ function renderOffsiteDetailView(el, OFFSITE, ALLDATA) {
 
   // ── Reviews tab ──
   function renderReviewsTab() {
+    // Show accumulated lessons from ALL past offsites
     var allLessons = (ALLDATA && ALLDATA.template && ALLDATA.template.lessonsLearned) || [];
-    var accumulatedHtml = allLessons.map(function(l) { var lesson = typeof l === 'string' ? l : l.lesson; var source = typeof l === 'object' ? l.source : ''; return '<div style="display:flex;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);font-size:11px;color:var(--text-dim);line-height:1.4"><span style="color:var(--gold);font-weight:700;flex-shrink:0">&#8226;</span><span style="flex:1">' + lesson + '</span>' + (source ? '<span style="font-size:9px;color:var(--text-muted);flex-shrink:0">' + source + '</span>' : '') + '</div>'; }).join('');
-    var localLessonsHtml = lessonsLearned.map(function(l) { return '<div style="display:flex;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:11px;color:var(--text-dim);line-height:1.4"><span style="color:var(--gold);font-weight:700;flex-shrink:0">&#8226;</span><span>' + l + '</span></div>'; }).join('');
+    var accumulatedHtml = allLessons.map(function(l) {
+      var lesson = typeof l === 'string' ? l : l.lesson;
+      var source = typeof l === 'object' ? l.source : '';
+      return '<div style="display:flex;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);font-size:11px;color:var(--text-dim);line-height:1.4">' +
+        '<span style="color:var(--gold);font-weight:700;flex-shrink:0">&#8226;</span>' +
+        '<span style="flex:1">' + lesson + '</span>' +
+        (source ? '<span style="font-size:9px;color:var(--text-muted);flex-shrink:0">' + source + '</span>' : '') +
+      '</div>';
+    }).join('');
+
+    // Current offsite lessons
+    var localLessonsHtml = lessonsLearned.map(function(l) {
+      return '<div style="display:flex;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:11px;color:var(--text-dim);line-height:1.4">' +
+        '<span style="color:var(--gold);font-weight:700;flex-shrink:0">&#8226;</span>' +
+        '<span>' + l + '</span>' +
+      '</div>';
+    }).join('');
+
     return '<div class="offsite-tab-pane" id="offsite-reviews">' +
-      '<div class="card" style="margin-bottom:12px"><div class="card-head"><div class="card-title">Lessons from This Offsite</div></div><div class="card-body" style="padding:10px 14px">' + (localLessonsHtml || '<div style="font-size:11px;color:var(--text-muted)">No lessons recorded yet.</div>') + '</div></div>' +
-      '<div class="card" style="margin-bottom:12px"><div class="card-head"><div class="card-title">Accumulated Lessons (All Past Offsites)</div></div><div class="card-body" style="padding:10px 14px;max-height:400px;overflow-y:auto">' + (accumulatedHtml || '<div style="font-size:11px;color:var(--text-muted)">No lessons recorded yet.</div>') + '</div></div>' +
-      '<div class="card" style="margin-bottom:12px"><div class="card-head"><div class="card-title">Post-Offsite Action Items</div></div><div class="card-body" style="padding:12px 14px;font-size:11px;color:var(--text-muted)">' + (reviews.length ? reviews.map(function(r) { return '<div style="padding:8px;border-bottom:1px solid var(--border)"><div style="font-weight:600;color:var(--text)">' + (r.title || 'Item') + '</div><div style="color:var(--text-muted);margin-top:4px">' + (r.notes || '') + '</div></div>'; }).join('') : 'Action items will be captured here after the offsite concludes.') + '</div></div>' +
-      '<div class="card"><div class="card-head"><div class="card-title">Rating Table</div></div><div class="card-body" style="padding:0;overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr style="border-bottom:2px solid var(--border);font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px"><th style="padding:6px 8px;text-align:left">Leader</th><th style="padding:6px 8px;text-align:center">Rating</th><th style="padding:6px 8px;text-align:center">LQ Rating</th><th style="padding:6px 8px;text-align:left">Feedback</th></tr></thead><tbody><tr><td colspan="4" style="padding:12px 8px;text-align:center;color:var(--text-muted);font-size:11px">Rating data will be populated after offsite.</td></tr></tbody></table></div></div>' +
+      '<div class="card" style="margin-bottom:12px">' +
+        '<div class="card-head"><div class="card-title">Lessons from This Offsite</div></div>' +
+        '<div class="card-body" style="padding:10px 14px">' +
+          (localLessonsHtml || '<div style="font-size:11px;color:var(--text-muted)">No lessons recorded yet for this offsite.</div>') +
+        '</div>' +
+      '</div>' +
+      '<div class="card" style="margin-bottom:12px">' +
+        '<div class="card-head"><div class="card-title">Accumulated Lessons (All Past Offsites)</div></div>' +
+        '<div class="card-body" style="padding:10px 14px;max-height:400px;overflow-y:auto">' +
+          (accumulatedHtml || '<div style="font-size:11px;color:var(--text-muted)">No lessons recorded yet.</div>') +
+        '</div>' +
+      '</div>' +
+      '<div class="card" style="margin-bottom:12px">' +
+        '<div class="card-head"><div class="card-title">Post-Offsite Action Items</div></div>' +
+        '<div class="card-body" style="padding:12px 14px;font-size:11px;color:var(--text-muted)">' +
+          (reviews.length ? reviews.map(function(r) {
+            return '<div style="padding:8px;border-bottom:1px solid var(--border)"><div style="font-weight:600;color:var(--text)">' + (r.title || 'Item') + '</div><div style="color:var(--text-muted);margin-top:4px">' + (r.notes || '') + '</div></div>';
+          }).join('') : 'Action items will be captured here after the offsite concludes on April 21.') +
+        '</div>' +
+      '</div>' +
+      '<div class="card">' +
+        '<div class="card-head"><div class="card-title">Rating Table</div></div>' +
+        '<div class="card-body" style="padding:0;overflow-x:auto">' +
+          '<table style="width:100%;border-collapse:collapse;font-size:11px">' +
+            '<thead><tr style="border-bottom:2px solid var(--border);font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px">' +
+              '<th style="padding:6px 8px;text-align:left">Leader</th>' +
+              '<th style="padding:6px 8px;text-align:center">Rating</th>' +
+              '<th style="padding:6px 8px;text-align:center">LQ Rating</th>' +
+              '<th style="padding:6px 8px;text-align:left">Feedback</th>' +
+            '</tr></thead>' +
+            '<tbody><tr><td colspan="4" style="padding:12px 8px;text-align:center;color:var(--text-muted);font-size:11px">Rating data will be populated from Q2 planning hub after offsite.</td></tr></tbody>' +
+          '</table>' +
+        '</div>' +
+      '</div>' +
     '</div>';
   }
 
+  // ── Render page ──
   var config = OFFSITE;
   el.innerHTML =
     '<button class="offsite-back-btn" onclick="_activeOffsiteId=null;renderOffsitePage()">&#8592; Back to All Offsites</button>' +
-    '<div class="page-header"><div class="page-title">&#9992;&#65039; ' + (OFFSITE.name || 'Leadership Offsite') + '</div><div class="page-kpis"><a href="' + (OFFSITE.notionHub || (OFFSITE.notionPageId ? 'https://www.notion.so/' + OFFSITE.notionPageId : '#')) + '" target="_blank" style="font-size:11px;color:var(--gold)">Notion Hub &#8599;</a></div></div>' +
-    '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px">' +
-      '<div class="card" style="padding:10px 14px;border-left:3px solid var(--gold)"><div style="font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);font-weight:700">Days Until</div><div style="font-size:18px;font-weight:800;color:var(--gold);margin-top:2px">' + daysUntil + ' <span style="font-size:11px;font-weight:500;color:var(--text-dim)">days to offsite</span></div></div>' +
-      '<div class="card" style="padding:10px 14px;border-left:3px solid var(--green)"><div style="font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);font-weight:700">Tasks Done</div><div style="font-size:18px;font-weight:800;color:var(--green);margin-top:2px">' + taskCounts.done + '/' + taskCounts.total + ' <span style="font-size:11px;font-weight:500;color:var(--text-dim)">' + taskPct + '% complete</span></div></div>' +
-      '<div class="card" style="padding:10px 14px;border-left:3px solid ' + (budget.approved ? 'var(--green)' : 'var(--red)') + '"><div style="font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);font-weight:700">Budget</div><div style="font-size:18px;font-weight:800;color:' + (budget.approved ? 'var(--green)' : 'var(--red)') + ';margin-top:2px">~$' + budgetEstimate.toLocaleString() + ' <span style="font-size:11px;font-weight:500;color:var(--text-dim)">' + (budget.approved ? 'approved' : 'pending approval') + '</span></div></div>' +
-      '<div class="card" style="padding:10px 14px;border-left:3px solid var(--blue)"><div style="font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);font-weight:700">Attendees Ready</div><div style="font-size:18px;font-weight:800;color:var(--blue);margin-top:2px">' + attendeesReady + '/' + attendees.length + ' <span style="font-size:11px;font-weight:500;color:var(--text-dim)">hotel+flight</span></div></div>' +
+    '<div class="page-header"><div class="page-title">&#9992;&#65039; ' + (OFFSITE.name || 'Leadership Offsite') + '</div>' +
+      '<div class="page-kpis">' +
+        '<a href="' + (OFFSITE.notionHub || (OFFSITE.notionPageId ? 'https://www.notion.so/' + OFFSITE.notionPageId : '#')) + '" target="_blank" style="font-size:11px;color:var(--gold)">Notion Hub &#8599;</a>' +
+      '</div>' +
     '</div>' +
-    '<div class="offsite-nav" id="offsite-page-nav">' + offsiteTabs.map(function(t, i) { return '<button class="offsite-nav-btn ' + (i === 0 ? 'active' : '') + '" data-offsite-page-tab="' + t.id + '">' + t.label + '</button>'; }).join('') + '</div>' +
-    renderOverviewTab() + renderChecklistTab() + renderAttendeesTab() + renderLogisticsTab() + renderAgendaTab() + renderReviewsTab();
 
+    // Summary stat cards
+    '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px">' +
+      '<div class="card" style="padding:10px 14px;border-left:3px solid var(--gold)">' +
+        '<div style="font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);font-weight:700">Days Until</div>' +
+        '<div style="font-size:18px;font-weight:800;color:var(--gold);margin-top:2px">' + daysUntil + ' <span style="font-size:11px;font-weight:500;color:var(--text-dim)">days to offsite</span></div>' +
+      '</div>' +
+      '<div class="card" style="padding:10px 14px;border-left:3px solid var(--green)">' +
+        '<div style="font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);font-weight:700">Tasks Done</div>' +
+        '<div style="font-size:18px;font-weight:800;color:var(--green);margin-top:2px">' + taskCounts.done + '/' + taskCounts.total + ' <span style="font-size:11px;font-weight:500;color:var(--text-dim)">' + taskPct + '% complete</span></div>' +
+      '</div>' +
+      '<div class="card" style="padding:10px 14px;border-left:3px solid ' + (budget.approved ? 'var(--green)' : 'var(--red)') + '">' +
+        '<div style="font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);font-weight:700">Budget</div>' +
+        '<div style="font-size:18px;font-weight:800;color:' + (budget.approved ? 'var(--green)' : 'var(--red)') + ';margin-top:2px">~$' + budgetEstimate.toLocaleString() + ' <span style="font-size:11px;font-weight:500;color:var(--text-dim)">' + (budget.approved ? 'approved' : 'pending approval') + '</span></div>' +
+      '</div>' +
+      '<div class="card" style="padding:10px 14px;border-left:3px solid var(--blue)">' +
+        '<div style="font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);font-weight:700">Attendees Ready</div>' +
+        '<div style="font-size:18px;font-weight:800;color:var(--blue);margin-top:2px">' + attendeesReady + '/' + attendees.length + ' <span style="font-size:11px;font-weight:500;color:var(--text-dim)">hotel+flight</span></div>' +
+      '</div>' +
+    '</div>' +
+
+    // Sub-tabs
+    '<div class="offsite-nav" id="offsite-page-nav">' +
+      offsiteTabs.map(function(t, i) { return '<button class="offsite-nav-btn ' + (i === 0 ? 'active' : '') + '" data-offsite-page-tab="' + t.id + '">' + t.label + '</button>'; }).join('') +
+    '</div>' +
+
+    // Tab panes
+    renderOverviewTab() +
+    renderChecklistTab() +
+    renderAttendeesTab() +
+    renderLogisticsTab() +
+    renderAgendaTab() +
+    renderReviewsTab();
+
+  // Wire sub-tab switching for standalone page
   document.querySelectorAll('#offsite-page-nav .offsite-nav-btn').forEach(function(btn) {
     btn.addEventListener('click', function() {
       document.querySelectorAll('#offsite-page-nav .offsite-nav-btn').forEach(function(b) { b.classList.remove('active'); });
@@ -4273,6 +4540,7 @@ function toggleAttendeeStatus(name, field) {
   var attendee = offsite.attendees.find(function(a) { return a.name === name; });
   if (!attendee) return;
   attendee[field] = !attendee[field];
+  // Save full data structure
   fetch('/api/offsite', {
     method: 'POST',
     headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer sophie-dashboard-secret-change-me'},
