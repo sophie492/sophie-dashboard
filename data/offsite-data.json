@@ -20,7 +20,9 @@
       "travelCardIssued": false,
       "dietaryNeeds": "",
       "location": "San Francisco, CA",
-      "title": "CEO"
+      "title": "CEO",
+      "needsFlight": true,
+      "travelNotes": "SFO \u2192 JFK/EWR (~5.5h flight)"
     },
     {
       "name": "Shreyas Kumar",
@@ -33,32 +35,38 @@
       "travelCardIssued": false,
       "dietaryNeeds": "",
       "location": "San Francisco, CA",
-      "title": "CTO"
+      "title": "CTO",
+      "needsFlight": true,
+      "travelNotes": "SFO \u2192 JFK/EWR (~5.5h flight)"
     },
     {
       "name": "Evelyn Xue",
       "role": "Finance / Budget Approver",
       "email": "evelyn@fermatcommerce.com",
       "marriottNum": "",
-      "needsHotel": true,
-      "hotelConfirmed": false,
-      "flightBooked": false,
+      "needsHotel": false,
+      "hotelConfirmed": true,
+      "flightBooked": true,
       "travelCardIssued": false,
       "dietaryNeeds": "",
-      "location": "New York, NY"
+      "location": "New York, NY",
+      "needsFlight": false,
+      "travelNotes": "NYC local \u2014 no travel needed"
     },
     {
       "name": "Jess McDaid",
       "role": "Sales Leader",
       "email": "jessica@fermatcommerce.com",
       "marriottNum": "",
-      "needsHotel": true,
-      "hotelConfirmed": false,
-      "flightBooked": false,
+      "needsHotel": false,
+      "hotelConfirmed": true,
+      "flightBooked": true,
       "travelCardIssued": false,
       "dietaryNeeds": "",
       "location": "New York, NY",
-      "title": "General Manager, Agency"
+      "title": "General Manager, Agency",
+      "needsFlight": false,
+      "travelNotes": "NYC local \u2014 no travel needed"
     },
     {
       "name": "Saunder Schroeder",
@@ -71,7 +79,9 @@
       "travelCardIssued": false,
       "dietaryNeeds": "",
       "location": "Salt Lake City, UT",
-      "title": "SVP, Growth"
+      "title": "SVP, Growth",
+      "needsFlight": true,
+      "travelNotes": "SLC \u2192 JFK/EWR (~4.5h flight)"
     },
     {
       "name": "Bharat Murali",
@@ -84,33 +94,39 @@
       "travelCardIssued": false,
       "dietaryNeeds": "",
       "location": "San Francisco, CA",
-      "title": "Eng Leadership"
+      "title": "Eng Leadership",
+      "needsFlight": true,
+      "travelNotes": "SFO \u2192 JFK/EWR (~5.5h flight)"
     },
     {
       "name": "Isabel O'Keefe",
       "role": "Product",
       "email": "isabel@fermatcommerce.com",
       "marriottNum": "634278963",
-      "needsHotel": false,
+      "needsHotel": true,
       "hotelConfirmed": false,
       "flightBooked": false,
       "travelCardIssued": false,
       "dietaryNeeds": "",
       "notes": "",
-      "location": "Denver, CO"
+      "location": "Denver, CO",
+      "needsFlight": true,
+      "travelNotes": "DEN \u2192 JFK/EWR (~4h flight)"
     },
     {
       "name": "Jennifer Schnadig",
       "role": "Marketing (Content, PMM, PR)",
       "email": "jennifer@fermatcommerce.com",
       "marriottNum": "",
-      "needsHotel": true,
-      "hotelConfirmed": false,
-      "flightBooked": false,
+      "needsHotel": false,
+      "hotelConfirmed": true,
+      "flightBooked": true,
       "travelCardIssued": false,
       "dietaryNeeds": "",
       "location": "New York, NY",
-      "title": "Chief of Staff"
+      "title": "Chief of Staff",
+      "needsFlight": false,
+      "travelNotes": "NYC local \u2014 no travel needed"
     },
     {
       "name": "Khushy",
@@ -122,7 +138,9 @@
       "flightBooked": false,
       "travelCardIssued": false,
       "dietaryNeeds": "",
-      "location": "Mumbai, India"
+      "location": "Mumbai, India",
+      "needsFlight": true,
+      "travelNotes": "International travel from Mumbai \u2014 check visa requirements"
     }
   ],
   "phases": [
@@ -426,7 +444,8 @@
       "rooms": 8,
       "roomsNote": "8 rooms needed \u2014 Isabel is NYC-based",
       "confirmed": false,
-      "contactPerson": "Alice Zhao (travel agent, alice.zhao@fora.travel)"
+      "contactPerson": "Alice Zhao (travel agent, alice.zhao@fora.travel)",
+      "roomsNeeded": 6
     },
     "weworkResearch": [
       {
