@@ -3370,7 +3370,7 @@ function toggleOffsiteTask(el) {
     if(idx >= 0) doneKeys.splice(idx, 1);
   }
   saveOffsiteDone(doneKeys);
-  syncCheckbox('offsite-'+pi+'-'+ti, isChecked);
+  syncCheckbox('offsite-'+pi+'-'+ti, isChecked, DATA.leadershipOffsite?.notionPageId, task.text);
 
   const cb = el.querySelector('.task-checkbox');
   const textSpan = el.querySelector('span:last-child');
@@ -3504,7 +3504,7 @@ function toggleHWTask(el) {
     if(idx >= 0) doneKeys.splice(idx, 1);
   }
   saveHackWeekDone(doneKeys);
-  syncCheckbox('hackweek-'+pi+'-'+ti, isChecked);
+  syncCheckbox('hackweek-'+pi+'-'+ti, isChecked, DATA.hackWeek?.notionPageId, task.text);
 
   const cb = el.querySelector('.task-checkbox');
   const label = el.querySelector('span:last-child');
@@ -4331,12 +4331,24 @@ async function reconcileTasks(){
 }
 
 // ── Checkbox state sync (all task lists) ──
-function syncCheckbox(key, checked) {
+function syncCheckbox(key, checked, notionPageId, taskText) {
+  // Save to server checkbox states
   fetch('/api/checkbox-states', {
     method: 'POST',
     headers: {'Content-Type':'application/json','Authorization':'Bearer sophie-dashboard-secret-change-me'},
     body: JSON.stringify({ key, checked })
   }).catch(e => console.warn('[Checkbox] Sync failed:', e.message));
+  // Also sync to Notion if we have a page ID
+  if (notionPageId && taskText) {
+    fetch('/api/notion/toggle-todo', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json','Authorization':'Bearer sophie-dashboard-secret-change-me'},
+      body: JSON.stringify({ pageId: notionPageId, text: taskText, checked })
+    }).then(r=>r.json()).then(d=>{
+      if(d.ok) console.log('[Notion] Synced checkbox:', taskText.slice(0,30));
+      else console.warn('[Notion] Checkbox sync failed:', d.error);
+    }).catch(e => console.warn('[Notion] Checkbox sync failed:', e.message));
+  }
 }
 
 // Load server checkbox states on startup and apply

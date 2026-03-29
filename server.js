@@ -303,6 +303,49 @@ app.post('/api/checkbox-states', (req, res) => {
   }
 });
 
+// ── Toggle Notion to_do block by text match ──
+app.post('/api/notion/toggle-todo', async (req, res) => {
+  const authHeader = req.headers.authorization || '';
+  const token = authHeader.replace('Bearer ', '');
+  if (token !== (process.env.DASHBOARD_API_KEY || 'sophie-dashboard-secret-change-me')) {
+    return res.status(401).json({ error: 'Invalid API key' });
+  }
+  if (!notion) return res.status(503).json({ error: 'Notion not configured' });
+  const { pageId, text, checked } = req.body;
+  if (!pageId || !text) return res.status(400).json({ error: 'pageId and text required' });
+  try {
+    // Get all blocks from the page
+    let allBlocks = [];
+    let cursor;
+    do {
+      const resp = await notion.blocks.children.list({ block_id: pageId, page_size: 100, start_cursor: cursor });
+      allBlocks = allBlocks.concat(resp.results);
+      cursor = resp.has_more ? resp.next_cursor : null;
+    } while (cursor);
+
+    // Find the matching to_do block by text
+    const normalize = s => s.toLowerCase().replace(/[^a-z0-9 ]/g, '').replace(/\s+/g, ' ').trim();
+    const targetNorm = normalize(text);
+    const match = allBlocks.find(b => {
+      if (b.type !== 'to_do') return false;
+      const blockText = (b.to_do.rich_text || []).map(t => t.plain_text).join('');
+      return normalize(blockText).includes(targetNorm.slice(0, 30)) || targetNorm.includes(normalize(blockText).slice(0, 30));
+    });
+
+    if (!match) return res.status(404).json({ error: 'to_do block not found for: ' + text.slice(0, 40) });
+
+    await notion.blocks.update({
+      block_id: match.id,
+      to_do: { checked: !!checked }
+    });
+    console.log(`[Notion] Toggled to_do "${text.slice(0, 30)}" → ${checked}`);
+    res.json({ ok: true, blockId: match.id });
+  } catch (err) {
+    console.error('[Notion] Toggle to_do failed:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ── CEO Brief Data Storage ──
 const BRIEF_PATH = path.join(__dirname, 'data', 'ceo-brief.json');
 
