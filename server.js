@@ -554,9 +554,48 @@ app.post('/api/offsite/create', async (req, res) => {
       data.offsites[year].sort((a,b) => a.quarter.localeCompare(b.quarter));
     }
 
+    // Create Notion page under Offsites parent
+    if (notion && newOffsite.status !== 'Placeholder') {
+      try {
+        const OFFSITES_PARENT = 'ca7532fd33714488ba26507ff5bed79b';
+        const attendeeRows = (newOffsite.attendees || []).map(a =>
+          `| ${a.name} | ${a.email} | ${a.location || ''} | ${a.title || ''} | ${a.marriottNum || '—'} |`
+        ).join('\n');
+
+        const checklistMd = (newOffsite.phases || []).map(phase => {
+          const tasks = (phase.tasks || []).map(t => `- [ ] ${t.text}`).join('\n');
+          return `## ${phase.name} — ${phase.deadline}\n${tasks}`;
+        }).join('\n---\n');
+
+        const content = `**${newOffsite.dates}** · ${newOffsite.city}\n\n` +
+          `### Attendees\n| Name | Email | Location | Title | Marriott # |\n|------|-------|----------|-------|------------|\n${attendeeRows}\n\n---\n${checklistMd}`;
+
+        const page = await notion.pages.create({
+          parent: { page_id: OFFSITES_PARENT },
+          icon: { emoji: '💥' },
+          properties: { title: [{ text: { content: newOffsite.name } }] },
+          children: [] // Content added separately if needed
+        });
+        newOffsite.notionPageId = page.id;
+        newOffsite.notionUrl = 'https://notion.so/' + page.id.replace(/-/g, '');
+        console.log('[Offsite] Created Notion page:', page.id);
+      } catch (notionErr) {
+        console.error('[Offsite] Notion page creation failed:', notionErr.message);
+        // Continue without Notion — offsite still created in dashboard
+      }
+    }
+
+    if (existing) {
+      const idx = data.offsites[year].findIndex(o => o.id === id);
+      data.offsites[year][idx] = newOffsite;
+    } else {
+      data.offsites[year].push(newOffsite);
+      data.offsites[year].sort((a,b) => a.quarter.localeCompare(b.quarter));
+    }
+
     data.lastSynced = new Date().toISOString();
     fs.writeFileSync(OFFSITE_PATH, JSON.stringify(data, null, 2));
-    res.json({ ok: true, offsite: newOffsite });
+    res.json({ ok: true, offsite: newOffsite, notionPageId: newOffsite.notionPageId || null });
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
