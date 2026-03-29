@@ -4772,18 +4772,18 @@ async function renderPodcastPage(){
   const el=document.getElementById('page-podcast');
   el.innerHTML='<div style="display:flex;align-items:center;justify-content:center;min-height:200px;color:var(--text-muted)">Loading podcast data...</div>';
 
-  let PODCAST_CONFIG={}, PODCAST_EPISODES=[], PODCAST_GUESTS=[], PODCAST_LAUNCH_TASKS=[], PODCAST_TOPICS=[], PODCAST_REVIEWS=[], PODCAST_LINKEDIN=[];
+  let PODCAST_CONFIG={}, PODCAST_EPISODES=[], PODCAST_GUESTS=[], PODCAST_LAUNCH_TASKS=[], PODCAST_TOPICS=[], PODCAST_REVIEWS=[], PODCAST_DISTRIBUTION=[];
   try{
-    const [config,episodes,guests,launchTasks,topics,reviews,linkedin]=await Promise.all([
+    const [config,episodes,guests,launchTasks,topics,reviews,distribution]=await Promise.all([
       fetch('/api/podcast/config').then(r=>r.ok?r.json():{}),
       fetch('/api/podcast/episodes').then(r=>r.ok?r.json():[]),
       fetch('/api/podcast/guests').then(r=>r.ok?r.json():[]),
       fetch('/api/podcast/launch-tasks').then(r=>r.ok?r.json():[]),
       fetch('/api/podcast/topics').then(r=>r.ok?r.json():[]),
       fetch('/api/podcast/reviews').then(r=>r.ok?r.json():[]),
-      fetch('/api/podcast/linkedin').then(r=>r.ok?r.json():[])
+      fetch('/api/podcast/content-distribution').then(r=>r.ok?r.json():[])
     ]);
-    PODCAST_CONFIG=config;PODCAST_EPISODES=episodes;PODCAST_GUESTS=guests;PODCAST_LAUNCH_TASKS=launchTasks;PODCAST_TOPICS=topics;PODCAST_REVIEWS=reviews;PODCAST_LINKEDIN=linkedin;
+    PODCAST_CONFIG=config;PODCAST_EPISODES=episodes;PODCAST_GUESTS=guests;PODCAST_LAUNCH_TASKS=launchTasks;PODCAST_TOPICS=topics;PODCAST_REVIEWS=reviews;PODCAST_DISTRIBUTION=distribution;
   }catch(e){
     console.error('Failed to load podcast data:',e);
     el.innerHTML='<div class="page-header"><div class="page-title">&#127908; Podcast</div></div><div style="padding:40px;text-align:center;color:var(--text-muted)">Could not load podcast data. Make sure podcast-api.js is mounted on the server.</div>';
@@ -4854,7 +4854,7 @@ async function renderPodcastPage(){
     {id:'pod-launch', label:'Launch Prep'},
     {id:'pod-topics', label:'Topics'},
     {id:'pod-reviews', label:'Reviews'},
-    {id:'pod-linkedin', label:'LinkedIn'}
+    {id:'pod-distribution', label:'Distribution'}
   ];
 
   el.innerHTML = `
@@ -4895,7 +4895,7 @@ async function renderPodcastPage(){
     ${renderPodLaunchPrep()}
     ${renderPodTopics()}
     ${renderPodReviews()}
-    ${renderPodLinkedIn()}
+    ${renderPodDistribution()}
   `;
 
   // Wire sub-tab switching
@@ -5296,53 +5296,139 @@ async function renderPodcastPage(){
     '</div>';
   }
 
-  function renderPodLinkedIn() {
-    if (PODCAST_LINKEDIN.length === 0) {
-      return '<div class="pod-tab-pane" id="pod-linkedin">' +
-        '<div class="card"><div class="card-head"><span class="card-title">LinkedIn Pipeline</span>' +
-        '<a href="https://www.notion.so/fermat-commerce/394ee9dbdc924a869ad53020104c1a13" target="_blank" style="font-size:10px;color:var(--gold)">Content Calendar &#8599;</a></div>' +
+  function renderPodDistribution() {
+    var statusColors = {
+      'Not Started':['rgba(160,174,192,.12)','#A0AEC0'],
+      'Draft':['rgba(236,201,75,.15)','#ECC94B'],
+      'Review':['rgba(237,137,54,.15)','#ED8936'],
+      'Scheduled':['rgba(66,153,225,.15)','#4299E1'],
+      'Published':['rgba(72,187,120,.15)','var(--green)']
+    };
+    var channelIcons = {
+      'LinkedIn':'&#128101;','Email':'&#9993;','Slack':'&#128172;',
+      'Blog':'&#128196;','Social Pilot':'&#127916;','Google Ads':'&#128200;'
+    };
+    var statuses = ['Not Started','Draft','Review','Scheduled','Published'];
+
+    if (PODCAST_DISTRIBUTION.length === 0) {
+      var firstEp = PODCAST_EPISODES.length > 0 ? PODCAST_EPISODES[0] : null;
+      return '<div class="pod-tab-pane" id="pod-distribution">' +
+        '<div class="card"><div class="card-head"><span class="card-title">Content Distribution Tracker</span></div>' +
         '<div class="card-body" style="padding:40px;text-align:center;color:var(--text-muted)">' +
-        '<div style="font-size:24px;margin-bottom:8px">&#128221;</div>' +
-        '<div>No LinkedIn posts yet &mdash; posts are generated when episodes reach Promotion phase.</div>' +
-        '<div style="font-size:11px;margin-top:8px">Each episode produces 3 posts: teaser, key insight, and recap.</div>' +
-        '<div style="font-size:11px;margin-top:4px">Status flow: <span style="color:var(--text-dim)">Draft</span> &#8594; <span style="color:var(--lavender)">Review</span> &#8594; <span style="color:var(--gold)">Scheduled</span> &#8594; <span style="color:var(--green)">Published</span></div>' +
+        '<div style="font-size:24px;margin-bottom:8px">&#128225;</div>' +
+        '<div>Distribution tracking starts when episodes reach Promotion phase.</div>' +
+        '<div style="font-size:11px;margin-top:8px">Each episode generates 8 channel items: LinkedIn (3), Email, Slack, Blog, Social Pilot, Google Ads.</div>' +
+        '<div style="font-size:11px;margin-top:4px">Status flow: <span style="color:#A0AEC0">Not Started</span> &#8594; <span style="color:#ECC94B">Draft</span> &#8594; <span style="color:#ED8936">Review</span> &#8594; <span style="color:#4299E1">Scheduled</span> &#8594; <span style="color:var(--green)">Published</span></div>' +
+        (firstEp ? '<div style="margin-top:16px"><button onclick="generateDistribution(\''+firstEp.id+'\')" style="padding:6px 16px;background:var(--gold);color:#000;border:none;border-radius:6px;font-weight:700;font-size:11px;cursor:pointer">Generate for Episode 1</button></div>' : '') +
         '</div></div></div>';
     }
 
-    var statusColors = {'Draft':['rgba(160,174,192,.15)','#A0AEC0'],'Review':['rgba(193,177,213,.15)','var(--lavender)'],'Scheduled':['rgba(212,175,55,.15)','var(--gold)'],'Published':['rgba(72,187,120,.15)','var(--green)']};
-    var typeLabels = {'teaser':'Teaser','key_insight':'Key Insight','recap':'Recap'};
-
-    // Group by episode
-    var byEp = {};
-    PODCAST_LINKEDIN.forEach(function(p) {
-      if (!byEp[p.episodeId]) byEp[p.episodeId] = [];
-      byEp[p.episodeId].push(p);
-    });
-
-    var html = '<div class="pod-tab-pane" id="pod-linkedin">';
-    html += '<div class="card"><div class="card-head"><span class="card-title">LinkedIn Pipeline</span>' +
-      '<a href="https://www.notion.so/fermat-commerce/394ee9dbdc924a869ad53020104c1a13" target="_blank" style="font-size:10px;color:var(--gold)">Content Calendar &#8599;</a></div>';
-    html += '<div class="card-body" style="padding:10px 14px">';
-
-    Object.keys(byEp).forEach(function(epId) {
-      var ep = PODCAST_EPISODES.find(function(e){return e.id===epId;});
-      var epTitle = ep ? ep.title : epId;
-      html += '<div style="margin-bottom:12px"><div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid var(--border)">' + epTitle + '</div>';
-      byEp[epId].forEach(function(post) {
-        var sc = statusColors[post.status] || statusColors['Draft'];
-        html += '<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)">' +
-          '<span style="font-size:10px;padding:2px 6px;border-radius:4px;background:' + sc[0] + ';color:' + sc[1] + ';font-weight:700">' + (typeLabels[post.type]||post.type) + '</span>' +
-          '<span style="flex:1;font-size:11px;color:var(--text-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + (post.text||'--') + '</span>' +
-          '<span style="font-size:10px;padding:2px 6px;border-radius:4px;background:' + sc[0] + ';color:' + sc[1] + ';font-weight:700">' + post.status + '</span>' +
-          (post.scheduledDate ? '<span style="font-size:10px;color:var(--text-muted)">' + post.scheduledDate + '</span>' : '') +
-          (post.publishedUrl ? '<a href="' + post.publishedUrl + '" target="_blank" style="font-size:10px;color:var(--gold)">View &#8599;</a>' : '') +
-          '</div>';
+    // Overall stats
+    var totalChannels = 0, publishedCount = 0, inProgressCount = 0;
+    PODCAST_DISTRIBUTION.forEach(function(ep) {
+      ep.channels.forEach(function(ch) {
+        totalChannels++;
+        if (ch.status === 'Published') publishedCount++;
+        else if (ch.status !== 'Not Started') inProgressCount++;
       });
-      html += '</div>';
     });
 
-    html += '</div></div></div>';
+    var html = '<div class="pod-tab-pane" id="pod-distribution">';
+
+    // Stats bar
+    html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px">' +
+      '<div class="card" style="padding:8px 12px;border-left:3px solid var(--lavender)">' +
+        '<div style="font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);font-weight:700">Total Channels</div>' +
+        '<div style="font-size:18px;font-weight:800;color:var(--lavender);margin-top:2px">'+totalChannels+'</div>' +
+      '</div>' +
+      '<div class="card" style="padding:8px 12px;border-left:3px solid var(--green)">' +
+        '<div style="font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);font-weight:700">Published</div>' +
+        '<div style="font-size:18px;font-weight:800;color:var(--green);margin-top:2px">'+publishedCount+'</div>' +
+      '</div>' +
+      '<div class="card" style="padding:8px 12px;border-left:3px solid #4299E1">' +
+        '<div style="font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);font-weight:700">In Progress</div>' +
+        '<div style="font-size:18px;font-weight:800;color:#4299E1;margin-top:2px">'+inProgressCount+'</div>' +
+      '</div>' +
+    '</div>';
+
+    // Per-episode distribution
+    PODCAST_DISTRIBUTION.forEach(function(epDist) {
+      var doneCount = epDist.channels.filter(function(c){return c.status==='Published';}).length;
+      var total = epDist.channels.length;
+      var pct = total ? Math.round(doneCount/total*100) : 0;
+
+      html += '<div class="card" style="margin-bottom:12px"><div class="card-head">' +
+        '<span class="card-title">'+epDist.episodeTitle+'</span>' +
+        '<span style="font-size:11px;color:var(--text-muted)">'+doneCount+'/'+total+' channels done</span>' +
+      '</div>';
+
+      // Progress bar
+      html += '<div style="padding:0 14px 10px 14px">' +
+        '<div style="height:6px;background:var(--bg-card);border-radius:3px;overflow:hidden">' +
+          '<div style="height:100%;width:'+pct+'%;background:'+(pct>=75?'var(--green)':pct>=25?'#4299E1':'var(--text-muted)')+';border-radius:3px;transition:width .3s"></div>' +
+        '</div>' +
+      '</div>';
+
+      // Channel cards grid
+      html += '<div class="card-body" style="padding:10px 14px">' +
+        '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px">';
+
+      epDist.channels.forEach(function(ch) {
+        var sc = statusColors[ch.status] || statusColors['Not Started'];
+        var icon = channelIcons[ch.channel] || '&#128196;';
+
+        html += '<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:10px 12px;border-left:3px solid '+sc[1]+'">' +
+          '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">' +
+            '<span style="font-size:12px;font-weight:700;color:var(--text)">'+icon+' '+ch.channel+'</span>' +
+            podOwnerBadge(ch.owner) +
+          '</div>' +
+          '<div style="font-size:11px;color:var(--text-dim);margin-bottom:8px">'+ch.type+'</div>' +
+          '<select onchange="updateDistributionStatus(\''+ch.id+'\',this.value)" style="width:100%;padding:4px 6px;font-size:10px;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:4px;cursor:pointer">';
+
+        statuses.forEach(function(s) {
+          html += '<option value="'+s+'"'+(ch.status===s?' selected':'')+'>'+s+'</option>';
+        });
+
+        html += '</select>';
+
+        // Show scheduled date or published URL if present
+        if (ch.scheduledDate) {
+          html += '<div style="font-size:9px;color:var(--text-muted);margin-top:4px">Scheduled: '+ch.scheduledDate+'</div>';
+        }
+        if (ch.publishedUrl) {
+          html += '<div style="margin-top:4px"><a href="'+ch.publishedUrl+'" target="_blank" style="font-size:9px;color:var(--gold);text-decoration:none">View published &#8599;</a></div>';
+        }
+
+        html += '</div>';
+      });
+
+      html += '</div></div></div>';
+    });
+
+    html += '</div>';
     return html;
+  }
+
+  function updateDistributionStatus(channelId, status) {
+    fetch('/api/podcast/content-distribution/' + channelId, {
+      method: 'PATCH',
+      headers: {'Content-Type':'application/json'},
+      credentials: 'include',
+      body: JSON.stringify({ status: status })
+    }).then(function(r){return r.json();}).then(function(d){
+      if(d.ok) console.log('[Distribution] Updated:', channelId, status);
+    });
+  }
+
+  function generateDistribution(episodeId) {
+    fetch('/api/podcast/content-distribution/generate', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      credentials: 'include',
+      body: JSON.stringify({ episodeId: episodeId })
+    }).then(function(r){return r.json();}).then(function(d){
+      if(d.ok) renderPodcastPage();
+    });
   }
 
   function updatePodEpProgress(epId) {

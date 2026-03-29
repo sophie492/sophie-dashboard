@@ -158,26 +158,67 @@ module.exports = function createPodcastRouter(notion) {
     }
   });
 
-  // ── GET /linkedin ──
-  router.get('/linkedin', (req, res) => {
+  // ── Content Distribution ──
+  router.get('/content-distribution', (req, res) => {
     const data = loadData();
-    res.json(data.linkedinPosts || []);
+    res.json(data.contentDistribution || []);
   });
 
-  // ── PATCH /linkedin/:id ──
-  router.patch('/linkedin/:id', (req, res) => {
+  router.patch('/content-distribution/:channelId', (req, res) => {
     try {
+      const { status, notes, publishedUrl, scheduledDate } = req.body;
       const data = loadData();
-      const posts = data.linkedinPosts || [];
-      const post = posts.find(p => p.id === req.params.id);
-      if (!post) return res.status(404).json({ error: 'Post not found' });
-      Object.assign(post, req.body);
-      data.lastSynced = new Date().toISOString();
+      const dist = data.contentDistribution || [];
+      for (const ep of dist) {
+        const ch = ep.channels.find(c => c.id === req.params.channelId);
+        if (ch) {
+          if (status) ch.status = status;
+          if (notes !== undefined) ch.notes = notes;
+          if (publishedUrl !== undefined) ch.publishedUrl = publishedUrl;
+          if (scheduledDate !== undefined) ch.scheduledDate = scheduledDate;
+          saveData(data);
+          return res.json({ ok: true });
+        }
+      }
+      res.status(404).json({ error: 'Channel not found' });
+    } catch (e) {
+      res.status(500).json({ error: e.message });
+    }
+  });
+
+  // Auto-generate distribution matrix for a new episode
+  router.post('/content-distribution/generate', (req, res) => {
+    try {
+      const { episodeId } = req.body;
+      const data = loadData();
+      const ep = data.episodes.find(e => e.id === episodeId);
+      if (!ep) return res.status(404).json({ error: 'Episode not found' });
+
+      // Check if already exists
+      if (!data.contentDistribution) data.contentDistribution = [];
+      if (data.contentDistribution.find(d => d.episodeId === episodeId)) {
+        return res.json({ ok: true, message: 'Already exists' });
+      }
+
+      const prefix = episodeId + '-';
+      data.contentDistribution.push({
+        episodeId,
+        episodeTitle: ep.title,
+        channels: [
+          {id:prefix+'li-teaser',channel:'LinkedIn',type:'Teaser post',status:'Not Started',owner:'Jennifer',scheduledDate:null,publishedUrl:null,notes:''},
+          {id:prefix+'li-insight',channel:'LinkedIn',type:'Key insight post',status:'Not Started',owner:'Jennifer',scheduledDate:null,publishedUrl:null,notes:''},
+          {id:prefix+'li-recap',channel:'LinkedIn',type:'Recap post',status:'Not Started',owner:'Jennifer',scheduledDate:null,publishedUrl:null,notes:''},
+          {id:prefix+'email',channel:'Email',type:'Episode announcement',status:'Not Started',owner:'Sophie',scheduledDate:null,publishedUrl:null,notes:''},
+          {id:prefix+'slack',channel:'Slack',type:'Internal share',status:'Not Started',owner:'Sophie',scheduledDate:null,publishedUrl:null,notes:''},
+          {id:prefix+'blog',channel:'Blog',type:'Blog post',status:'Not Started',owner:'Sophie',scheduledDate:null,publishedUrl:null,notes:''},
+          {id:prefix+'social',channel:'Social Pilot',type:'3-5 clips',status:'Not Started',owner:'Jennifer',scheduledDate:null,publishedUrl:null,notes:''},
+          {id:prefix+'ads',channel:'Google Ads',type:'Retargeting ad',status:'Not Started',owner:'Jennifer',scheduledDate:null,publishedUrl:null,notes:''}
+        ]
+      });
       saveData(data);
       res.json({ ok: true });
     } catch (e) {
-      console.error('Error updating linkedin post:', e);
-      res.status(500).json({ error: 'Failed to update' });
+      res.status(500).json({ error: e.message });
     }
   });
 

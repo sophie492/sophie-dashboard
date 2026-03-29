@@ -121,6 +121,21 @@
   "reviews": [
     {"id":"r1","meeting":"April 2026 Review","date":"2026-04-30","status":"Upcoming","episodesPublished":0,"episodesRecorded":0,"guestPipeline":"Confirmed: 0 | In Conversation: 0 | Sent: 0 | Drafting: 0 | Not Started: 22","launchPrep":"Done: 1/25 | In Progress: 0 | Waiting: 1 | Not Started: 23","keyWins":"Podcast pipeline automation fully built. 6 automations running.","issues":"Podcast name not finalized. Editor intro pending from Jack.","actionItems":"","notionLink":"https://www.notion.so/fermat-commerce/3301ad76fd2a81e59f36d1d260f2441e"}
   ],
-  "linkedinPosts": [],
+  "contentDistribution": [
+    {
+      "episodeId": "ep1",
+      "episodeTitle": "TBD (Awaiting Rishabh's Selection)",
+      "channels": [
+        {"id":"cd1","channel":"LinkedIn","type":"Teaser post","status":"Not Started","owner":"Jennifer","scheduledDate":null,"publishedUrl":null,"notes":""},
+        {"id":"cd2","channel":"LinkedIn","type":"Key insight post","status":"Not Started","owner":"Jennifer","scheduledDate":null,"publishedUrl":null,"notes":""},
+        {"id":"cd3","channel":"LinkedIn","type":"Recap post","status":"Not Started","owner":"Jennifer","scheduledDate":null,"publishedUrl":null,"notes":""},
+        {"id":"cd4","channel":"Email","type":"Episode announcement","status":"Not Started","owner":"Sophie","scheduledDate":null,"publishedUrl":null,"notes":""},
+        {"id":"cd5","channel":"Slack","type":"Internal share","status":"Not Started","owner":"Sophie","scheduledDate":null,"publishedUrl":null,"notes":""},
+        {"id":"cd6","channel":"Blog","type":"Blog post","status":"Not Started","owner":"Sophie","scheduledDate":null,"publishedUrl":null,"notes":""},
+        {"id":"cd7","channel":"Social Pilot","type":"3-5 clips","status":"Not Started","owner":"Jennifer","scheduledDate":null,"publishedUrl":null,"notes":""},
+        {"id":"cd8","channel":"Google Ads","type":"Retargeting ad","status":"Not Started","owner":"Jennifer","scheduledDate":null,"publishedUrl":null,"notes":""}
+      ]
+    }
+  ],
   "lastSynced": "2026-03-27T00:00:00.000Z"
 }
