@@ -1688,8 +1688,8 @@ function applyPersistedState() {
 // SIDEBAR + NAVIGATION
 // ============================================================
 function renderSidebar(){
-  const rishabhUrgent=getPersonActionItems('Rishabh').filter(i=>i.priority==='red').length;
-  const shreyasItems=getPersonActionItems('Shreyas').length;
+  const rishabhPrios=(CEO_BRIEF.priorities||[]).length;
+  const shreyasPrios=(CEO_BRIEF.shreyasPriorities||[]).length;
   const openTasks=(DATA.myTasks||[]).filter(t=>!t.done).length;
   const broken=(DATA.tasks||[]).filter(t=>t.status!=='ok'&&t.status!=='off').length;
   const offsiteTotal=DATA.leadershipOffsite?DATA.leadershipOffsite.phases.reduce((s,p)=>s+p.tasks.length,0):0;
@@ -1718,8 +1718,8 @@ function renderSidebar(){
   document.getElementById('sidebar-nav').innerHTML=`
     <div class="sidebar-item active" data-page="overview"><span class="si-icon">&#127968;</span><span class="si-label">Overview</span></div>
     <div class="sidebar-group">People</div>
-    <div class="sidebar-item" data-page="rishabh"><span class="si-dot lavender"></span><span class="si-label">Rishabh</span>${rishabhUrgent>0?`<span class="si-badge red">${rishabhUrgent}</span>`:''}</div>
-    <div class="sidebar-item" data-page="shreyas"><span class="si-dot gold"></span><span class="si-label">Shreyas</span>${shreyasItems>0?`<span class="si-badge gold">${shreyasItems}</span>`:''}</div>
+    <div class="sidebar-item" data-page="rishabh"><span class="si-dot lavender"></span><span class="si-label">Rishabh</span>${rishabhPrios>0?`<span class="si-badge gold">${rishabhPrios}</span>`:''}</div>
+    <div class="sidebar-item" data-page="shreyas"><span class="si-dot gold"></span><span class="si-label">Shreyas</span>${shreyasPrios>0?`<span class="si-badge gold">${shreyasPrios}</span>`:''}</div>
     <div class="sidebar-group">My Work</div>
     <div class="sidebar-item" data-page="tasks"><span class="si-icon">&#128142;</span><span class="si-label">Tasks</span><span class="si-badge gold">${openTasks}</span></div>
     <div class="sidebar-item" data-page="podcast"><span class="si-icon">&#127908;</span><span class="si-label">Podcast</span></div>
@@ -2170,19 +2170,20 @@ function renderPersonPage(person){
 
   const cls=key==='rishabh'?'rishabh':'shreyas';
   const dotColor=key==='rishabh'?'var(--lavender)':'var(--gold)';
-  const items=getPersonActionItems(person);
-  const waiting=getPersonWaitingOn(person);
-  const urgentCount=items.filter(i=>i.priority==='red').length;
+  const prioData=key==='rishabh'?CEO_BRIEF.priorities:CEO_BRIEF.shreyasPriorities;
+  const prioCount=(prioData||[]).length;
+  const calDays=DATA.calendarDays||[];
+  const todayStr=new Date(new Date().toLocaleString('en-US',{timeZone:'America/Los_Angeles'})).toISOString().slice(0,10);
+  const todayCal=calDays.find(d=>d.date>=todayStr)||calDays[0];
+  const mtgCount=todayCal?((todayCal[key]||[]).length):0;
 
   let html=`
     <div class="page-header">
       <div class="page-title"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${dotColor};margin-right:8px"></span>${person}</div>
       <div class="page-kpis">
-        <div class="kpi red"><div class="num">${urgentCount}</div><div class="lbl">Urgent</div></div>
+        <div class="kpi gold"><div class="num">${prioCount}</div><div class="lbl">Priorities</div></div>
         <div class="kpi-divider"></div>
-        <div class="kpi gold"><div class="num">${items.length}</div><div class="lbl">Items</div></div>
-        <div class="kpi-divider"></div>
-        <div class="kpi blue"><div class="num">${waiting.length}</div><div class="lbl">Waiting</div></div>
+        <div class="kpi blue"><div class="num">${mtgCount}</div><div class="lbl">Meetings Today</div></div>
       </div>
     </div>
   `;
