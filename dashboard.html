@@ -1724,9 +1724,22 @@ function applyPersistedState() {
     }
   });
 
-  // 4. Apply offsite task done-states
+  // 4. Apply offsite task done-states (offsite-ID-specific keys)
   if (DATA.leadershipOffsite) {
-    const offsiteDone = new Set(loadOffsiteDone());
+    // Use the active offsite ID or default to 2026-Q2 for the overview card
+    const offsiteIdForState = _activeOffsiteId || '2026-Q2';
+    const offsiteStorageKey = 'sophie-dash-offsite-done-' + offsiteIdForState;
+    let offsiteDoneArr = [];
+    try { offsiteDoneArr = JSON.parse(localStorage.getItem(offsiteStorageKey)) || []; } catch(e) {}
+    // Also migrate legacy keys (one-time): if old global key has data but new key doesn't, copy to 2026-Q2
+    if (offsiteDoneArr.length === 0) {
+      const legacyDone = loadOffsiteDone();
+      if (legacyDone.length > 0 && offsiteIdForState === '2026-Q2') {
+        offsiteDoneArr = legacyDone;
+        try { localStorage.setItem(offsiteStorageKey, JSON.stringify(offsiteDoneArr)); } catch(e) {}
+      }
+    }
+    const offsiteDone = new Set(offsiteDoneArr);
     DATA.leadershipOffsite.phases.forEach((p, pi) => {
       p.tasks.forEach((t, ti) => {
         const key = pi + '-' + ti;
@@ -2970,6 +2983,17 @@ function renderNewsPage(){
     </div>`;
 }
 
+// -- Events: Update field to server + Notion --
+function updateEventField(eventId, field, value) {
+  fetch('/api/events/update', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json', 'Authorization':'Bearer sophie-dashboard-secret-change-me'},
+    body: JSON.stringify({ eventId, field, value })
+  }).then(r=>r.json()).then(d=>{
+    if(d.ok) console.log('[Events] Updated:', eventId, field);
+  }).catch(e=>console.error('[Events] Update failed:', e.message));
+}
+
 // -- Events Page --
 function renderEventPane(ev) {
   const isPast = new Date(ev.startDate) < new Date();
@@ -2981,19 +3005,23 @@ function renderEventPane(ev) {
       <!-- Left: Event details -->
       <div class="card">
         <div class="card-head">
-          <div class="card-title">${ev.name}</div>
+          <div class="card-title"><span contenteditable="true" class="ev-editable-inline" data-event-id="${ev.id}" data-field="name" style="outline:none;border-bottom:1px dashed transparent;min-width:80px;display:inline-block" onfocus="this.style.borderBottomColor='var(--gold)'" onblur="this.style.borderBottomColor='transparent';if(this.textContent.trim()!=='${ev.name.replace(/'/g,"\\'")}')updateEventField('${ev.id}','name',this.textContent.trim())">${ev.name}</span></div>
           <div class="card-badges">
             <span class="badge ${isPast ? 'tag-gray' : 'tag-green'}">${isPast ? 'Past' : ev.startDate}</span>
-            <span class="badge tag-accent">${ev.status}</span>
+            <select class="ev-status-select" data-event-id="${ev.id}" style="font-size:10px;padding:2px 6px;border-radius:4px;border:1px solid var(--border);background:var(--surface);color:var(--text);cursor:pointer;font-weight:600" onchange="updateEventField('${ev.id}','status',this.value)">
+              <option value="Planned"${ev.status==='Planned'?' selected':''}>Planned</option>
+              <option value="In Progress"${ev.status==='In Progress'?' selected':''}>In Progress</option>
+              <option value="Complete"${ev.status==='Complete'?' selected':''}>Complete</option>
+            </select>
             ${ev.calendarLink ? `<a href="${ev.calendarLink}" target="_blank" style="font-size:10px;color:var(--gold)">&#128197; Cal &#8599;</a>` : ''}
             ${ev.notionLink ? `<a href="${ev.notionLink}" target="_blank" style="font-size:10px;color:var(--accent)">Notion &#8599;</a>` : ''}
           </div>
         </div>
         <div class="card-body">
           <div class="mkt-detail">
-            <div class="mkt-stat"><span class="ms-l">&#128197; Dates</span><span class="ms-v">${ev.dates}</span></div>
-            <div class="mkt-stat"><span class="ms-l">&#128205; Location</span><span class="ms-v">${ev.location}</span></div>
-            <div class="mkt-stat"><span class="ms-l">&#127970; Venue</span><span class="ms-v">${ev.venue}</span></div>
+            <div class="mkt-stat"><span class="ms-l">&#128197; Dates</span><span class="ms-v"><input type="text" value="${(ev.dates||'').replace(/"/g,'&quot;')}" class="ev-edit-input" data-event-id="${ev.id}" data-field="dates" onblur="updateEventField('${ev.id}','dates',this.value)" style="background:transparent;border:none;border-bottom:1px dashed var(--border);color:var(--text);font-size:inherit;font-family:inherit;width:100%;padding:0" onfocus="this.style.borderBottomColor='var(--gold)'" /></span></div>
+            <div class="mkt-stat"><span class="ms-l">&#128205; Location</span><span class="ms-v"><input type="text" value="${(ev.location||'').replace(/"/g,'&quot;')}" class="ev-edit-input" data-event-id="${ev.id}" data-field="location" onblur="updateEventField('${ev.id}','location',this.value)" style="background:transparent;border:none;border-bottom:1px dashed var(--border);color:var(--text);font-size:inherit;font-family:inherit;width:100%;padding:0" onfocus="this.style.borderBottomColor='var(--gold)'" /></span></div>
+            <div class="mkt-stat"><span class="ms-l">&#127970; Venue</span><span class="ms-v"><input type="text" value="${(ev.venue||'').replace(/"/g,'&quot;')}" class="ev-edit-input" data-event-id="${ev.id}" data-field="venue" onblur="updateEventField('${ev.id}','venue',this.value)" style="background:transparent;border:none;border-bottom:1px dashed var(--border);color:var(--text);font-size:inherit;font-family:inherit;width:100%;padding:0" onfocus="this.style.borderBottomColor='var(--gold)'" /></span></div>
             <div class="mkt-stat"><span class="ms-l">&#127991; Type</span><span class="ms-v">${ev.type}</span></div>
             ${ev.details.attendees ? `<div class="mkt-stat"><span class="ms-l">&#128101; Attendees</span><span class="ms-v">${ev.details.attendees}</span></div>` : ''}
             ${ev.details.sponsorLevel ? `<div class="mkt-stat"><span class="ms-l">&#128176; Sponsorship</span><span class="ms-v">${ev.details.sponsorLevel}</span></div>` : ''}
@@ -3004,7 +3032,7 @@ function renderEventPane(ev) {
           </div>
           <div style="margin-top:12px">
             <div class="mkt-label">Description</div>
-            <div style="font-size:12px;color:var(--text-dim);line-height:1.6">${ev.description}</div>
+            <div contenteditable="true" class="ev-editable-desc" data-event-id="${ev.id}" data-field="description" style="font-size:12px;color:var(--text-dim);line-height:1.6;outline:none;border:1px dashed transparent;border-radius:4px;padding:4px;min-height:40px" onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='transparent';updateEventField('${ev.id}','description',this.textContent.trim())">${ev.description}</div>
           </div>
           ${ev.targets ? `
             <div style="margin-top:12px">
@@ -3042,10 +3070,10 @@ function renderEventPane(ev) {
           </div>
           <div class="card-body">
             <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px">
-              ${ev.rishabh ? '<span class="exec-badge rishabh"><span class="exec-dot rishabh"></span> Rishabh</span>' : ''}
-              ${ev.shreyas ? '<span class="exec-badge shreyas"><span class="exec-dot shreyas"></span> Shreyas</span>' : ''}
+              <span class="exec-badge rishabh" style="cursor:pointer;opacity:${ev.rishabh?'1':'0.35'}" onclick="this.dataset.on=this.dataset.on==='true'?'false':'true';this.style.opacity=this.dataset.on==='true'?'1':'0.35';updateEventField('${ev.id}','rishabh',this.dataset.on==='true')" data-on="${ev.rishabh?'true':'false'}"><span class="exec-dot rishabh"></span> Rishabh</span>
+              <span class="exec-badge shreyas" style="cursor:pointer;opacity:${ev.shreyas?'1':'0.35'}" onclick="this.dataset.on=this.dataset.on==='true'?'false':'true';this.style.opacity=this.dataset.on==='true'?'1':'0.35';updateEventField('${ev.id}','shreyas',this.dataset.on==='true')" data-on="${ev.shreyas?'true':'false'}"><span class="exec-dot shreyas"></span> Shreyas</span>
               ${ev.team.map(t => `<span class="exec-badge team">${t}</span>`).join('')}
-              ${!ev.rishabh && !ev.shreyas && ev.team.length === 0 ? '<span style="font-size:12px;color:var(--text-muted)">TBD  -  no attendees confirmed</span>' : ''}
+              <span contenteditable="true" class="exec-badge team" style="outline:none;border:1px dashed var(--border);min-width:60px;font-size:10px;cursor:text" data-event-id="${ev.id}" placeholder="+ member" onblur="if(this.textContent.trim()){updateEventField('${ev.id}','addTeamMember',this.textContent.trim());this.textContent=''}">+ add</span>
             </div>
             ${!ev.rishabh && !ev.shreyas ? `
               <div style="font-size:11px;padding:8px 10px;border-radius:6px;background:var(--surface);border:1px solid var(--border);color:var(--text-muted)">
@@ -3143,8 +3171,29 @@ function updateTodoProgress(evId) {
   }
 }
 
-function renderEventsPage(){
+async function renderEventsPage(){
   const el=document.getElementById('page-events');
+
+  // Load event overrides from server and merge
+  let eventOverrides = {};
+  try {
+    const ovRes = await fetch('/api/events/overrides');
+    eventOverrides = await ovRes.json();
+  } catch(e) {}
+  MKT_EVENTS.forEach(ev => {
+    if (eventOverrides[ev.id]) {
+      const ov = eventOverrides[ev.id];
+      if (ov.name !== undefined) ev.name = ov.name;
+      if (ov.dates !== undefined) ev.dates = ov.dates;
+      if (ov.location !== undefined) ev.location = ov.location;
+      if (ov.venue !== undefined) ev.venue = ov.venue;
+      if (ov.status !== undefined) ev.status = ov.status;
+      if (ov.description !== undefined) ev.description = ov.description;
+      if (ov.rishabh !== undefined) ev.rishabh = ov.rishabh === true || ov.rishabh === 'true';
+      if (ov.shreyas !== undefined) ev.shreyas = ov.shreyas === true || ov.shreyas === 'true';
+      if (ov.addTeamMember !== undefined && !ev.team.includes(ov.addTeamMember)) ev.team.push(ov.addTeamMember);
+    }
+  });
 
   const todayISO = new Date().toISOString().slice(0,10);
   const sixMonthsOut = new Date(); sixMonthsOut.setMonth(sixMonthsOut.getMonth() + 6);
@@ -3593,11 +3642,16 @@ function toggleOffsitePhase(head) {
 function toggleOffsiteTask(el) {
   const pi = parseInt(el.dataset.phase);
   const ti = parseInt(el.dataset.task);
+  // Determine which offsite ID context we're in (standalone page vs overview card)
+  const offsiteId = _activeOffsiteId || '2026-Q2';
   const task = DATA.leadershipOffsite.phases[pi].tasks[ti];
   task.done = !task.done;
   const isChecked = task.done;
 
-  const doneKeys = loadOffsiteDone();
+  // Use offsite-ID-specific localStorage keys to avoid cross-offsite contamination
+  const storageKey = 'sophie-dash-offsite-done-' + offsiteId;
+  let doneKeys = [];
+  try { doneKeys = JSON.parse(localStorage.getItem(storageKey)) || []; } catch(e) { doneKeys = []; }
   const key = pi + '-' + ti;
   if(isChecked) {
     if(!doneKeys.includes(key)) doneKeys.push(key);
@@ -3605,8 +3659,8 @@ function toggleOffsiteTask(el) {
     const idx = doneKeys.indexOf(key);
     if(idx >= 0) doneKeys.splice(idx, 1);
   }
-  saveOffsiteDone(doneKeys);
-  syncCheckbox('offsite-'+pi+'-'+ti, isChecked, DATA.leadershipOffsite?.notionPageId, task.text);
+  try { localStorage.setItem(storageKey, JSON.stringify(doneKeys)); } catch(e) {}
+  syncCheckbox('offsite-'+offsiteId+'-'+pi+'-'+ti, isChecked, DATA.leadershipOffsite?.notionPageId, task.text);
 
   const cb = el.querySelector('.task-checkbox');
   const textSpan = el.querySelector('span:last-child');
@@ -5624,11 +5678,12 @@ async function loadServerCheckboxStates() {
     const res = await fetch('/api/checkbox-states');
     if (!res.ok) return;
     const states = await res.json();
-    // Apply to offsite tasks
+    // Apply to offsite tasks (check both legacy and offsite-ID-specific keys)
     if (DATA.leadershipOffsite) {
+      const offsiteIdForServer = _activeOffsiteId || '2026-Q2';
       DATA.leadershipOffsite.phases.forEach((p, pi) => {
         p.tasks.forEach((t, ti) => {
-          const s = states['offsite-' + pi + '-' + ti];
+          const s = states['offsite-' + offsiteIdForServer + '-' + pi + '-' + ti] || states['offsite-' + pi + '-' + ti];
           if (s) t.done = s.checked;
         });
       });

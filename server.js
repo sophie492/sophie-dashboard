@@ -939,6 +939,48 @@ app.post('/api/events/sync', async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
+// ── Event Field Overrides ──
+const EVENTS_OVERRIDES_PATH = path.join(__dirname, 'data', 'event-overrides.json');
+
+app.post('/api/events/update', async (req, res) => {
+  const authHeader = req.headers.authorization || '';
+  const token = authHeader.replace('Bearer ', '');
+  if (token !== (process.env.DASHBOARD_API_KEY || 'sophie-dashboard-secret-change-me')) {
+    return res.status(401).json({ error: 'Invalid API key' });
+  }
+  try {
+    const { eventId, field, value } = req.body;
+    const overrides = fs.existsSync(EVENTS_OVERRIDES_PATH) ? JSON.parse(fs.readFileSync(EVENTS_OVERRIDES_PATH, 'utf8')) : {};
+    if (!overrides[eventId]) overrides[eventId] = {};
+    overrides[eventId][field] = value;
+    overrides[eventId].lastUpdated = new Date().toISOString();
+    fs.writeFileSync(EVENTS_OVERRIDES_PATH, JSON.stringify(overrides, null, 2));
+
+    // Sync to Notion (fire-and-forget)
+    if (notion) {
+      try {
+        const MKT_HUB = '3321ad76fd2a8112acffe43f5f00d187';
+        await notion.pages.create({
+          parent: { page_id: MKT_HUB },
+          properties: { title: [{ text: { content: 'Event Update: ' + eventId + ' — ' + field + ': ' + JSON.stringify(value).slice(0,100) } }] }
+        });
+      } catch(e) { console.warn('[Events] Notion sync failed:', e.message); }
+    }
+
+    res.json({ ok: true });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get('/api/events/overrides', (req, res) => {
+  try {
+    if (fs.existsSync(EVENTS_OVERRIDES_PATH)) {
+      res.json(JSON.parse(fs.readFileSync(EVENTS_OVERRIDES_PATH, 'utf8')));
+    } else {
+      res.json({});
+    }
+  } catch(e) { res.json({}); }
+});
+
 // ── CEO Brief Data Storage ──
 const BRIEF_PATH = path.join(__dirname, 'data', 'ceo-brief.json');
 
