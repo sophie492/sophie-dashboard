@@ -5367,7 +5367,7 @@ async function fetchLivePulse(){
 }
 
 function fetchLiveCalendar(){
-  fetch('/api/calendar?days=14')
+  return fetch('/api/calendar?days=14')
   .then(r=>r.ok?r.json():null)
   .then(data=>{
     if(!data||!Array.isArray(data.calendarDays)||data.calendarDays.length===0)return;
@@ -6463,6 +6463,7 @@ async function renderMarketingHubPage(){
     mkt={config:{},standups:[],campaigns:[],reviews:[]};
   }
   var config=mkt.config||{};
+  var ownerIcons={'Saunder':'&#128640;','Jennifer':'&#9999;&#65039;','Maya':'&#127881;'};
   var standups=mkt.standups||[];
   var campaigns=mkt.campaigns||[];
   var reviews=mkt.reviews||[];
