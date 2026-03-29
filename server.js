@@ -383,19 +383,42 @@ app.post('/api/notion/toggle-todo', async (req, res) => {
   }
 });
 
-// ── Leadership Offsite API ──
+// ── Leadership Offsite API (Multi-Quarter) ──
 const OFFSITE_PATH = path.join(__dirname, 'data', 'offsite-data.json');
+
+function loadOffsiteData() {
+  try { return fs.existsSync(OFFSITE_PATH) ? JSON.parse(fs.readFileSync(OFFSITE_PATH, 'utf8')) : { offsites: {} }; }
+  catch(e) { return { offsites: {} }; }
+}
 
 app.get('/api/offsite', (req, res) => {
   try {
-    if (fs.existsSync(OFFSITE_PATH)) {
-      const data = JSON.parse(fs.readFileSync(OFFSITE_PATH, 'utf8'));
-      data.config.daysUntil = Math.ceil((new Date('2026-04-20') - new Date()) / 86400000);
-      res.json(data);
-    } else {
-      res.json({ config: {}, attendees: [], agenda: [], logistics: {}, themes: [], reviews: [] });
+    const data = loadOffsiteData();
+    // Add computed daysUntil for each non-complete offsite
+    Object.values(data.offsites).forEach(year => {
+      year.forEach(o => {
+        if (o.dates && o.dates !== 'TBD' && o.status !== 'Complete') {
+          const match = o.dates.match(/(\w+ \d+)/);
+          if (match) {
+            const target = new Date(o.year + '-' + o.dates);
+            o.daysUntil = Math.ceil((new Date(o.dates.includes('202') ? o.dates : o.year+' '+o.dates) - new Date()) / 86400000);
+          }
+        }
+      });
+    });
+    res.json(data);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get('/api/offsite/:id', (req, res) => {
+  try {
+    const data = loadOffsiteData();
+    for (const year of Object.values(data.offsites)) {
+      const offsite = year.find(o => o.id === req.params.id);
+      if (offsite) return res.json(offsite);
     }
-  } catch (e) { res.status(500).json({ error: e.message }); }
+    res.status(404).json({ error: 'Offsite not found' });
+  } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
 app.post('/api/offsite', (req, res) => {
@@ -410,6 +433,76 @@ app.post('/api/offsite', (req, res) => {
     fs.writeFileSync(OFFSITE_PATH, JSON.stringify({ ...req.body, lastSynced: new Date().toISOString() }, null, 2));
     res.json({ ok: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/offsite/create', async (req, res) => {
+  const authHeader = req.headers.authorization || '';
+  const token = authHeader.replace('Bearer ', '');
+  if (token !== (process.env.DASHBOARD_API_KEY || 'sophie-dashboard-secret-change-me')) {
+    return res.status(401).json({ error: 'Invalid API key' });
+  }
+  try {
+    const { quarter, year, city, dates } = req.body;
+    const data = loadOffsiteData();
+    const id = year + '-' + quarter;
+
+    // Check if already exists
+    if (!data.offsites[year]) data.offsites[year] = [];
+    const existing = data.offsites[year].find(o => o.id === id);
+    if (existing && existing.status !== 'Placeholder') {
+      return res.status(409).json({ error: 'Offsite already exists' });
+    }
+
+    const newOffsite = {
+      id,
+      quarter,
+      year: parseInt(year),
+      name: year + ' ' + quarter + ' Leadership Offsite',
+      dates: dates || 'TBD',
+      city: city || 'TBD',
+      status: dates && dates !== 'TBD' ? 'Planning' : 'Placeholder',
+      notionPageId: null,
+      attendees: JSON.parse(JSON.stringify(data.defaultRoster || [])),
+      phases: JSON.parse(JSON.stringify(data.template?.phases || [])),
+      logistics: { hotel: {confirmed:false}, venue: {confirmed:false}, dinner: {confirmed:false}, activity: {confirmed:false}, budget: {estimated:0, approved:false, committed:0, actual:0} },
+      themes: [],
+      lessonsLearned: data.template?.lessonsLearned || [],
+      reviews: []
+    };
+
+    if (existing) {
+      const idx = data.offsites[year].findIndex(o => o.id === id);
+      data.offsites[year][idx] = newOffsite;
+    } else {
+      data.offsites[year].push(newOffsite);
+      data.offsites[year].sort((a,b) => a.quarter.localeCompare(b.quarter));
+    }
+
+    data.lastSynced = new Date().toISOString();
+    fs.writeFileSync(OFFSITE_PATH, JSON.stringify(data, null, 2));
+    res.json({ ok: true, offsite: newOffsite });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/offsite/:id', (req, res) => {
+  const authHeader = req.headers.authorization || '';
+  const token = authHeader.replace('Bearer ', '');
+  if (token !== (process.env.DASHBOARD_API_KEY || 'sophie-dashboard-secret-change-me')) {
+    return res.status(401).json({ error: 'Invalid API key' });
+  }
+  try {
+    const data = loadOffsiteData();
+    for (const yearArr of Object.values(data.offsites)) {
+      const idx = yearArr.findIndex(o => o.id === req.params.id);
+      if (idx >= 0) {
+        yearArr[idx] = { ...yearArr[idx], ...req.body };
+        data.lastSynced = new Date().toISOString();
+        fs.writeFileSync(OFFSITE_PATH, JSON.stringify(data, null, 2));
+        return res.json({ ok: true });
+      }
+    }
+    res.status(404).json({ error: 'Offsite not found' });
+  } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
 // ── BD Ownership API ──
