@@ -4226,9 +4226,8 @@ function renderOffsiteDetailView(el, OFFSITE, ALLDATA) {
     var confirmed = travelers.filter(function(a) { return a.hotelConfirmed && a.flightBooked; }).length;
     var locals = attendees.filter(function(a) { return a.needsHotel === false; }).length;
     function attendeeToggle(a, field) {
-      var isLocal = (a.needsHotel === false && (field === 'hotelConfirmed' || field === 'flightBooked')) ||
-                    (a.needsFlight === false && field === 'flightBooked');
-      if (isLocal) {
+      var isLocal = a.needsHotel === false || a.needsFlight === false;
+      if (isLocal && (field === 'hotelConfirmed' || field === 'flightBooked' || field === 'travelCardIssued')) {
         return '<span style="font-size:10px;color:var(--text-muted);font-style:italic">N/A</span>';
       }
       var val = a[field];

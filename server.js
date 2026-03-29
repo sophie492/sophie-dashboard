@@ -443,6 +443,7 @@ function computeTravelNeeds(offsite) {
       a.needsFlight = false;
       a.hotelConfirmed = true;
       a.flightBooked = true;
+      a.travelCardIssued = true;
       a.travelNotes = offsiteCity.charAt(0).toUpperCase() + offsiteCity.slice(1) + ' local — no travel needed';
     } else {
       a.needsHotel = true;
