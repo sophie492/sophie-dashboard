@@ -1,26 +1,184 @@
 {
   "config": {
     "name": "Hack Week #3",
-    "dates": "Week of June 8, 2026",
+    "dates": "Week of June 8, 2026 (tentative)",
     "targetDate": "2026-06-08",
     "notionHub": "https://www.notion.so/3291ad76fd2a81b8a66ff9d04b4a1bbe",
     "notionPageId": "3291ad76fd2a81b8a66ff9d04b4a1bbe",
     "slackChannel": "#hack-week-jun-2026",
-    "signupSheet": null
+    "signupSheet": null,
+    "previousHackWeeks": {
+      "jan2026Notion": "https://www.notion.so/2b01ad76fd2a81a39933d57ffed44277",
+      "june2025Notion": "https://www.notion.so/2071ad76fd2a80068a91c8b89c261580",
+      "jan2026Signup": "https://docs.google.com/spreadsheets/d/1qf2DWzf9852ARQFBnMxv1T5b5r_Zj73_VJyniG5HAv0/edit"
+    },
+    "cadence": "Every 6 months"
   },
   "teams": [],
   "schedule": {
-    "day1": {"theme": "Kick-off + Build", "events": []},
-    "day2": {"theme": "Build", "events": []},
-    "day3": {"theme": "Demo Day", "events": []},
-    "day4": {"theme": "Optimize + Ship", "events": []},
-    "day5": {"theme": "Ship + Happy Hour", "events": []}
+    "day1": {"theme": "Kick-off + Build", "events": ["Kick-off session (Bharat/Shreyas address both teams)", "Post opening message in #hack-week channel", "Confirm attendance", "Encourage progress updates", "Offer office hours", "Set up shared Spotify Jam playlist"]},
+    "day2": {"theme": "Build", "events": ["Teams building", "Progress updates in Slack", "Office hours continue"]},
+    "day3": {"theme": "Demo Day", "events": ["Run demo sessions per office (SF and BLR)", "Record all demos (Loom or live)", "Host team dinner after demos"]},
+    "day4": {"theme": "Optimize + Ship", "events": ["Post shipping guidance: (1) Productionize, (2) Support with PR reviews, (3) Record Loom once shipped", "Check in on productionization", "Help scope down to MVP if needed"]},
+    "day5": {"theme": "Ship + Happy Hour", "events": ["Ensure all Loom links added to spreadsheet", "Host end-of-week happy hour"]}
   },
+  "checklist": {
+    "phase1_earlyPlanning": {
+      "deadline": "6-8 weeks before (Late April 2026)",
+      "items": [
+        {"item": "Pick the dates — Avoid US and India holidays. Check holiday calendar, OOO schedules, BLR office holidays.", "done": false, "lesson": "Jan 2026: Holiday conflicts with MLK Day and BLR holiday caused last-minute schedule changes."},
+        {"item": "Decide on cross-office schedule — If BLR and SF need different start days, plan async but parallel schedule", "done": false},
+        {"item": "Confirm the daily structure — Recommended: Build (2 days), Demo (mid-week), Optimize/Ship (2 days)", "done": false},
+        {"item": "Get budget approved — Talk to Evelyn about prizes, travel, team dinners/happy hours, daily lunches, Ramp card limits", "done": false},
+        {"item": "Decide on prizes and categories — Past categories: Best Use of AI, Highest Customer Impact, Best Internal Tool / Most Useful DevTool. ~$1,000 per winning team.", "done": false},
+        {"item": "Confirm judges — Typically Shreyas, Rishabh, Bharat + leadership. Ensure available for demo day AND deliberation.", "done": false, "lesson": "Jan 2026: Both Bharat and Shreyas were absent for scheduled Town Hall announcement."},
+        {"item": "Assign a BLR logistics lead — Kunal or Sriram for coordination, Shiksha for logistics support", "done": false}
+      ]
+    },
+    "phase2_preEventSetup": {
+      "deadline": "4-5 weeks before (Mid May 2026)",
+      "items": {
+        "communications": [
+          {"item": "Create the #hack-week-[month-year] Slack channel", "done": false},
+          {"item": "Draft and send kick-off announcement in #dev and #general. Have Bharat post.", "done": false},
+          {"item": "Create team sign-up spreadsheet (Google Sheet)", "done": false},
+          {"item": "Send reminder nudges", "done": false},
+          {"item": "Draft Slack announcement templates", "done": false}
+        ],
+        "teamFormation": [
+          {"item": "Set team formation rules — Teams of 2-4, no solo projects, cross-functional (>50% cannot be from same eng team), PMs/Designers encouraged", "done": false},
+          {"item": "Set deadline for team/idea submission (~1 week before)", "done": false},
+          {"item": "Have Bharat/Shreyas review and approve all ideas (2-3 days between submission and lock date)", "done": false},
+          {"item": "Lock all teams and ideas (2-3 days before hack week)", "done": false}
+        ],
+        "logistics": [
+          {"item": "Arrange travel for remote employees", "done": false, "lesson": "Jan 2026: $400 flight budget and $1,400 hotel budget were too tight. Budget $550-600 for flights, $350/night for hotels in SF."},
+          {"item": "Coordinate BLR travel with Kunal/Sriram", "done": false},
+          {"item": "Arrange daily lunches for SF and BLR offices", "done": false},
+          {"item": "Plan social events — team dinner (mid-week after demos) and happy hour (end of week). Both offices.", "done": false},
+          {"item": "Set up late-night dinner policy — teams working past 6pm can expense dinner on Fermat", "done": false}
+        ],
+        "calendar": [
+          {"item": "Cancel all internal meetings for hack week", "done": false},
+          {"item": "Set up on-call schedule for customer-facing coverage", "done": false},
+          {"item": "Block calendars with hack week events", "done": false},
+          {"item": "Set up Loom recording workflow", "done": false}
+        ]
+      }
+    },
+    "phase3_weekOf": {
+      "items": [
+        {"item": "Host kick-off session", "done": false},
+        {"item": "Post opening message in #hack-week channel", "done": false},
+        {"item": "Confirm attendance", "done": false},
+        {"item": "Encourage daily updates", "done": false},
+        {"item": "Offer office hours (Bharat/Shreyas)", "done": false},
+        {"item": "Set up Spotify Jam playlist", "done": false},
+        {"item": "Run demo sessions per office", "done": false},
+        {"item": "Record all demos", "done": false},
+        {"item": "Host team dinner after demos", "done": false},
+        {"item": "Post shipping guidance", "done": false},
+        {"item": "Check in on productionization", "done": false},
+        {"item": "Ensure Loom links in spreadsheet", "done": false},
+        {"item": "Host end-of-week happy hour", "done": false}
+      ]
+    },
+    "phase4_postEvent": {
+      "deadline": "1-2 weeks after",
+      "items": [
+        {"item": "Judges review all demos and Looms (2-3 days)", "done": false},
+        {"item": "Pick winners across all categories", "done": false},
+        {"item": "Announce winners at Town Hall — lock date in advance, ensure judges available", "done": false},
+        {"item": "Have winning teams re-present (polished) to whole company", "done": false},
+        {"item": "Distribute prizes — $1,000 per winning team, split among members", "done": false},
+        {"item": "Post hack week recap in #general with all team names, Loom links, winners", "done": false},
+        {"item": "Create LinkedIn content — coordinate timing with marketing", "done": false},
+        {"item": "Feature hack week at offsite/company events if applicable", "done": false},
+        {"item": "Send feedback survey (Google Form)", "done": false},
+        {"item": "Hold planning retro — Sophie + Bharat + BLR leads", "done": false},
+        {"item": "Update this checklist with new lessons learned", "done": false},
+        {"item": "Track which projects made it to production (2-4 weeks later)", "done": false}
+      ]
+    }
+  },
+  "upcomingTimeline": [
+    {"milestone": "Start planning & pick dates", "targetDate": "Late April 2026", "notes": "Check US & India holidays for June/July. Avoid July 4th week."},
+    {"milestone": "Get budget approved", "targetDate": "Early May 2026", "notes": "Prize money, travel, food, social events"},
+    {"milestone": "Announce to team", "targetDate": "Mid May 2026", "notes": "Kick-off announcement in #dev, create Slack channel"},
+    {"milestone": "Team/idea submission deadline", "targetDate": "~1 week before HW", "notes": ""},
+    {"milestone": "Ideas reviewed & locked", "targetDate": "~3 days before HW", "notes": "Bharat/Shreyas review"},
+    {"milestone": "Hack Week", "targetDate": "Week of June 8, 2026 (tentative)", "notes": "Adjust for holidays. Confirm BLR/SF alignment."},
+    {"milestone": "Winners announced", "targetDate": "Within 1-2 weeks after", "notes": "Lock Town Hall date in advance"},
+    {"milestone": "Retro & checklist update", "targetDate": "Within 2 weeks after", "notes": ""}
+  ],
+  "lessonsLearned": [
+    {
+      "hackWeek": "June 2025 (Hack me if you can)",
+      "lessons": [
+        "First hack week. Allowed solo projects — later changed to teams-only for Jan 2026.",
+        "4-day format (Mon kickoff, Tue-Wed build, Thu demos). Felt compressed.",
+        "Winners announced weeks later at Town Hall + Slack. Next time: announce faster.",
+        "Feedback survey sent — good practice to continue."
+      ]
+    },
+    {
+      "hackWeek": "January 2026",
+      "lessons": [
+        "Holiday scheduling was painful. MLK Day + BLR Republic Day created conflicts. Needed async schedules across offices (SF Mon-Fri, BLR Tue-Mon).",
+        "Flight/hotel budgets for remote employees were too tight on short notice. Increase buffer or book earlier.",
+        "Cross-functional team requirement (no more than 50% from same eng team) drove better collaboration.",
+        "8 teams participated, strong output. 'Teams shipped full products within three days. Not prototypes.' (Rishabh's LinkedIn post)",
+        "Mid-week demos + dinner was a great energy boost.",
+        "Productionization guidance on Day 4 was helpful. Several teams needed to scope down for v1.",
+        "Winner announcement delayed because Bharat and Shreyas were both out for scheduled Town Hall. Lock in announcement date and ensure judges available.",
+        "Loom recordings essential for async visibility across offices and non-engineering staff.",
+        "Late-night dinner policy (originally 8pm, adjusted to 6pm) was well-received."
+      ]
+    }
+  ],
+  "teamFormationRules": [
+    "Teams of 2-4 people",
+    "No solo projects",
+    "Cross-functional: more than 50% cannot be from the same engineering team",
+    "PMs and Designers encouraged to participate"
+  ],
+  "prizeCategories": [
+    {"category": "Best Use of AI", "amount": 1000},
+    {"category": "Highest Customer Impact", "amount": 1000},
+    {"category": "Best Internal Tool / Most Useful DevTool", "amount": 1000}
+  ],
   "logistics": {
-    "budget": {"prizes": 3000, "travel": 0, "food": 0, "social": 0, "approved": false, "approver": "Evelyn"},
-    "judges": ["Shreyas", "Rishabh", "Bharat"],
-    "keyContacts": {"engineeringLead": "Bharat", "operations": "Sophie", "blrLogistics": "Kunal, Sriram, Shiksha", "finance": "Evelyn"}
+    "budget": {
+      "prizes": 3000,
+      "travel": 0,
+      "travelNote": "Budget $550-600 for flights, $350/night hotels in SF per Jan 2026 lesson",
+      "food": 0,
+      "foodNote": "Daily lunches for SF and BLR offices + team dinner + happy hour",
+      "social": 0,
+      "approved": false,
+      "approver": "Evelyn"
+    },
+    "judges": ["Shreyas", "Rishabh", "Bharat", "+ leadership team members"],
+    "keyContacts": {
+      "engineeringLead": {"name": "Bharat", "role": "Engineering Lead / MC"},
+      "operations": {"name": "Sophie", "role": "Operations & Planning"},
+      "blrLogistics": [
+        {"name": "Kunal", "role": "BLR coordination lead"},
+        {"name": "Sriram", "role": "BLR coordination lead"},
+        {"name": "Shiksha", "role": "BLR logistics support"}
+      ],
+      "finance": {"name": "Evelyn", "role": "Budget approval"}
+    }
   },
+  "schedulingTips": [
+    "January works well but watch for MLK Day and BLR Republic Day (Jan 26).",
+    "June works well but watch for July 4th proximity.",
+    "December is risky — holiday season makes it hard to get clean 5-day window. Push to early January instead."
+  ],
+  "futureHackWeeks": [
+    {"number": 4, "dates": "Week of Jan 11, 2027 (tentative)", "planningStart": "Late October 2026"},
+    {"number": 5, "dates": "Week of June 7, 2027 (tentative)", "planningStart": "Late April 2027"}
+  ],
   "reviews": [],
-  "lastSynced": "2026-03-28T00:00:00.000Z"
+  "lastSynced": "2026-03-27T21:00:00.000Z"
 }

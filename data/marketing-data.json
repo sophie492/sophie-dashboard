@@ -1,12 +1,91 @@
 {
   "config": {
     "name": "Marketing Reporting System",
-    "notionHub": null,
+    "notionHub": "https://www.notion.so/394ee9dbdc924a869ad53020104c1a13",
+    "notionContentCalendar": "Rishabh LinkedIn Posting Calendar",
     "slackChannel": "#marketing-agendas",
-    "standupSchedule": {"monday": "Saunder (campaigns, ABM, demand gen)", "wednesday": "Jennifer (content, PMM, PR)", "friday": "Maya (events, logistics)"}
+    "slackChannelId": "C0ANMMJU71Q",
+    "standupSchedule": {
+      "monday": {
+        "owner": "Saunder",
+        "slackId": "U06JDT3CJBD",
+        "area": "Campaigns, ABM & Demand Gen",
+        "prepPostedBy": "Sunday evening (5pm ET)",
+        "skillFile": "marketing-standup-prep-monday",
+        "dataSources": ["Slack (#marketing, #pipeline-engagements, #fermat-intentsify, #ai-prospect-call-quality-matrix)", "Granola", "Google Calendar (saunder@fermatcommerce.com)", "Gmail", "Notion (MKT Calendar, All MKT Campaigns, Content Topic Matrix)"],
+        "sections": ["CAMPAIGNS", "TARGET ACCOUNTS", "STRATEGY & PRIORITIES", "FLAGGED"],
+        "dashboardEndpoint": "POST /api/marketing/standup"
+      },
+      "wednesday": {
+        "owner": "Jennifer",
+        "slackId": "U092P73GQB1",
+        "area": "Content, PMM & PR",
+        "prepPostedBy": "Tuesday evening (5pm ET)",
+        "skillFile": "marketing-standup-prep-wednesday",
+        "dataSources": ["Slack (#content-marketing, #mkt-website, #mkt-product-marketing, #content-requests)", "Granola", "Google Calendar (jennifer@fermatcommerce.com)", "Gmail", "Notion (MKT Calendar, MKT Projects, FERMAT Press Coverage DB, PR Moxie page)"],
+        "sections": ["PUBLISHED & PERFORMANCE", "CONTENT PIPELINE", "PMM & SALES ENABLEMENT", "PR & PRESS", "FLAGGED"],
+        "dashboardEndpoint": "POST /api/marketing/standup",
+        "recentNote": "Jennifer noted PR agency doc is back on the Moxie team; meeting scheduled (per #marketing-agendas 3/25)"
+      },
+      "friday": {
+        "owner": "Maya",
+        "slackId": "U0A1L9XMUGZ",
+        "area": "Events & Logistics",
+        "prepPostedBy": "Thursday evening (5pm ET)",
+        "skillFile": "marketing-standup-prep-friday",
+        "dataSources": ["Slack (#mkt-field-marketing, #events-engagement, #webinar-engagement, #zapier-error, #pipeline-engagements)", "Granola", "Google Calendar (maya@fermatcommerce.com)", "Gmail", "Notion (MKT Events, Event Attendee Targets, MKT Budget, Top 20 Enterprise Targets)"],
+        "sections": ["THIS WEEK'S EVENTS", "SFDC TRACKING", "UPCOMING EVENTS & DEADLINES", "FLAGGED"],
+        "dashboardEndpoint": "POST /api/marketing/standup",
+        "recentNote": "Maya's standup day confirmed moved to Friday (was previously different) — Saunder confirmed. Sophie set up #marketing-agendas channel."
+      }
+    }
   },
-  "standups": [],
+  "standups": [
+    {
+      "date": "2026-03-26",
+      "day": "Friday",
+      "owner": "Maya",
+      "postedAt": "2026-03-26T21:30:56Z",
+      "summary": "Shoptalk Spring 2026 final day (81 Glam Suite guests, 2 qualified new entries: Sephora and Batteries Plus). SELLEBRATE 2026 co-hosted with 300+ attendees. Perry Ellis POC active (created 3/17, close 6/30, Tinuiti-led). Sephora opportunity via Claire Shaughnessy. Gap Inc Gemini checkout announcement biggest conference talking point. Upcoming: Tinuiti x FERMAT LA Kings VIP Suite Apr 9, CAB with Sony + Tinuiti confirmed, Salesforce Connections decision needed.",
+      "flagged": [
+        "Zapier/SFDC campaign missing for C-Suite Peer to Peer Virtual Exchange Luma event — 5 errors in #zapier-error since 3/24",
+        "Maya's standup day moving to Friday — now live",
+        "Shoptalk follow-up deadline was 3/26 EOD — all Glam Suite attendees need tagging",
+        "Event Attendee Targets Notion — Hult and Gillian incorrectly included for some items, Jennifer adjusting"
+      ]
+    }
+  ],
+  "contentCalendar": {
+    "source": "Rishabh LinkedIn Posting Calendar (Notion DB)",
+    "dbId": "394ee9dbdc924a869ad53020104c1a13",
+    "dataSourceId": "collection://23ed37cc-e224-4930-9520-c7fedfcaccbd",
+    "schema": {
+      "fields": ["Post Title", "Date", "Author", "Status", "Tier", "Post #", "LinkedIn URL", "Post Copy Preview", "Notes", "Release Board Link"],
+      "authors": ["Rishabh", "Bharat", "Ankit", "Prajjwal"],
+      "statuses": ["Posted", "Planned", "Draft", "Not Started"],
+      "tiers": ["1", "2", "3", "TL"]
+    },
+    "parentPage": "Daily Marketing Posts — Engineering & Product Showcase (Mar 2026)",
+    "viewType": "calendar",
+    "calendarBy": "Date"
+  },
+  "channelSetup": {
+    "channelName": "#marketing-agendas",
+    "channelId": "C0ANMMJU71Q",
+    "welcomeMessage": "Welcome to #marketing-agendas. This channel auto-posts standup prep briefs the night before each MWF marketing standup so you walk in ready to go.",
+    "postedBy": "Sophie Weiler",
+    "postedDate": "2026-03-25",
+    "feedbackNote": "Reply in a thread to your brief and it'll be incorporated into future runs.",
+    "saunderReaction": "amazing! excited to see what it pulls and plug in anything additional"
+  },
+  "upcomingEvents": [
+    {"name": "Tinuiti x FERMAT LA Kings VIP Suite", "date": "2026-04-09", "time": "7:30pm", "capacity": 30, "status": "Confirmed", "notes": "Gillian pulling LA prospects. RSVPs include Provenance Consumer, Carter's, Citizen Watch, Once Upon a Farm, Mammoth Brands, Encore Consumer Capital, Necessarie."},
+    {"name": "CAB (Customer Advisory Board)", "date": null, "status": "Planning", "confirmed": ["Sony (Maya Wasserman)", "Tinuiti (Megan Caputo)"], "notes": "Jennifer drafting outreach email for flight info (cc Jess + Maya). Agenda shared in Notion."},
+    {"name": "Fashionology Summit x Fermat", "date": "2026-03-27", "time": "10am PT", "status": "On Maya's calendar"},
+    {"name": "C-Suite Peer to Peer Virtual Exchange", "date": null, "status": "Registrations coming in", "registrants": ["Birdy Grey", "BTS Studio", "Stamped.io"]},
+    {"name": "Salesforce Connections (Chicago)", "date": null, "status": "Decision needed", "notes": "Jess flagged team should attend; Maya said not planned based on team feedback but open to discuss."}
+  ],
   "campaigns": [],
   "reviews": [],
-  "lastSynced": "2026-03-28T00:00:00.000Z"
+  "lastSynced": "2026-03-27T21:00:00.000Z"
 }

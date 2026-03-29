@@ -9,34 +9,312 @@
     "daysUntil": null
   },
   "attendees": [
-    {"name":"Rishabh Jain","email":"rishabh@fermatcommerce.com","marriottNum":"241632843","hotelConfirmed":false,"flightBooked":false,"travelCardIssued":false,"dietaryNeeds":""},
-    {"name":"Shreyas Kumar","email":"shreyas@fermatcommerce.com","marriottNum":"648366443","hotelConfirmed":false,"flightBooked":false,"travelCardIssued":false,"dietaryNeeds":""},
-    {"name":"Evelyn Xue","email":"evelyn@fermatcommerce.com","marriottNum":"","hotelConfirmed":false,"flightBooked":false,"travelCardIssued":false,"dietaryNeeds":""},
-    {"name":"Jess McDaid","email":"jessica@fermatcommerce.com","marriottNum":"","hotelConfirmed":false,"flightBooked":false,"travelCardIssued":false,"dietaryNeeds":""},
-    {"name":"Saunder Schroeder","email":"saunder@fermatcommerce.com","marriottNum":"746587509","hotelConfirmed":false,"flightBooked":false,"travelCardIssued":false,"dietaryNeeds":""},
-    {"name":"Bharat Murali","email":"bharat@fermatcommerce.com","marriottNum":"","hotelConfirmed":false,"flightBooked":false,"travelCardIssued":false,"dietaryNeeds":""},
-    {"name":"Isabel O'Keefe","email":"isabel@fermatcommerce.com","marriottNum":"634278963","hotelConfirmed":false,"flightBooked":false,"travelCardIssued":false,"dietaryNeeds":"NYC-based, may not need hotel"},
-    {"name":"Jennifer Schnadig","email":"jennifer@fermatcommerce.com","marriottNum":"","hotelConfirmed":false,"flightBooked":false,"travelCardIssued":false,"dietaryNeeds":""},
-    {"name":"Khushy","email":"khushy@fermatcommerce.com","marriottNum":"","hotelConfirmed":false,"flightBooked":false,"travelCardIssued":false,"dietaryNeeds":""}
+    {"name": "Rishabh Jain", "role": "CEO", "email": "rishabh@fermatcommerce.com", "marriottNum": "241632843", "needsHotel": true, "hotelConfirmed": false, "flightBooked": false, "travelCardIssued": false, "dietaryNeeds": ""},
+    {"name": "Shreyas Kumar", "role": "CTO", "email": "shreyas@fermatcommerce.com", "marriottNum": "648366443", "needsHotel": true, "hotelConfirmed": false, "flightBooked": false, "travelCardIssued": false, "dietaryNeeds": ""},
+    {"name": "Evelyn Xue", "role": "Finance / Budget Approver", "email": "evelyn@fermatcommerce.com", "marriottNum": "", "needsHotel": true, "hotelConfirmed": false, "flightBooked": false, "travelCardIssued": false, "dietaryNeeds": ""},
+    {"name": "Jess McDaid", "role": "Sales Leader", "email": "jessica@fermatcommerce.com", "marriottNum": "", "needsHotel": true, "hotelConfirmed": false, "flightBooked": false, "travelCardIssued": false, "dietaryNeeds": ""},
+    {"name": "Saunder Schroeder", "role": "Marketing (Campaigns, ABM)", "email": "saunder@fermatcommerce.com", "marriottNum": "746587509", "needsHotel": true, "hotelConfirmed": false, "flightBooked": false, "travelCardIssued": false, "dietaryNeeds": ""},
+    {"name": "Bharat Murali", "role": "Engineering Lead", "email": "bharat@fermatcommerce.com", "marriottNum": "214468410", "needsHotel": true, "hotelConfirmed": false, "flightBooked": false, "travelCardIssued": false, "dietaryNeeds": ""},
+    {"name": "Isabel O'Keefe", "role": "Product", "email": "isabel@fermatcommerce.com", "marriottNum": "634278963", "needsHotel": false, "hotelConfirmed": false, "flightBooked": false, "travelCardIssued": false, "dietaryNeeds": "", "notes": "NYC-based — likely does not need a hotel (8 rooms needed)"},
+    {"name": "Jennifer Schnadig", "role": "Marketing (Content, PMM, PR)", "email": "jennifer@fermatcommerce.com", "marriottNum": "", "needsHotel": true, "hotelConfirmed": false, "flightBooked": false, "travelCardIssued": false, "dietaryNeeds": ""},
+    {"name": "Khushy", "role": "Leadership", "email": "khushy@fermatcommerce.com", "marriottNum": "", "needsHotel": true, "hotelConfirmed": false, "flightBooked": false, "travelCardIssued": false, "dietaryNeeds": ""}
   ],
-  "agenda": [],
+  "phases": [
+    {"phase": "Phase 1: Kickoff", "deadline": "Fri Mar 20", "what": "Confirm dates, city, headcount, budget expectations", "status": "mostly_done"},
+    {"phase": "Phase 2: Logistics", "deadline": "Wed Mar 25 – Fri Mar 27", "what": "Hotel + budget approved by Mar 25, WeWork + social activity booked by Mar 27", "status": "in_progress"},
+    {"phase": "Phase 3: Agenda", "deadline": "Fri Apr 3", "what": "Coordinate agenda with leadership, collect materials", "status": "not_started"},
+    {"phase": "Pre-reads sent", "deadline": "Mon Apr 13", "what": "Send pre-reads to team (1 week before)", "status": "not_started"},
+    {"phase": "Phase 4: Final Comms", "deadline": "Fri Apr 13", "what": "Logistics announcement, confirm all bookings", "status": "not_started"},
+    {"phase": "Day Before", "deadline": "Sun Apr 19", "what": "Final confirmations, prep DoorDash links", "status": "not_started"},
+    {"phase": "Day 1", "deadline": "Mon Apr 20", "what": "Offsite Day 1", "status": "not_started"},
+    {"phase": "Day 2", "deadline": "Tue Apr 21", "what": "Offsite Day 2", "status": "not_started"},
+    {"phase": "Post-Offsite", "deadline": "Fri Apr 24", "what": "Lessons learned, action item follow-up", "status": "not_started"}
+  ],
+  "checklist": {
+    "phase1_kickoff": [
+      {"item": "Confirm dates and city — April 20-21, NYC", "done": true},
+      {"item": "Confirm headcount and attendee list — 9 attendees", "done": true},
+      {"item": "Create a Planning Hub page for this offsite", "done": true},
+      {"item": "Create calendar event (attendees in notes, no invites sent yet)", "done": true},
+      {"item": "Set budget expectations with Evelyn", "done": false}
+    ],
+    "phase2_logistics": {
+      "hotel": [
+        {"item": "Coordinate booking with Alice (travel agent)", "done": false},
+        {"item": "Collect Marriott member numbers (offer to link reservations)", "done": false},
+        {"item": "Send hotel confirmation numbers to attendees", "done": false}
+      ],
+      "wework": [
+        {"item": "Find nearest WeWork to hotel (walking distance)", "done": false},
+        {"item": "Book conference room or private office for the team (capacity 10+)", "done": false}
+      ],
+      "socialActivity": [
+        {"item": "Research 3 group activity options", "done": false},
+        {"item": "Ensure flexible participation levels", "done": false},
+        {"item": "Book activity", "done": false},
+        {"item": "Book dinner restaurant (pair with social activity)", "done": false}
+      ],
+      "food": [
+        {"item": "Prepare DoorDash group order links in advance — each day", "done": false}
+      ],
+      "budget": [
+        {"item": "Compile estimated costs across all categories", "done": false},
+        {"item": "Draft budget approval request to Evelyn", "done": false},
+        {"item": "Get budget approved before committing to bookings", "done": false},
+        {"item": "Track committed and actual spend as bookings are made", "done": false}
+      ]
+    },
+    "phase3_agenda": [
+      {"item": "Review #leadership Slack channel (past 30 days) for discussion themes", "done": true},
+      {"item": "Run keyword searches across Slack (strategy, roadmap, priority, blocker, hiring, revenue)", "done": true},
+      {"item": "Check Granola meeting notes for recent leadership topics", "done": true},
+      {"item": "Coordinate with Evelyn and leadership team on agenda topics and materials", "done": false},
+      {"item": "Confirm topic owners and time slots with leadership", "done": false},
+      {"item": "Build agenda in Notion based on leadership input", "done": false},
+      {"item": "Collect pre-read materials from topic owners", "done": false},
+      {"item": "Send pre-reads to team — by Mon Apr 13 (1 week before)", "done": false}
+    ],
+    "phase4_finalComms": [
+      {"item": "Draft logistics announcement for #leadership (get approval before sending)", "done": false},
+      {"item": "Send hotel confirmation details to attendees", "done": false},
+      {"item": "Follow up with anyone who hasn't shared travel details", "done": false},
+      {"item": "Confirm all bookings (hotel, venue, activity, restaurant)", "done": false},
+      {"item": "Build buffer time into schedule for unstructured socializing", "done": false}
+    ],
+    "dayBefore": [
+      {"item": "Confirm all hotel reservations", "done": false},
+      {"item": "Confirm restaurant reservation", "done": false},
+      {"item": "Confirm social activity booking", "done": false},
+      {"item": "Prepare DoorDash links for lunch orders", "done": false}
+    ],
+    "day1": [
+      {"item": "Send DoorDash link at start of first session", "done": false},
+      {"item": "Send any last-minute logistics updates", "done": false}
+    ],
+    "day2": [
+      {"item": "Send DoorDash link for lunch", "done": false},
+      {"item": "Collect informal feedback", "done": false},
+      {"item": "Note action items from sessions", "done": false}
+    ],
+    "postOffsite": [
+      {"item": "Capture lessons learned — update checklist for next time", "done": false},
+      {"item": "Follow up on action items and owners", "done": false}
+    ]
+  },
   "logistics": {
-    "hotel": {"name":"Moxy NYC Chelsea","rate":420,"nights":2,"rooms":9,"confirmed":false,"contactPerson":"Alice Zhao (travel agent)"},
-    "venue": {"name":"WeWork TBD","address":"","confirmed":false,"capacity":"10+","estimatedCost":"1000-1600"},
-    "dinner": {"name":"TBD","options":["The Modern","BLACKBARN","Yara"],"confirmed":false},
-    "activity": {"name":"TBD","options":["Escape Room","Cooking Class","Improv Workshop"],"confirmed":false},
-    "budget": {"estimated":13500,"approved":false,"committed":0,"actual":0,"approver":"Evelyn"}
+    "hotelResearch": [
+      {
+        "name": "Courtyard by Marriott Midtown East",
+        "location": "Near Grand Central",
+        "pricePerNight": "$250-350",
+        "pros": "5-min walk to WeWork 575 Fifth Ave & 430 Park Ave. Modern rooms, free Wi-Fi, 12th-floor lounge. Close to subway (4/5/6).",
+        "cons": "",
+        "bestPairedWith": "WeWork 575 Fifth Ave or 430 Park Ave"
+      },
+      {
+        "name": "SpringHill Suites Midtown Manhattan",
+        "location": "Near Bryant Park",
+        "pricePerNight": "$250-350",
+        "pros": "Large rooms by NYC standards, free breakfast included. Walk to WeWork 1460 Broadway. Near Grand Central.",
+        "cons": "",
+        "bestPairedWith": "WeWork 1460 Broadway"
+      },
+      {
+        "name": "Renaissance New York Midtown",
+        "location": "35th St, Garment District",
+        "pricePerNight": "$280-400",
+        "pros": "348 rooms, floor-to-ceiling windows. Walk to WeWork Midtown West and Penn Station.",
+        "cons": "",
+        "bestPairedWith": "WeWork Midtown West locations"
+      },
+      {
+        "name": "Moxy NYC Chelsea",
+        "location": "Chelsea",
+        "pricePerNight": "~$469 total/room (2 nights), ~$420 with Fermat 10% discount",
+        "pros": "Fermat has automatic 10% off website rate. WeWork across the street. Alice (travel agent) negotiating further with GM Diana.",
+        "cons": "",
+        "bestPairedWith": "WeWork Chelsea",
+        "aliceNote": "Alice contacted Diana at Moxy for Fermat-specific discount. $1,120/room for both nights before discount. Awaiting final pricing.",
+        "currentFrontrunner": true
+      }
+    ],
+    "hotel": {
+      "name": "Moxy NYC Chelsea (pending final pricing)",
+      "rate": 420,
+      "rateNote": "~$420/room with 10% Fermat discount, pending Diana confirmation via Alice",
+      "nights": 2,
+      "rooms": 8,
+      "roomsNote": "8 rooms needed — Isabel is NYC-based",
+      "confirmed": false,
+      "contactPerson": "Alice Zhao (travel agent, alice.zhao@fora.travel)"
+    },
+    "weworkResearch": [
+      {
+        "name": "575 Fifth Avenue",
+        "location": "Midtown East",
+        "bestPairedWith": "Courtyard Midtown East",
+        "notes": "Near Grand Central, Bryant Park. B/D/F/M/4/5/6/7 trains."
+      },
+      {
+        "name": "1460 Broadway",
+        "location": "Times Square",
+        "bestPairedWith": "SpringHill Suites",
+        "notes": "Heart of Times Square. 1/2/3/N/Q/R/W/A/C/E trains."
+      },
+      {
+        "name": "430 Park Avenue",
+        "location": "Midtown East",
+        "bestPairedWith": "Courtyard Midtown East",
+        "notes": "Quieter location, close to Grand Central."
+      }
+    ],
+    "venue": {
+      "name": "WeWork TBD (depends on hotel selection)",
+      "address": "",
+      "confirmed": false,
+      "capacity": "10+",
+      "estimatedCost": "$1,500-2,000",
+      "costNote": "Day pass conference rooms start ~$10/seat/hr. 10-person room for 2 full days."
+    },
+    "dinnerResearch": [
+      {
+        "name": "The Modern",
+        "cuisine": "French / New American",
+        "privateDining": "Yes (large groups)",
+        "location": "MoMA, Midtown",
+        "vegetarianOptions": "Excellent — seasonal vegetable-forward menu",
+        "notes": "Fine dining at MoMA. Impressive setting for a special occasion."
+      },
+      {
+        "name": "BLACKBARN",
+        "cuisine": "Farm-to-table American",
+        "privateDining": "Yes (12-300)",
+        "location": "Midtown",
+        "vegetarianOptions": "Excellent — seasonal vegetarian dishes built into menu",
+        "notes": "Locally sourced, relaxed but upscale. Multiple private spaces."
+      },
+      {
+        "name": "Yara",
+        "cuisine": "Mediterranean / Middle Eastern",
+        "privateDining": "Yes (groups)",
+        "location": "Midtown East",
+        "vegetarianOptions": "Outstanding — 18+ vegan dishes, shareable mezze",
+        "notes": "Great for diverse dietary needs. Fun shared-plates format like Denver dinner."
+      }
+    ],
+    "dinner": {
+      "name": "TBD",
+      "options": ["The Modern", "BLACKBARN", "Yara"],
+      "confirmed": false,
+      "requirement": "Strong vegetarian options + private dining"
+    },
+    "activityResearch": [
+      {
+        "name": "Escape Room (Escape Room Madness)",
+        "type": "Puzzle/teamwork",
+        "groupSize": "Up to 10",
+        "estimatedCost": "~$40-50/person (~$360-450 total)",
+        "why": "Proven hit from Denver. Great for problem-solving together."
+      },
+      {
+        "name": "Cooking Class / Great Guac Off",
+        "type": "Food competition",
+        "groupSize": "10+",
+        "estimatedCost": "~$75-125/person (~$675-1,125 total)",
+        "why": "Relaxed, social, flexible participation. Fun competitive twist."
+      },
+      {
+        "name": "Improv Workshop (UCB Theatre)",
+        "type": "Creative/communication",
+        "groupSize": "10+",
+        "estimatedCost": "~$75-100/person (~$675-900 total)",
+        "why": "Unique NYC experience. Builds communication & quick thinking."
+      }
+    ],
+    "activity": {
+      "name": "TBD",
+      "options": ["Escape Room", "Cooking Class / Great Guac Off", "Improv Workshop"],
+      "confirmed": false,
+      "lesson": "Group activity + dinner is a proven combo. Escape room was a hit in Denver."
+    },
+    "budget": {
+      "estimated": null,
+      "approved": false,
+      "committed": 0,
+      "actual": 0,
+      "approver": "Evelyn",
+      "categories": [
+        {"category": "Hotel", "estimated": null, "committed": null, "actual": null, "notes": "8 rooms x 2 nights. Moxy ~$420/room = ~$6,720 estimated"},
+        {"category": "Venue / Coworking", "estimated": null, "committed": null, "actual": null, "notes": "WeWork ~$1,500-2,000 for 2 full days"},
+        {"category": "Transportation", "estimated": null, "committed": null, "actual": null, "notes": "People arrange own flights"},
+        {"category": "Food & Beverage", "estimated": null, "committed": null, "actual": null, "notes": "DoorDash group orders x2 days + dinner"},
+        {"category": "Social Activity", "estimated": null, "committed": null, "actual": null, "notes": "Range: $360-1,125 depending on activity"},
+        {"category": "Miscellaneous", "estimated": null, "committed": null, "actual": null, "notes": ""}
+      ]
+    }
   },
   "themes": [
-    "AI-First Transformation — 10x contributor expectations, tool adoption",
-    "Outcome Ownership Framework — 3-5 outcomes per leader",
-    "Hiring & Team Composition — 30% reduction expected in 6 months",
-    "Enterprise Relationships & Account Management",
-    "Performance Reviews & Feedback Structure",
-    "Goal Alignment — shared vs individual goals",
-    "Speed & Execution — timelines during pivot",
-    "AI for Customer-Facing Teams"
+    {
+      "title": "AI-First Transformation",
+      "description": "10x contributor expectations, 3.5x engineering velocity, tool adoption training program. Rishabh shared strategy doc on 3/10.",
+      "strategyDocLink": "https://docs.google.com/document/d/13LCRtXHWH9v1FkeJy6AVJROfKRxTti3VRdh8xUkWUy4/edit"
+    },
+    {
+      "title": "Outcome Ownership Framework",
+      "description": "Major gap: only Isabel completed the ownership exercise. Need 3-5 outcomes per leader defined."
+    },
+    {
+      "title": "Hiring & Team Composition",
+      "description": "Bharat: 'how we hire is going to change a lot on eng.' Expect 30% reduction in 6 months. Culture favors high-curiosity."
+    },
+    {
+      "title": "Enterprise Relationships & Account Management",
+      "description": "Tinuiti model discussion, AM role assignment, Jesse's role. Jess flagged need for clarity."
+    },
+    {
+      "title": "Performance Reviews & Feedback Structure",
+      "description": "Saunder raised question about sharing packets with departing team members. Feedback structure discussion."
+    },
+    {
+      "title": "Goal Alignment",
+      "description": "Shared vs. individual goals confusion. Multiple people assigned same goals (e.g., 'O'Keefe native')."
+    },
+    {
+      "title": "Speed & Execution",
+      "description": "Hard to set timelines during pivot, but speed = differentiator. 'Feeling of success' trap."
+    },
+    {
+      "title": "AI for Customer-Facing Teams",
+      "description": "Jess: 'I get the how does Fermat incorporate AI question all the time.' Could be good for customer teams to have on hand."
+    }
   ],
+  "lessonsLearned": [
+    "Prioritize central/downtown location walkable to all activities. Avoid airport-area hotels.",
+    "Group activity + dinner is a proven combo. Escape room was a hit. Find unique activities.",
+    "Send DoorDash links at the start of sessions so food arrives on time.",
+    "Build flexible scheduling — not every minute needs to be programmed. The team valued unstructured bonding time.",
+    "Agenda content and topics come from Evelyn and leadership — Sophie coordinates and organizes, but doesn't set the agenda."
+  ],
+  "coordinationContacts": [
+    {"name": "Evelyn", "role": "Budget approver", "reachOutFor": "Budget approval, agenda coordination"},
+    {"name": "Alice Zhao", "role": "Travel agent (Fora Travel)", "email": "alice.zhao@fora.travel", "reachOutFor": "Hotel bookings, group rates, flight coordination"}
+  ],
+  "aliceCorrespondence": {
+    "threadSubject": "Next Leadership Offsite",
+    "lastEmailDate": "2026-03-27",
+    "summary": "Sophie initially asked about Courtyard Midtown East for 4 rooms. Alice suggested Moxy NYC Chelsea (Fermat has auto 10% off). Moxy quoted ~$1,120/room for both nights without discount. Alice contacted Diana (GM) for Fermat-specific pricing. Sophie confirmed Moxy is the likely choice pending budget approval. Alice is standing by for names, Marriott numbers, and which CC to use once approval comes through.",
+    "nextStep": "Awaiting Moxy pricing from Diana via Alice. Need budget approval from Evelyn before committing.",
+    "keyEmails": [
+      {"date": "2026-03-23", "from": "Sophie", "summary": "Initial request for Courtyard Midtown East, 4 rooms"},
+      {"date": "2026-03-23", "from": "Alice", "summary": "Suggested Moxy Chelsea — Fermat has 10% off. Moxy ~$469/room total ($1,120 for 2 nights before discount). WeWork across the street."},
+      {"date": "2026-03-24", "from": "Sophie", "summary": "Confirmed likely going with Moxy, getting budget approval"},
+      {"date": "2026-03-24", "from": "Alice", "summary": "Will wait on names/Marriott numbers and CC once approval comes"},
+      {"date": "2026-03-27", "from": "Sophie", "summary": "Asked Alice to check availability and rates at Moxy for Apr 20-21, 4 people"},
+      {"date": "2026-03-27", "from": "Alice", "summary": "Contacted Diana at Moxy for Fermat-specific discount"},
+      {"date": "2026-03-27", "from": "Sophie", "summary": "Thanked Alice"}
+    ]
+  },
+  "agenda": [],
   "reviews": [],
-  "lastSynced": "2026-03-28T00:00:00.000Z"
+  "lastSynced": "2026-03-27T21:00:00.000Z"
 }
