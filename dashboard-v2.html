@@ -5403,7 +5403,7 @@ async function fetchLiveFPPC(){
   try{
     const res=await fetch(FPPC_API_URL);
     const data=await res.json();
-    if(!data.events)return;
+    if(!data.events||data.events.length===0)return; // Don't overwrite with empty data
     // Replace upcoming events with live data from the FPPC API
     // Parse human-readable dates to ISO for filtering
     function parseFppcDate(dateStr){
