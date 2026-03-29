@@ -1,0 +1,42 @@
+{
+  "config": {
+    "name": "Q2 Leadership Offsite",
+    "dates": "April 20-21, 2026",
+    "location": "New York City",
+    "notionHub": "https://www.notion.so/3291ad76fd2a81ab8b67f63e59d54a43",
+    "notionPageId": "3291ad76fd2a81ab8b67f63e59d54a43",
+    "slackChannel": "#leadership",
+    "daysUntil": null
+  },
+  "attendees": [
+    {"name":"Rishabh Jain","email":"rishabh@fermatcommerce.com","marriottNum":"241632843","hotelConfirmed":false,"flightBooked":false,"travelCardIssued":false,"dietaryNeeds":""},
+    {"name":"Shreyas Kumar","email":"shreyas@fermatcommerce.com","marriottNum":"648366443","hotelConfirmed":false,"flightBooked":false,"travelCardIssued":false,"dietaryNeeds":""},
+    {"name":"Evelyn Xue","email":"evelyn@fermatcommerce.com","marriottNum":"","hotelConfirmed":false,"flightBooked":false,"travelCardIssued":false,"dietaryNeeds":""},
+    {"name":"Jess McDaid","email":"jessica@fermatcommerce.com","marriottNum":"","hotelConfirmed":false,"flightBooked":false,"travelCardIssued":false,"dietaryNeeds":""},
+    {"name":"Saunder Schroeder","email":"saunder@fermatcommerce.com","marriottNum":"746587509","hotelConfirmed":false,"flightBooked":false,"travelCardIssued":false,"dietaryNeeds":""},
+    {"name":"Bharat Murali","email":"bharat@fermatcommerce.com","marriottNum":"","hotelConfirmed":false,"flightBooked":false,"travelCardIssued":false,"dietaryNeeds":""},
+    {"name":"Isabel O'Keefe","email":"isabel@fermatcommerce.com","marriottNum":"634278963","hotelConfirmed":false,"flightBooked":false,"travelCardIssued":false,"dietaryNeeds":"NYC-based, may not need hotel"},
+    {"name":"Jennifer Schnadig","email":"jennifer@fermatcommerce.com","marriottNum":"","hotelConfirmed":false,"flightBooked":false,"travelCardIssued":false,"dietaryNeeds":""},
+    {"name":"Khushy","email":"khushy@fermatcommerce.com","marriottNum":"","hotelConfirmed":false,"flightBooked":false,"travelCardIssued":false,"dietaryNeeds":""}
+  ],
+  "agenda": [],
+  "logistics": {
+    "hotel": {"name":"Moxy NYC Chelsea","rate":420,"nights":2,"rooms":9,"confirmed":false,"contactPerson":"Alice Zhao (travel agent)"},
+    "venue": {"name":"WeWork TBD","address":"","confirmed":false,"capacity":"10+","estimatedCost":"1000-1600"},
+    "dinner": {"name":"TBD","options":["The Modern","BLACKBARN","Yara"],"confirmed":false},
+    "activity": {"name":"TBD","options":["Escape Room","Cooking Class","Improv Workshop"],"confirmed":false},
+    "budget": {"estimated":13500,"approved":false,"committed":0,"actual":0,"approver":"Evelyn"}
+  },
+  "themes": [
+    "AI-First Transformation — 10x contributor expectations, tool adoption",
+    "Outcome Ownership Framework — 3-5 outcomes per leader",
+    "Hiring & Team Composition — 30% reduction expected in 6 months",
+    "Enterprise Relationships & Account Management",
+    "Performance Reviews & Feedback Structure",
+    "Goal Alignment — shared vs individual goals",
+    "Speed & Execution — timelines during pivot",
+    "AI for Customer-Facing Teams"
+  ],
+  "reviews": [],
+  "lastSynced": "2026-03-28T00:00:00.000Z"
+}
