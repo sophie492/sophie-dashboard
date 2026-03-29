@@ -1,0 +1,26 @@
+{
+  "config": {
+    "name": "Hack Week #3",
+    "dates": "Week of June 8, 2026",
+    "targetDate": "2026-06-08",
+    "notionHub": "https://www.notion.so/3291ad76fd2a81b8a66ff9d04b4a1bbe",
+    "notionPageId": "3291ad76fd2a81b8a66ff9d04b4a1bbe",
+    "slackChannel": "#hack-week-jun-2026",
+    "signupSheet": null
+  },
+  "teams": [],
+  "schedule": {
+    "day1": {"theme": "Kick-off + Build", "events": []},
+    "day2": {"theme": "Build", "events": []},
+    "day3": {"theme": "Demo Day", "events": []},
+    "day4": {"theme": "Optimize + Ship", "events": []},
+    "day5": {"theme": "Ship + Happy Hour", "events": []}
+  },
+  "logistics": {
+    "budget": {"prizes": 3000, "travel": 0, "food": 0, "social": 0, "approved": false, "approver": "Evelyn"},
+    "judges": ["Shreyas", "Rishabh", "Bharat"],
+    "keyContacts": {"engineeringLead": "Bharat", "operations": "Sophie", "blrLogistics": "Kunal, Sriram, Shiksha", "finance": "Evelyn"}
+  },
+  "reviews": [],
+  "lastSynced": "2026-03-28T00:00:00.000Z"
+}

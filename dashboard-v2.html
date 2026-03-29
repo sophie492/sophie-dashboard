@@ -472,6 +472,18 @@ a.loop-row:hover .loop-source{color:var(--gold)}
 .bd-nav-btn:hover{color:var(--text)}
 .bd-tab-pane{display:none}
 .bd-tab-pane.active{display:block}
+.mkt-hub-nav{display:flex;gap:8px;border-bottom:1px solid var(--border);margin-bottom:16px;flex-wrap:wrap}
+.mkt-hub-nav-btn{padding:10px 20px;font-size:13px;font-weight:700;color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;letter-spacing:-.2px;background:none;border-top:none;border-left:none;border-right:none;font-family:inherit}
+.mkt-hub-nav-btn.active{color:var(--gold);border-bottom-color:var(--gold)}
+.mkt-hub-nav-btn:hover{color:var(--text)}
+.mkt-hub-tab-pane{display:none}
+.mkt-hub-tab-pane.active{display:block}
+.hw-hub-nav{display:flex;gap:8px;border-bottom:1px solid var(--border);margin-bottom:16px;flex-wrap:wrap}
+.hw-hub-nav-btn{padding:10px 20px;font-size:13px;font-weight:700;color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;letter-spacing:-.2px;background:none;border-top:none;border-left:none;border-right:none;font-family:inherit}
+.hw-hub-nav-btn.active{color:var(--gold);border-bottom-color:var(--gold)}
+.hw-hub-nav-btn:hover{color:var(--text)}
+.hw-hub-tab-pane{display:none}
+.hw-hub-tab-pane.active{display:block}
 #page-bd .card{height:auto}
 </style>
 </head>
@@ -502,6 +514,7 @@ a.loop-row:hover .loop-source{color:var(--gold)}
   <div class="page" id="page-system"></div>
   <div class="page" id="page-podcast"></div>
   <div class="page" id="page-bd"></div>
+  <div class="page" id="page-marketing-hub"></div>
 </main>
 
 <script>
@@ -1738,6 +1751,7 @@ function renderSidebar(){
     <div class="sidebar-item" data-page="tasks"><span class="si-icon">&#128142;</span><span class="si-label">Tasks</span><span class="si-badge gold">${openTasks}</span></div>
     <div class="sidebar-item" data-page="podcast"><span class="si-icon">&#127908;</span><span class="si-label">Podcast</span></div>
     <div class="sidebar-item" data-page="bd"><span class="si-icon">&#129309;</span><span class="si-label">BD Tracker</span></div>
+    <div class="sidebar-item" data-page="marketing-hub"><span class="si-icon">&#128202;</span><span class="si-label">Marketing</span></div>
     <div class="sidebar-item" data-page="project-offsite"><span class="si-icon">✈️</span><span class="si-label">Leadership Offsite</span><span style="font-size:8px;color:var(--text-muted);margin-left:auto">${offsitePct}%</span></div>
     <div class="sidebar-item" data-page="project-hackweek"><span class="si-icon">🧪</span><span class="si-label">Hack Week</span><span style="font-size:8px;color:var(--text-muted);margin-left:auto">${hwPct}%</span></div>
     <div class="sidebar-item" data-page="project-bd"><span class="si-icon">🤝</span><span class="si-label">BD Ownership</span><span style="font-size:8px;color:var(--text-muted);margin-left:auto">${bdPct}%</span></div>
@@ -3244,12 +3258,20 @@ function renderEventsPage(){
 
 // -- Projects Page --
 let _offsiteApiData = null;
+let _hackweekApiData = null;
 
 async function fetchOffsiteData() {
   try {
     const res = await fetch('/api/offsite');
     if (res.ok) { _offsiteApiData = await res.json(); }
   } catch(e) { console.warn('[Offsite] API fetch failed:', e.message); }
+}
+
+async function fetchHackweekData() {
+  try {
+    const res = await fetch('/api/hackweek');
+    if (res.ok) { _hackweekApiData = await res.json(); }
+  } catch(e) { console.warn('[Hackweek] API fetch failed:', e.message); }
 }
 
 function renderOffsite() {
@@ -3460,6 +3482,24 @@ document.addEventListener('click', function(e) {
 // Fetch offsite API data on load
 fetchOffsiteData();
 
+// Wire hack week sub-tab switching
+document.addEventListener('click', function(e) {
+  var btn = e.target.closest('.hw-hub-nav-btn');
+  if (!btn) return;
+  var tab = btn.dataset.hwTab;
+  var nav = btn.closest('.hw-hub-nav');
+  if (!nav) return;
+  var container = nav.parentElement;
+  nav.querySelectorAll('.hw-hub-nav-btn').forEach(function(b) { b.classList.remove('active'); });
+  btn.classList.add('active');
+  container.querySelectorAll('.hw-hub-tab-pane').forEach(function(p) { p.classList.remove('active'); });
+  var pane = container.querySelector('[data-hw-pane="'+tab+'"]');
+  if (pane) pane.classList.add('active');
+});
+
+// Fetch hack week API data on load
+fetchHackweekData();
+
 function syncOffsiteToNotion() {
   const btn = document.getElementById('offsite-sync-btn');
   const o = DATA.leadershipOffsite;
@@ -3609,29 +3649,125 @@ function renderHackWeek() {
 
   const barColor = pct >= 75 ? 'var(--green)' : pct >= 40 ? 'var(--yellow)' : 'var(--accent)';
 
+  // Hack Week API data
+  const hwApi = _hackweekApiData || {};
+  const hwConfig = hwApi.config || {};
+  const hwTeams = hwApi.teams || [];
+  const hwSchedule = hwApi.schedule || {};
+  const hwLogistics = hwApi.logistics || {};
+  const hwBudget = hwLogistics.budget || {};
+  const hwJudges = hwLogistics.judges || [];
+  const hwContacts = hwLogistics.keyContacts || hw.keyContacts || {};
+  const hwReviews = hwApi.reviews || [];
+
+  // Schedule HTML
+  const dayNames = ['day1','day2','day3','day4','day5'];
+  const dayLabels = ['Day 1 (Mon)','Day 2 (Tue)','Day 3 (Wed)','Day 4 (Thu)','Day 5 (Fri)'];
+  let scheduleHtml = dayNames.map((d,i) => {
+    const day = hwSchedule[d] || {theme:'TBD',events:[]};
+    const evts = day.events.length > 0 ? day.events.map(e => '<div style="padding:4px 0;font-size:11px;color:var(--text-dim);border-bottom:1px solid var(--border)">' + (e.time||'') + ' ' + (e.name||e) + '</div>').join('') : '<div style="padding:8px 0;font-size:11px;color:var(--text-muted);font-style:italic">No events scheduled yet</div>';
+    return '<div class="card" style="margin-bottom:8px"><div class="card-head"><span class="card-title">' + dayLabels[i] + '</span><span style="font-size:10px;color:var(--gold)">' + day.theme + '</span></div><div class="card-body" style="padding:8px 14px">' + evts + '</div></div>';
+  }).join('');
+
+  // Budget total
+  const budgetTotal = (hwBudget.prizes||0) + (hwBudget.travel||0) + (hwBudget.food||0) + (hwBudget.social||0);
+
   return `
-  <div class="card">
-    <div class="card-head">
-      <div class="card-title">&#129470; Hack Week #3</div>
-      <div class="card-badges">
-        <span class="badge tag-blue">${daysUntil}d away</span>
-        <a href="${hw.notionUrl}" target="_blank" style="font-size:10px;color:var(--gold)">Notion &#8599;</a>
+  <div class="hw-hub-nav">
+    <button class="hw-hub-nav-btn active" data-hw-tab="hw-current">Current Hack Week</button>
+    <button class="hw-hub-nav-btn" data-hw-tab="hw-teams">Teams</button>
+    <button class="hw-hub-nav-btn" data-hw-tab="hw-schedule">Schedule</button>
+    <button class="hw-hub-nav-btn" data-hw-tab="hw-logistics">Logistics</button>
+    <button class="hw-hub-nav-btn" data-hw-tab="hw-reviews">Reviews</button>
+  </div>
+
+  <!-- TAB: Current Hack Week -->
+  <div class="hw-hub-tab-pane active" data-hw-pane="hw-current">
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">&#129470; Hack Week #3</div>
+        <div class="card-badges">
+          <span class="badge ${daysUntil<=14?'tag-yellow':'tag-blue'}">${daysUntil}d away</span>
+          <a href="${hw.notionUrl || hwConfig.notionHub || ''}" target="_blank" style="font-size:10px;color:var(--gold)">Notion &#8599;</a>
+        </div>
+      </div>
+      <div class="card-body" style="padding:10px 14px">
+        <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:12px">
+          <div style="font-size:11px;color:var(--text-muted)"><strong style="color:var(--text)">Dates:</strong> ${hwConfig.dates || hw.dates}</div>
+          <div style="font-size:11px;color:var(--text-muted)"><strong style="color:var(--text)">Slack:</strong> ${hwConfig.slackChannel || '#hack-week-jun-2026'}</div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <span style="font-size:12px;font-weight:700;color:var(--text)">Planning Progress</span>
+          <span style="font-size:10px;color:var(--text-muted)">${doneTasks}/${totalTasks} tasks (${pct}%)</span>
+        </div>
+        <div style="height:6px;background:var(--surface);border-radius:3px;overflow:hidden;border:1px solid var(--border);margin-bottom:10px">
+          <div style="height:100%;width:${pct}%;background:${barColor};border-radius:3px;transition:width .5s"></div>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
+          <span style="font-size:9px;padding:2px 6px;border-radius:4px;background:var(--surface);border:1px solid var(--border);color:var(--text-dim)">&#9881; ${hwContacts.engineeringLead || 'TBD'}</span>
+          <span style="font-size:9px;padding:2px 6px;border-radius:4px;background:var(--surface);border:1px solid var(--border);color:var(--text-dim)">&#128203; ${hwContacts.operations || 'TBD'}</span>
+          <span style="font-size:9px;padding:2px 6px;border-radius:4px;background:var(--surface);border:1px solid var(--border);color:var(--text-dim)">&#127919; ${hwJudges.length > 0 ? hwJudges.join(', ') : (hw.keyContacts ? hw.keyContacts.judges : 'TBD')}</span>
+        </div>
+        ${phaseHtml}
       </div>
     </div>
-    <div class="card-body" style="padding:10px 14px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-        <span style="font-size:12px;font-weight:700;color:var(--text)">${hw.dates}</span>
-        <span style="font-size:10px;color:var(--text-muted)">${doneTasks}/${totalTasks} tasks (${pct}%)</span>
+  </div>
+
+  <!-- TAB: Teams -->
+  <div class="hw-hub-tab-pane" data-hw-pane="hw-teams">
+    <div class="card">
+      <div class="card-head"><span class="card-title">Team Sign-ups</span><span style="font-size:11px;color:var(--text-muted)">${hwTeams.length} teams</span></div>
+      <div class="card-body" style="padding:20px;text-align:center;color:var(--text-muted)">
+        ${hwTeams.length > 0 ? hwTeams.map(t => '<div style="padding:8px 0;border-bottom:1px solid var(--border);text-align:left"><span style="font-weight:700;color:var(--text)">' + t.name + '</span> <span style="font-size:11px;color:var(--text-muted)">(' + (t.members||[]).join(', ') + ')</span></div>').join('') : '<div style="font-size:24px;margin-bottom:8px">&#128101;</div><div>No teams signed up yet.</div><div style="font-size:11px;margin-top:4px">Teams will appear here once sign-ups open.</div>'}
       </div>
-      <div style="height:6px;background:var(--surface);border-radius:3px;overflow:hidden;border:1px solid var(--border);margin-bottom:10px">
-        <div style="height:100%;width:${pct}%;background:${barColor};border-radius:3px;transition:width .5s"></div>
+    </div>
+  </div>
+
+  <!-- TAB: Schedule -->
+  <div class="hw-hub-tab-pane" data-hw-pane="hw-schedule">
+    ${scheduleHtml}
+  </div>
+
+  <!-- TAB: Logistics -->
+  <div class="hw-hub-tab-pane" data-hw-pane="hw-logistics">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+      <div class="card" style="padding:14px;border-left:3px solid var(--gold)">
+        <div style="font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);font-weight:700">Budget</div>
+        <div style="font-size:18px;font-weight:800;color:var(--gold);margin-top:4px">$${budgetTotal.toLocaleString()}</div>
+        <div style="font-size:11px;color:var(--text-dim);margin-top:4px">
+          Prizes: $${(hwBudget.prizes||0).toLocaleString()} | Travel: $${(hwBudget.travel||0).toLocaleString()} | Food: $${(hwBudget.food||0).toLocaleString()} | Social: $${(hwBudget.social||0).toLocaleString()}
+        </div>
+        <div style="font-size:10px;margin-top:4px;color:${hwBudget.approved?'var(--green)':'var(--yellow)'}">
+          ${hwBudget.approved ? '&#10003; Approved' : '&#9679; Pending approval from ' + (hwBudget.approver || 'Finance')}
+        </div>
       </div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
-        <span style="font-size:9px;padding:2px 6px;border-radius:4px;background:var(--surface);border:1px solid var(--border);color:var(--text-dim)">&#9881; ${hw.keyContacts.engineeringLead}</span>
-        <span style="font-size:9px;padding:2px 6px;border-radius:4px;background:var(--surface);border:1px solid var(--border);color:var(--text-dim)">&#128203; ${hw.keyContacts.operations}</span>
-        <span style="font-size:9px;padding:2px 6px;border-radius:4px;background:var(--surface);border:1px solid var(--border);color:var(--text-dim)">&#127919; ${hw.keyContacts.judges}</span>
+      <div class="card" style="padding:14px;border-left:3px solid var(--lavender)">
+        <div style="font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);font-weight:700">Judges</div>
+        <div style="margin-top:6px">
+          ${hwJudges.map(j => '<span style="font-size:11px;padding:3px 8px;border-radius:4px;background:var(--surface);border:1px solid var(--border);color:var(--text);margin-right:4px;display:inline-block;margin-bottom:4px">' + j + '</span>').join('')}
+        </div>
       </div>
-      ${phaseHtml}
+    </div>
+    <div class="card">
+      <div class="card-head"><span class="card-title">Key Contacts</span></div>
+      <div class="card-body" style="padding:10px 14px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px">
+          <div><span style="color:var(--text-muted)">Engineering Lead:</span> <strong>${hwContacts.engineeringLead || 'TBD'}</strong></div>
+          <div><span style="color:var(--text-muted)">Operations:</span> <strong>${hwContacts.operations || 'TBD'}</strong></div>
+          <div><span style="color:var(--text-muted)">BLR Logistics:</span> <strong>${hwContacts.blrLogistics || 'TBD'}</strong></div>
+          <div><span style="color:var(--text-muted)">Finance:</span> <strong>${hwContacts.finance || 'TBD'}</strong></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: Reviews -->
+  <div class="hw-hub-tab-pane" data-hw-pane="hw-reviews">
+    <div class="card">
+      <div class="card-head"><span class="card-title">Post-Event Reviews</span></div>
+      <div class="card-body" style="padding:40px;text-align:center;color:var(--text-muted)">
+        ${hwReviews.length > 0 ? hwReviews.map(r => '<div style="padding:8px 0;border-bottom:1px solid var(--border);text-align:left"><strong>' + r.title + '</strong> <span style="font-size:11px;color:var(--text-muted)">' + r.date + '</span></div>').join('') : '<div style="font-size:24px;margin-bottom:8px">&#128203;</div><div>No reviews yet.</div><div style="font-size:11px;margin-top:4px">Post-event reviews will appear here after Hack Week.</div>'}
+      </div>
     </div>
   </div>`;
 }
@@ -4614,6 +4750,7 @@ async function init(){
   renderSystemPage();
   renderPodcastPage();
   renderBDPage();
+  renderMarketingHubPage();
 
   const lastPage=loadActivePage();
   if(lastPage&&lastPage!=='overview')navigateTo(lastPage);
@@ -4635,17 +4772,18 @@ async function renderPodcastPage(){
   const el=document.getElementById('page-podcast');
   el.innerHTML='<div style="display:flex;align-items:center;justify-content:center;min-height:200px;color:var(--text-muted)">Loading podcast data...</div>';
 
-  let PODCAST_CONFIG={}, PODCAST_EPISODES=[], PODCAST_GUESTS=[], PODCAST_LAUNCH_TASKS=[], PODCAST_TOPICS=[], PODCAST_REVIEWS=[];
+  let PODCAST_CONFIG={}, PODCAST_EPISODES=[], PODCAST_GUESTS=[], PODCAST_LAUNCH_TASKS=[], PODCAST_TOPICS=[], PODCAST_REVIEWS=[], PODCAST_LINKEDIN=[];
   try{
-    const [config,episodes,guests,launchTasks,topics,reviews]=await Promise.all([
+    const [config,episodes,guests,launchTasks,topics,reviews,linkedin]=await Promise.all([
       fetch('/api/podcast/config').then(r=>r.ok?r.json():{}),
       fetch('/api/podcast/episodes').then(r=>r.ok?r.json():[]),
       fetch('/api/podcast/guests').then(r=>r.ok?r.json():[]),
       fetch('/api/podcast/launch-tasks').then(r=>r.ok?r.json():[]),
       fetch('/api/podcast/topics').then(r=>r.ok?r.json():[]),
-      fetch('/api/podcast/reviews').then(r=>r.ok?r.json():[])
+      fetch('/api/podcast/reviews').then(r=>r.ok?r.json():[]),
+      fetch('/api/podcast/linkedin').then(r=>r.ok?r.json():[])
     ]);
-    PODCAST_CONFIG=config;PODCAST_EPISODES=episodes;PODCAST_GUESTS=guests;PODCAST_LAUNCH_TASKS=launchTasks;PODCAST_TOPICS=topics;PODCAST_REVIEWS=reviews;
+    PODCAST_CONFIG=config;PODCAST_EPISODES=episodes;PODCAST_GUESTS=guests;PODCAST_LAUNCH_TASKS=launchTasks;PODCAST_TOPICS=topics;PODCAST_REVIEWS=reviews;PODCAST_LINKEDIN=linkedin;
   }catch(e){
     console.error('Failed to load podcast data:',e);
     el.innerHTML='<div class="page-header"><div class="page-title">&#127908; Podcast</div></div><div style="padding:40px;text-align:center;color:var(--text-muted)">Could not load podcast data. Make sure podcast-api.js is mounted on the server.</div>';
@@ -4715,7 +4853,8 @@ async function renderPodcastPage(){
     {id:'pod-guests', label:'Guests'},
     {id:'pod-launch', label:'Launch Prep'},
     {id:'pod-topics', label:'Topics'},
-    {id:'pod-reviews', label:'Reviews'}
+    {id:'pod-reviews', label:'Reviews'},
+    {id:'pod-linkedin', label:'LinkedIn'}
   ];
 
   el.innerHTML = `
@@ -4756,6 +4895,7 @@ async function renderPodcastPage(){
     ${renderPodLaunchPrep()}
     ${renderPodTopics()}
     ${renderPodReviews()}
+    ${renderPodLinkedIn()}
   `;
 
   // Wire sub-tab switching
@@ -5156,6 +5296,55 @@ async function renderPodcastPage(){
     '</div>';
   }
 
+  function renderPodLinkedIn() {
+    if (PODCAST_LINKEDIN.length === 0) {
+      return '<div class="pod-tab-pane" id="pod-linkedin">' +
+        '<div class="card"><div class="card-head"><span class="card-title">LinkedIn Pipeline</span>' +
+        '<a href="https://www.notion.so/fermat-commerce/394ee9dbdc924a869ad53020104c1a13" target="_blank" style="font-size:10px;color:var(--gold)">Content Calendar &#8599;</a></div>' +
+        '<div class="card-body" style="padding:40px;text-align:center;color:var(--text-muted)">' +
+        '<div style="font-size:24px;margin-bottom:8px">&#128221;</div>' +
+        '<div>No LinkedIn posts yet &mdash; posts are generated when episodes reach Promotion phase.</div>' +
+        '<div style="font-size:11px;margin-top:8px">Each episode produces 3 posts: teaser, key insight, and recap.</div>' +
+        '<div style="font-size:11px;margin-top:4px">Status flow: <span style="color:var(--text-dim)">Draft</span> &#8594; <span style="color:var(--lavender)">Review</span> &#8594; <span style="color:var(--gold)">Scheduled</span> &#8594; <span style="color:var(--green)">Published</span></div>' +
+        '</div></div></div>';
+    }
+
+    var statusColors = {'Draft':['rgba(160,174,192,.15)','#A0AEC0'],'Review':['rgba(193,177,213,.15)','var(--lavender)'],'Scheduled':['rgba(212,175,55,.15)','var(--gold)'],'Published':['rgba(72,187,120,.15)','var(--green)']};
+    var typeLabels = {'teaser':'Teaser','key_insight':'Key Insight','recap':'Recap'};
+
+    // Group by episode
+    var byEp = {};
+    PODCAST_LINKEDIN.forEach(function(p) {
+      if (!byEp[p.episodeId]) byEp[p.episodeId] = [];
+      byEp[p.episodeId].push(p);
+    });
+
+    var html = '<div class="pod-tab-pane" id="pod-linkedin">';
+    html += '<div class="card"><div class="card-head"><span class="card-title">LinkedIn Pipeline</span>' +
+      '<a href="https://www.notion.so/fermat-commerce/394ee9dbdc924a869ad53020104c1a13" target="_blank" style="font-size:10px;color:var(--gold)">Content Calendar &#8599;</a></div>';
+    html += '<div class="card-body" style="padding:10px 14px">';
+
+    Object.keys(byEp).forEach(function(epId) {
+      var ep = PODCAST_EPISODES.find(function(e){return e.id===epId;});
+      var epTitle = ep ? ep.title : epId;
+      html += '<div style="margin-bottom:12px"><div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid var(--border)">' + epTitle + '</div>';
+      byEp[epId].forEach(function(post) {
+        var sc = statusColors[post.status] || statusColors['Draft'];
+        html += '<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)">' +
+          '<span style="font-size:10px;padding:2px 6px;border-radius:4px;background:' + sc[0] + ';color:' + sc[1] + ';font-weight:700">' + (typeLabels[post.type]||post.type) + '</span>' +
+          '<span style="flex:1;font-size:11px;color:var(--text-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + (post.text||'--') + '</span>' +
+          '<span style="font-size:10px;padding:2px 6px;border-radius:4px;background:' + sc[0] + ';color:' + sc[1] + ';font-weight:700">' + post.status + '</span>' +
+          (post.scheduledDate ? '<span style="font-size:10px;color:var(--text-muted)">' + post.scheduledDate + '</span>' : '') +
+          (post.publishedUrl ? '<a href="' + post.publishedUrl + '" target="_blank" style="font-size:10px;color:var(--gold)">View &#8599;</a>' : '') +
+          '</div>';
+      });
+      html += '</div>';
+    });
+
+    html += '</div></div></div>';
+    return html;
+  }
+
   function updatePodEpProgress(epId) {
     const ep = PODCAST_EPISODES.find(function(e){return e.id===epId;});
     if (!ep) return;
@@ -5181,6 +5370,140 @@ async function renderPodcastPage(){
     if (barEl) { barEl.style.width = pct+'%'; barEl.style.background = pct>=75?'var(--green)':pct>=40?'var(--yellow)':'var(--red)'; }
     if (countEl) countEl.textContent = done+' of '+total+' tasks done';
   }
+}
+
+// ── Marketing Reporting Hub ──
+async function renderMarketingHubPage(){
+  const el=document.getElementById('page-marketing-hub');
+  if(!el) return;
+  let mkt;
+  try {
+    const resp=await fetch('/api/marketing');
+    mkt=await resp.json();
+  } catch(e) {
+    mkt={config:{},standups:[],campaigns:[],reviews:[]};
+  }
+  const config=mkt.config||{};
+  const standups=mkt.standups||[];
+  const campaigns=mkt.campaigns||[];
+  const reviews=mkt.reviews||[];
+  const schedule=config.standupSchedule||{};
+
+  // Determine next standup
+  const dayNames=['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
+  const standupDays={monday:1,wednesday:3,friday:5};
+  const today=new Date();
+  const todayDow=today.getDay();
+  let nextDay=null;let nextOwner='';let daysAway=7;
+  Object.entries(standupDays).forEach(function(entry){
+    var diff=entry[1]-todayDow;
+    if(diff<=0)diff+=7;
+    if(diff<daysAway||(diff===daysAway&&!nextDay)){daysAway=diff;nextDay=entry[0];nextOwner=schedule[entry[0]]||'';}
+  });
+  // If today is a standup day, highlight it
+  if(standupDays[dayNames[todayDow]]!==undefined){nextDay=dayNames[todayDow];nextOwner=schedule[nextDay]||'';daysAway=0;}
+  const nextDate=new Date(today);nextDate.setDate(nextDate.getDate()+daysAway);
+  const nextDateStr=nextDate.toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric'});
+
+  const mktTabs=[
+    {id:'mkt-current',label:'Current Week'},
+    {id:'mkt-archive',label:'Standup Archive'},
+    {id:'mkt-campaigns',label:'Campaigns'},
+    {id:'mkt-calendar',label:'Content Calendar'},
+    {id:'mkt-reviews',label:'Reviews'}
+  ];
+
+  // Standup archive
+  let archiveHtml='';
+  if(standups.length>0){
+    archiveHtml=standups.slice().reverse().map(function(s){
+      return '<div class="card" style="margin-bottom:8px;padding:10px 14px"><div style="display:flex;justify-content:space-between;align-items:center"><span style="font-weight:700;font-size:12px;color:var(--text)">'+s.date+'</span><span style="font-size:10px;color:var(--text-muted)">'+s.owner+'</span></div>'+(s.summary?'<div style="font-size:11px;color:var(--text-dim);margin-top:4px">'+s.summary+'</div>':'')+'</div>';
+    }).join('');
+  } else {
+    archiveHtml='<div style="padding:40px;text-align:center;color:var(--text-muted)"><div style="font-size:24px;margin-bottom:8px">&#128220;</div><div>No standup records yet.</div><div style="font-size:11px;margin-top:4px">Standups are archived automatically after each session.</div></div>';
+  }
+
+  // Campaigns
+  let campaignHtml='';
+  if(campaigns.length>0){
+    campaignHtml=campaigns.map(function(c){
+      return '<div class="card" style="margin-bottom:8px;padding:10px 14px"><div style="display:flex;justify-content:space-between;align-items:center"><span style="font-weight:700;font-size:12px;color:var(--text)">'+c.name+'</span><span style="font-size:10px;padding:2px 8px;border-radius:4px;background:var(--surface);color:var(--text-muted)">'+c.status+'</span></div></div>';
+    }).join('');
+  } else {
+    campaignHtml='<div style="padding:40px;text-align:center;color:var(--text-muted)"><div style="font-size:24px;margin-bottom:8px">&#128640;</div><div>No active campaigns tracked yet.</div><div style="font-size:11px;margin-top:4px">Campaigns will be populated by marketing automation.</div></div>';
+  }
+
+  // Reviews
+  let reviewHtml='';
+  if(reviews.length>0){
+    reviewHtml=reviews.map(function(r){
+      return '<div class="card" style="margin-bottom:8px;padding:10px 14px"><div style="display:flex;justify-content:space-between;align-items:center"><span style="font-weight:700;font-size:12px;color:var(--text)">'+r.title+'</span><span style="font-size:10px;color:var(--text-muted)">'+r.date+'</span></div>'+(r.summary?'<div style="font-size:11px;color:var(--text-dim);margin-top:4px">'+r.summary+'</div>':'')+'</div>';
+    }).join('');
+  } else {
+    reviewHtml='<div style="padding:40px;text-align:center;color:var(--text-muted)"><div style="font-size:24px;margin-bottom:8px">&#128203;</div><div>No weekly rollups yet.</div><div style="font-size:11px;margin-top:4px">Weekly marketing rollups will appear here.</div></div>';
+  }
+
+  el.innerHTML=
+    '<div style="padding:24px 28px">'+
+    '<div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">'+
+    '<span style="font-size:24px">&#128202;</span>'+
+    '<div><h2 style="margin:0;font-size:18px;font-weight:800;letter-spacing:-.3px">'+(config.name||'Marketing Reporting')+'</h2>'+
+    '<div style="font-size:11px;color:var(--text-muted)">'+(config.slackChannel||'#marketing-agendas')+
+    (config.notionHub?' &middot; <a href="'+config.notionHub+'" target="_blank" style="color:var(--gold)">Notion Hub</a>':'')+
+    '</div></div></div>'+
+
+    '<nav class="mkt-hub-nav">'+
+    mktTabs.map(function(t,i){return '<button class="mkt-hub-nav-btn '+(i===0?'active':'')+'" data-mkt-tab="'+t.id+'">'+t.label+'</button>';}).join('')+
+    '</nav>'+
+
+    // Current Week tab
+    '<div class="mkt-hub-tab-pane active" id="mkt-current">'+
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">'+
+    '<div class="card" style="padding:14px;border-left:3px solid var(--gold)">'+
+    '<div style="font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);font-weight:700">Next Standup</div>'+
+    '<div style="font-size:16px;font-weight:800;color:var(--gold);margin-top:4px">'+nextDateStr+'</div>'+
+    '<div style="font-size:12px;color:var(--text-dim);margin-top:2px">'+nextOwner+'</div>'+
+    (daysAway===0?'<div style="font-size:10px;color:var(--green);font-weight:700;margin-top:4px">&#9679; Today</div>':'')+
+    '</div>'+
+    '<div class="card" style="padding:14px;border-left:3px solid var(--lavender)">'+
+    '<div style="font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);font-weight:700">Standup Schedule</div>'+
+    '<div style="font-size:11px;color:var(--text);margin-top:6px">'+
+    '<div style="display:flex;gap:6px;align-items:center;margin-bottom:4px;padding:3px 0'+(nextDay==='monday'?';background:var(--glow-gold);border-radius:4px;padding-left:6px':'')+'">'+(nextDay==='monday'?'<span style="color:var(--gold);font-weight:700">&#9654;</span>':'')+'<strong>Mon:</strong> '+(schedule.monday||'TBD')+'</div>'+
+    '<div style="display:flex;gap:6px;align-items:center;margin-bottom:4px;padding:3px 0'+(nextDay==='wednesday'?';background:var(--glow-gold);border-radius:4px;padding-left:6px':'')+'">'+(nextDay==='wednesday'?'<span style="color:var(--gold);font-weight:700">&#9654;</span>':'')+'<strong>Wed:</strong> '+(schedule.wednesday||'TBD')+'</div>'+
+    '<div style="display:flex;gap:6px;align-items:center;padding:3px 0'+(nextDay==='friday'?';background:var(--glow-gold);border-radius:4px;padding-left:6px':'')+'">'+(nextDay==='friday'?'<span style="color:var(--gold);font-weight:700">&#9654;</span>':'')+'<strong>Fri:</strong> '+(schedule.friday||'TBD')+'</div>'+
+    '</div></div></div></div>'+
+
+    // Standup Archive tab
+    '<div class="mkt-hub-tab-pane" id="mkt-archive">'+archiveHtml+'</div>'+
+
+    // Campaigns tab
+    '<div class="mkt-hub-tab-pane" id="mkt-campaigns">'+campaignHtml+'</div>'+
+
+    // Content Calendar tab
+    '<div class="mkt-hub-tab-pane" id="mkt-calendar">'+
+    '<div class="card" style="padding:14px">'+
+    '<div class="card-head"><span class="card-title">Content Calendar</span></div>'+
+    '<div class="card-body" style="padding:20px;text-align:center">'+
+    '<div style="font-size:24px;margin-bottom:8px">&#128197;</div>'+
+    '<div style="font-size:12px;color:var(--text)">Jennifer\'s content calendar is managed in Notion.</div>'+
+    '<div style="margin-top:12px"><a href="https://www.notion.so/fermat-commerce/394ee9dbdc924a869ad53020104c1a13" target="_blank" style="font-size:12px;color:var(--gold);text-decoration:none;padding:6px 16px;border:1px solid var(--gold);border-radius:6px;display:inline-block">Open Content Calendar in Notion &#8599;</a></div>'+
+    '</div></div></div>'+
+
+    // Reviews tab
+    '<div class="mkt-hub-tab-pane" id="mkt-reviews">'+reviewHtml+'</div>'+
+
+    '</div>';
+
+  // Wire tab switching
+  el.querySelectorAll('.mkt-hub-nav-btn').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      el.querySelectorAll('.mkt-hub-nav-btn').forEach(function(b){b.classList.remove('active');});
+      el.querySelectorAll('.mkt-hub-tab-pane').forEach(function(p){p.classList.remove('active');});
+      btn.classList.add('active');
+      var pane=el.querySelector('#'+btn.dataset.mktTab);
+      if(pane)pane.classList.add('active');
+    });
+  });
 }
 
 // ── BD Ownership Page ──

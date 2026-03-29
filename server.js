@@ -456,6 +456,62 @@ app.patch('/api/bd/relationships/:id', (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// ── Marketing Reporting API ──
+const MARKETING_PATH = path.join(__dirname, 'data', 'marketing-data.json');
+
+app.get('/api/marketing', (req, res) => {
+  try {
+    if (fs.existsSync(MARKETING_PATH)) {
+      res.json(JSON.parse(fs.readFileSync(MARKETING_PATH, 'utf8')));
+    } else {
+      res.json({ config: {}, standups: [], campaigns: [], reviews: [] });
+    }
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/marketing', (req, res) => {
+  const authHeader = req.headers.authorization || '';
+  const token = authHeader.replace('Bearer ', '');
+  if (token !== (process.env.DASHBOARD_API_KEY || 'sophie-dashboard-secret-change-me')) {
+    return res.status(401).json({ error: 'Invalid API key' });
+  }
+  try {
+    const dir = path.dirname(MARKETING_PATH);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(MARKETING_PATH, JSON.stringify({ ...req.body, lastSynced: new Date().toISOString() }, null, 2));
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ── Hack Week API ──
+const HACKWEEK_PATH = path.join(__dirname, 'data', 'hackweek-data.json');
+
+app.get('/api/hackweek', (req, res) => {
+  try {
+    if (fs.existsSync(HACKWEEK_PATH)) {
+      const data = JSON.parse(fs.readFileSync(HACKWEEK_PATH, 'utf8'));
+      data.config.daysUntil = Math.ceil((new Date(data.config.targetDate) - new Date()) / 86400000);
+      res.json(data);
+    } else {
+      res.json({ config: {}, teams: [], schedule: {}, logistics: {}, reviews: [] });
+    }
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/hackweek', (req, res) => {
+  const authHeader = req.headers.authorization || '';
+  const token = authHeader.replace('Bearer ', '');
+  if (token !== (process.env.DASHBOARD_API_KEY || 'sophie-dashboard-secret-change-me')) {
+    return res.status(401).json({ error: 'Invalid API key' });
+  }
+  try {
+    const dir = path.dirname(HACKWEEK_PATH);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(HACKWEEK_PATH, JSON.stringify({ ...req.body, lastSynced: new Date().toISOString() }, null, 2));
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 // ── CEO Brief Data Storage ──
 const BRIEF_PATH = path.join(__dirname, 'data', 'ceo-brief.json');
 

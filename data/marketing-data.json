@@ -1,0 +1,12 @@
+{
+  "config": {
+    "name": "Marketing Reporting System",
+    "notionHub": null,
+    "slackChannel": "#marketing-agendas",
+    "standupSchedule": {"monday": "Saunder (campaigns, ABM, demand gen)", "wednesday": "Jennifer (content, PMM, PR)", "friday": "Maya (events, logistics)"}
+  },
+  "standups": [],
+  "campaigns": [],
+  "reviews": [],
+  "lastSynced": "2026-03-28T00:00:00.000Z"
+}

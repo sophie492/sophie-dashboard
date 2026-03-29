@@ -158,5 +158,28 @@ module.exports = function createPodcastRouter(notion) {
     }
   });
 
+  // ── GET /linkedin ──
+  router.get('/linkedin', (req, res) => {
+    const data = loadData();
+    res.json(data.linkedinPosts || []);
+  });
+
+  // ── PATCH /linkedin/:id ──
+  router.patch('/linkedin/:id', (req, res) => {
+    try {
+      const data = loadData();
+      const posts = data.linkedinPosts || [];
+      const post = posts.find(p => p.id === req.params.id);
+      if (!post) return res.status(404).json({ error: 'Post not found' });
+      Object.assign(post, req.body);
+      data.lastSynced = new Date().toISOString();
+      saveData(data);
+      res.json({ ok: true });
+    } catch (e) {
+      console.error('Error updating linkedin post:', e);
+      res.status(500).json({ error: 'Failed to update' });
+    }
+  });
+
   return router;
 };
