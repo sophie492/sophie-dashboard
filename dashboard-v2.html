@@ -2190,124 +2190,23 @@ function renderPersonPage(person){
   // Calendar section
   html+=`<div id="person-cal-${key}">${renderPersonCalendar(person)}</div>`;
 
-  // Flagged items (from CEO brief) — Rishabh only
-  if (key === 'rishabh' && CEO_BRIEF.flagged && CEO_BRIEF.flagged.length > 0) {
-    let flaggedHtml = '';
-    CEO_BRIEF.flagged.forEach(f => {
-      const tag = f.tag ? `<span style="margin-right:4px">${f.tag}</span>` : '';
-      flaggedHtml += `<div class="ai-row">
-        <span class="ai-dot red"></span>
-        <span style="flex:1;font-size:11px;color:var(--text)">${tag}${f.text}</span>
-        <span class="badge tag-gray" style="font-size:8px">${f.source || ''}</span>
-      </div>`;
-    });
-    html += `<div style="margin-top:16px">
-      <div class="card" style="border-left:3px solid var(--red)">
-        <div class="card-head"><span class="card-title" style="color:var(--red)">&#128308; Flagged — Needs Attention</span><span class="card-badges"><span class="badge tag-red">${CEO_BRIEF.flagged.length}</span></span></div>
-        <div class="card-body">${flaggedHtml}</div>
-      </div>
-    </div>`;
-  }
-
-  // Top 3 Priorities (from CEO brief) — Rishabh only
-  if (key === 'rishabh' && CEO_BRIEF.priorities && CEO_BRIEF.priorities.length > 0) {
+  // Today's Priorities (from CEO brief)
+  const prioData = key === 'rishabh' ? CEO_BRIEF.priorities : CEO_BRIEF.shreyasPriorities;
+  if (prioData && prioData.length > 0) {
     let prioHtml = '';
-    CEO_BRIEF.priorities.forEach((p, i) => {
+    prioData.forEach((p, i) => {
       prioHtml += `<div style="display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px;align-items:flex-start">
         <span style="font-size:16px;font-weight:800;color:var(--gold);min-width:20px">${i + 1}</span>
         <span style="color:var(--text-dim);line-height:1.4">${p.text}</span>
       </div>`;
     });
-    html += `<div style="margin-top:12px">
+    html += `<div style="margin-top:16px">
       <div class="card" style="border-left:3px solid var(--gold)">
         <div class="card-head"><span class="card-title" style="color:var(--gold)">&#127919; Today's Priorities</span></div>
         <div class="card-body">${prioHtml}</div>
       </div>
     </div>`;
   }
-
-  // Flagged items — Shreyas
-  if (key === 'shreyas' && CEO_BRIEF.shreyasFlagged && CEO_BRIEF.shreyasFlagged.length > 0) {
-    let flaggedHtml = '';
-    CEO_BRIEF.shreyasFlagged.forEach(f => {
-      const tag = f.tag ? `<span style="margin-right:4px">${f.tag}</span>` : '';
-      flaggedHtml += `<div class="ai-row">
-        <span class="ai-dot red"></span>
-        <span style="flex:1;font-size:11px;color:var(--text)">${tag}${f.text}</span>
-        <span class="badge tag-gray" style="font-size:8px">${f.source || ''}</span>
-      </div>`;
-    });
-    html += `<div style="margin-top:16px">
-      <div class="card" style="border-left:3px solid var(--red)">
-        <div class="card-head"><span class="card-title" style="color:var(--red)">&#128308; Flagged — Needs Attention</span><span class="card-badges"><span class="badge tag-red">${CEO_BRIEF.shreyasFlagged.length}</span></span></div>
-        <div class="card-body">${flaggedHtml}</div>
-      </div>
-    </div>`;
-  }
-
-  // Priorities — Shreyas
-  if (key === 'shreyas' && CEO_BRIEF.shreyasPriorities && CEO_BRIEF.shreyasPriorities.length > 0) {
-    let prioHtml = '';
-    CEO_BRIEF.shreyasPriorities.forEach((p, i) => {
-      prioHtml += `<div style="display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px;align-items:flex-start">
-        <span style="font-size:16px;font-weight:800;color:var(--gold);min-width:20px">${i + 1}</span>
-        <span style="color:var(--text-dim);line-height:1.4">${p.text}</span>
-      </div>`;
-    });
-    html += `<div style="margin-top:12px">
-      <div class="card" style="border-left:3px solid var(--gold)">
-        <div class="card-head"><span class="card-title" style="color:var(--gold)">&#127919; Today's Priorities</span></div>
-        <div class="card-body">${prioHtml}</div>
-      </div>
-    </div>`;
-  }
-
-  // Action Items + Waiting On in 2 columns
-  html+=`<div class="grid-2" style="margin-top:16px">`;
-
-  // Full action items
-  let aiHtml='';
-  if(items.length===0){
-    aiHtml='<div style="color:var(--text-muted);font-size:11px;padding:8px 0">No action items for '+person+'</div>';
-  } else {
-    items.forEach(it=>{
-      const dotClass=it.priority||'yellow';
-      // Check for 🆕/🔄 tags from CEO brief
-      const tag = it.tag || '';
-      const tagHtml = tag ? `<span style="margin-right:4px">${tag}</span>` : '';
-      const dismissBtn=it.notionId?`<button class="item-dismiss" onclick="resolveActionItem(this,'${it.notionId}')" title="Resolve">&times;</button>`:'';
-      aiHtml+=`<div class="ai-row">
-        <span class="ai-dot ${dotClass}"></span>
-        <span style="flex:1;font-size:11px;color:var(--text-dim)">${tagHtml}${it.text}</span>
-        <span class="badge tag-gray" style="font-size:8px">${it.source||''}</span>
-        ${dismissBtn}
-      </div>`;
-    });
-  }
-  html+=`<div class="card person-${cls}">
-    <div class="card-head"><span class="card-title">\u26A1 Action Items</span><span class="card-badges"><span class="badge tag-${urgentCount>0?'red':'green'}">${items.length}</span></span></div>
-    <div class="card-body">${aiHtml}</div>
-  </div>`;
-
-  // Full waiting on
-  let waitHtml='';
-  if(waiting.length===0){
-    waitHtml='<div style="color:var(--text-muted);font-size:11px;padding:8px 0">Nothing stale for '+person+'</div>';
-  } else {
-    waiting.forEach(w=>{
-      waitHtml+=`<div class="ai-row">
-        <span class="ai-dot red"></span>
-        <span style="flex:1;font-size:11px;color:var(--text-dim)">${w.text}</span>
-        <span class="badge tag-gray" style="font-size:8px">${w.source||''}</span>
-      </div>`;
-    });
-  }
-  html+=`<div class="card person-${cls}">
-    <div class="card-head"><span class="card-title">\u23F3 Waiting On</span><span class="card-badges"><span class="badge ${waiting.length>0?'tag-yellow':'tag-green'}">${waiting.length}</span></span></div>
-    <div class="card-body">${waitHtml}</div>
-  </div>`;
-
-  html+='</div>';
 
   el.innerHTML=html;
 
