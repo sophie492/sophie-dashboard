@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sophie's Dashboard v2 — Fermat</title>
 <meta http-equiv="refresh" content="300">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💎</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
@@ -6468,9 +6469,13 @@ async function renderMarketingHubPage(){
   var campaigns=mkt.campaigns||[];
   var reviews=mkt.reviews||[];
   var schedule=config.standupSchedule||{};
-  var owners={monday:schedule.monday||'Saunder',wednesday:schedule.wednesday||'Jennifer',friday:schedule.friday||'Maya'};
-  // Clean owner names (might have description like "Saunder (campaigns, ABM)")
-  Object.keys(owners).forEach(function(k){owners[k]=owners[k].split('(')[0].trim().split(' ')[0];});
+  var owners={
+    monday: typeof schedule.monday==='object'?(schedule.monday.owner||'Saunder'):(schedule.monday||'Saunder'),
+    wednesday: typeof schedule.wednesday==='object'?(schedule.wednesday.owner||'Jennifer'):(schedule.wednesday||'Jennifer'),
+    friday: typeof schedule.friday==='object'?(schedule.friday.owner||'Maya'):(schedule.friday||'Maya')
+  };
+  // Clean owner names (strip descriptions)
+  Object.keys(owners).forEach(function(k){if(typeof owners[k]==='string')owners[k]=owners[k].split('(')[0].trim().split(' ')[0];});
 
   // Determine next standup
   const dayNames=['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
