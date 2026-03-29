@@ -900,8 +900,23 @@ function fmtTime(dateTime) {
 }
 
 function classifyEvent(ev) {
-  const s = (ev.summary || '').toLowerCase();
-  if (s.includes('external') || s.includes('demo') || s.includes('intro')) return 'external';
+  const attendees = ev.attendees || [];
+  const fermatDomain = 'fermatcommerce.com';
+
+  // Filter out resource calendars and the organizer's own email
+  const realAttendees = attendees.filter(a => !a.resource && a.email);
+
+  // Check for external attendees (non-fermatcommerce.com)
+  const externalAttendees = realAttendees.filter(a => !a.email.endsWith('@' + fermatDomain));
+  const internalAttendees = realAttendees.filter(a => a.email.endsWith('@' + fermatDomain));
+
+  // If there are external attendees, it's an external meeting
+  if (externalAttendees.length > 0) return 'external';
+
+  // If exactly 2 real attendees (both internal), it's a 1:1
+  if (realAttendees.length === 2 && internalAttendees.length === 2) return '1on1';
+
+  // Everything else is internal
   return 'internal';
 }
 
