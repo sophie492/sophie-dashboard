@@ -2191,8 +2191,7 @@ function renderPersonPage(person){
   // Calendar section
   html+=`<div id="person-cal-${key}">${renderPersonCalendar(person)}</div>`;
 
-  // Today's Priorities (from CEO brief)
-  const prioData = key === 'rishabh' ? CEO_BRIEF.priorities : CEO_BRIEF.shreyasPriorities;
+  // Today's Priorities (from CEO brief) — prioData already defined above
   if (prioData && prioData.length > 0) {
     let prioHtml = '';
     prioData.forEach((p, i) => {
