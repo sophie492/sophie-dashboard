@@ -4125,12 +4125,16 @@ function renderOffsiteDetailView(el, OFFSITE, ALLDATA) {
   function renderOverviewTab() {
     // Timeline at a Glance
     var timelineRows = phases.map(function(p) {
-      var statusColor = p.status === 'mostly_done' ? 'var(--green)' : p.status === 'in_progress' ? 'var(--gold)' : 'var(--text-muted)';
-      var isNext = p.status === 'in_progress';
+      var pDone = (p.tasks||[]).filter(function(t){return t.done;}).length;
+      var pTotal = (p.tasks||[]).length;
+      var allDone = pTotal > 0 && pDone === pTotal;
+      var hasProgress = pDone > 0 && !allDone;
+      var statusColor = allDone ? 'var(--green)' : hasProgress ? 'var(--gold)' : 'var(--text-muted)';
+      var isNext = hasProgress;
       return '<tr style="border-bottom:1px solid var(--border);' + (isNext ? 'background:var(--glow-gold)' : '') + '">' +
-        '<td style="padding:6px 8px;font-size:11px;font-weight:600;color:var(--text)">' + p.phase + '</td>' +
-        '<td style="padding:6px 8px;font-size:10px;color:var(--text-muted)">' + p.deadline + '</td>' +
-        '<td style="padding:6px 8px;font-size:10px;color:var(--text-dim)">' + p.what + '</td>' +
+        '<td style="padding:6px 8px;font-size:11px;font-weight:600;color:' + (allDone ? 'var(--green)' : 'var(--text)') + '">' + (p.name||'') + '</td>' +
+        '<td style="padding:6px 8px;font-size:10px;color:var(--text-muted)">' + (p.deadline||'') + '</td>' +
+        '<td style="padding:6px 8px;font-size:10px;color:var(--text-dim)">' + pDone + '/' + pTotal + ' tasks</td>' +
         '<td style="padding:6px 8px;text-align:center"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + statusColor + '"></span></td>' +
       '</tr>';
     }).join('');
