@@ -391,19 +391,95 @@ function loadOffsiteData() {
   catch(e) { return { offsites: {} }; }
 }
 
+// Compute travel needs by comparing attendee location to offsite city
+function computeTravelNeeds(offsite) {
+  if (!offsite.attendees || !offsite.city || offsite.city === 'TBD') return;
+
+  const cityNorm = offsite.city.toLowerCase().replace(/[^a-z ]/g, '').trim();
+
+  // Map of city variations to canonical names
+  const cityAliases = {
+    'new york city': 'new york', 'new york': 'new york', 'nyc': 'new york', 'manhattan': 'new york', 'brooklyn': 'new york',
+    'san francisco': 'san francisco', 'sf': 'san francisco',
+    'los angeles': 'los angeles', 'la': 'los angeles',
+    'denver': 'denver',
+    'san diego': 'san diego',
+    'salt lake city': 'salt lake city', 'slc': 'salt lake city',
+    'mumbai': 'mumbai', 'bangalore': 'bangalore', 'bengaluru': 'bangalore'
+  };
+
+  const offsiteCity = cityAliases[cityNorm] || cityNorm;
+
+  // Airport map
+  const airports = {
+    'san francisco': 'SFO', 'new york': 'JFK/EWR', 'los angeles': 'LAX',
+    'denver': 'DEN', 'san diego': 'SAN', 'salt lake city': 'SLC',
+    'mumbai': 'BOM', 'bangalore': 'BLR'
+  };
+
+  // Approximate flight times to common offsite cities (hours)
+  const flightTimes = {
+    'san francisco->new york': 5.5, 'new york->san francisco': 5.5,
+    'san francisco->denver': 2.5, 'denver->san francisco': 2.5,
+    'san francisco->san diego': 1.5, 'san diego->san francisco': 1.5,
+    'salt lake city->new york': 4.5, 'new york->salt lake city': 4.5,
+    'salt lake city->san francisco': 2, 'san francisco->salt lake city': 2,
+    'denver->new york': 4, 'new york->denver': 4,
+    'mumbai->new york': 16, 'mumbai->san francisco': 18,
+    'mumbai->denver': 20, 'bangalore->san francisco': 20
+  };
+
+  const destAirport = airports[offsiteCity] || offsiteCity.toUpperCase();
+
+  offsite.attendees.forEach(a => {
+    const locNorm = (a.location || '').toLowerCase().replace(/[^a-z ]/g, '').trim();
+    const attendeeCity = Object.entries(cityAliases).find(([k]) => locNorm.includes(k));
+    const homeCity = attendeeCity ? cityAliases[attendeeCity[0]] : locNorm;
+    const homeAirport = airports[homeCity] || homeCity.toUpperCase();
+
+    if (homeCity === offsiteCity) {
+      // Local — no travel needed
+      a.needsHotel = false;
+      a.needsFlight = false;
+      a.hotelConfirmed = true;
+      a.flightBooked = true;
+      a.travelNotes = offsiteCity.charAt(0).toUpperCase() + offsiteCity.slice(1) + ' local — no travel needed';
+    } else {
+      a.needsHotel = true;
+      a.needsFlight = true;
+      const route = homeCity + '->' + offsiteCity;
+      const hours = flightTimes[route];
+      if (hours) {
+        a.travelNotes = homeAirport + ' → ' + destAirport + ' (~' + hours + 'h flight)';
+      } else {
+        a.travelNotes = homeAirport + ' → ' + destAirport;
+      }
+      if (homeCity === 'mumbai' || homeCity === 'bangalore') {
+        a.travelNotes += ' — international, check visa';
+      }
+    }
+  });
+
+  // Count rooms needed
+  const roomsNeeded = offsite.attendees.filter(a => a.needsHotel).length;
+  if (!offsite.logistics) offsite.logistics = {};
+  if (!offsite.logistics.hotel) offsite.logistics.hotel = {};
+  offsite.logistics.hotel.roomsNeeded = roomsNeeded;
+}
+
 app.get('/api/offsite', (req, res) => {
   try {
     const data = loadOffsiteData();
-    // Add computed daysUntil for each non-complete offsite
+    // Compute daysUntil and travel needs for each offsite
     Object.values(data.offsites).forEach(year => {
       year.forEach(o => {
         if (o.dates && o.dates !== 'TBD' && o.status !== 'Complete') {
-          const match = o.dates.match(/(\w+ \d+)/);
-          if (match) {
-            const target = new Date(o.year + '-' + o.dates);
+          try {
             o.daysUntil = Math.ceil((new Date(o.dates.includes('202') ? o.dates : o.year+' '+o.dates) - new Date()) / 86400000);
-          }
+          } catch(e) {}
         }
+        // Auto-compute travel needs based on attendee locations vs offsite city
+        computeTravelNeeds(o);
       });
     });
     res.json(data);
@@ -415,7 +491,7 @@ app.get('/api/offsite/:id', (req, res) => {
     const data = loadOffsiteData();
     for (const year of Object.values(data.offsites)) {
       const offsite = year.find(o => o.id === req.params.id);
-      if (offsite) return res.json(offsite);
+      if (offsite) { computeTravelNeeds(offsite); return res.json(offsite); }
     }
     res.status(404).json({ error: 'Offsite not found' });
   } catch(e) { res.status(500).json({ error: e.message }); }
