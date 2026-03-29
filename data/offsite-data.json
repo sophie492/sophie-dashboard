@@ -1865,7 +1865,29 @@
         "notionPageId": null,
         "attendees": [],
         "phases": [],
-        "logistics": {},
+        "logistics": {
+          "hotel": { "name": "TBD", "confirmed": false, "status": "Not Started", "statusDetail": "", "selectedOption": null, "confirmationDetails": "", "rate": null, "nights": 2, "rooms": null, "contactPerson": "Alice Zhao (travel agent, alice.zhao@fora.travel)" },
+          "venue": { "name": "TBD", "address": "", "confirmed": false, "status": "Not Started", "statusDetail": "", "selectedOption": null, "confirmationDetails": "" },
+          "dinner": { "name": "TBD", "confirmed": false, "status": "Not Started", "statusDetail": "", "selectedOption": null, "confirmationDetails": "", "reservationDate": "", "partySize": null, "requirement": "Strong vegetarian options + private dining" },
+          "activity": { "name": "TBD", "confirmed": false, "status": "Not Started", "statusDetail": "", "selectedOption": null, "confirmationDetails": "" },
+          "hotelResearch": [],
+          "weworkResearch": [],
+          "dinnerResearch": [],
+          "activityResearch": [],
+          "meals": { "day1Lunch": { "link": "", "notes": "" }, "day2Lunch": { "link": "", "notes": "" } },
+          "budget": { "estimated": null, "approved": false, "committed": 0, "actual": 0, "approver": "Evelyn", "categories": [
+            { "category": "Hotel", "estimated": null, "committed": 0, "actual": 0, "notes": "" },
+            { "category": "Venue", "estimated": null, "committed": 0, "actual": 0, "notes": "" },
+            { "category": "Transportation", "estimated": null, "committed": 0, "actual": 0, "notes": "" },
+            { "category": "Food & Beverage", "estimated": null, "committed": 0, "actual": 0, "notes": "" },
+            { "category": "Social Activity", "estimated": null, "committed": 0, "actual": 0, "notes": "" },
+            { "category": "Misc", "estimated": null, "committed": 0, "actual": 0, "notes": "" }
+          ] },
+          "aliceCorrespondence": { "threadSubject": "", "lastEmailDate": "", "summary": "", "nextStep": "", "keyEmails": [] },
+          "coordinationContacts": [
+            { "name": "Alice Zhao", "role": "Travel agent (Fora Travel)", "email": "alice.zhao@fora.travel", "reachOutFor": "Hotel bookings, group rates, flight coordination" }
+          ]
+        },
         "themes": [],
         "lessonsLearned": [],
         "reviews": []
@@ -1881,7 +1903,29 @@
         "notionPageId": null,
         "attendees": [],
         "phases": [],
-        "logistics": {},
+        "logistics": {
+          "hotel": { "name": "TBD", "confirmed": false, "status": "Not Started", "statusDetail": "", "selectedOption": null, "confirmationDetails": "", "rate": null, "nights": 2, "rooms": null, "contactPerson": "Alice Zhao (travel agent, alice.zhao@fora.travel)" },
+          "venue": { "name": "TBD", "address": "", "confirmed": false, "status": "Not Started", "statusDetail": "", "selectedOption": null, "confirmationDetails": "" },
+          "dinner": { "name": "TBD", "confirmed": false, "status": "Not Started", "statusDetail": "", "selectedOption": null, "confirmationDetails": "", "reservationDate": "", "partySize": null, "requirement": "Strong vegetarian options + private dining" },
+          "activity": { "name": "TBD", "confirmed": false, "status": "Not Started", "statusDetail": "", "selectedOption": null, "confirmationDetails": "" },
+          "hotelResearch": [],
+          "weworkResearch": [],
+          "dinnerResearch": [],
+          "activityResearch": [],
+          "meals": { "day1Lunch": { "link": "", "notes": "" }, "day2Lunch": { "link": "", "notes": "" } },
+          "budget": { "estimated": null, "approved": false, "committed": 0, "actual": 0, "approver": "Evelyn", "categories": [
+            { "category": "Hotel", "estimated": null, "committed": 0, "actual": 0, "notes": "" },
+            { "category": "Venue", "estimated": null, "committed": 0, "actual": 0, "notes": "" },
+            { "category": "Transportation", "estimated": null, "committed": 0, "actual": 0, "notes": "" },
+            { "category": "Food & Beverage", "estimated": null, "committed": 0, "actual": 0, "notes": "" },
+            { "category": "Social Activity", "estimated": null, "committed": 0, "actual": 0, "notes": "" },
+            { "category": "Misc", "estimated": null, "committed": 0, "actual": 0, "notes": "" }
+          ] },
+          "aliceCorrespondence": { "threadSubject": "", "lastEmailDate": "", "summary": "", "nextStep": "", "keyEmails": [] },
+          "coordinationContacts": [
+            { "name": "Alice Zhao", "role": "Travel agent (Fora Travel)", "email": "alice.zhao@fora.travel", "reachOutFor": "Hotel bookings, group rates, flight coordination" }
+          ]
+        },
         "themes": [],
         "lessonsLearned": [],
         "reviews": []

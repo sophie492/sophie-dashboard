@@ -512,6 +512,41 @@ app.post('/api/offsite', (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// PATCH a single logistics category for an offsite
+app.patch('/api/offsite/:id/logistics', (req, res) => {
+  const authHeader = req.headers.authorization || '';
+  const token = authHeader.replace('Bearer ', '');
+  if (token !== (process.env.DASHBOARD_API_KEY || 'sophie-dashboard-secret-change-me')) {
+    return res.status(401).json({ error: 'Invalid API key' });
+  }
+  try {
+    const data = loadOffsiteData();
+    let found = null;
+    for (const year of Object.values(data.offsites)) {
+      found = year.find(o => o.id === req.params.id);
+      if (found) break;
+    }
+    if (!found) return res.status(404).json({ error: 'Offsite not found' });
+
+    if (!found.logistics) found.logistics = {};
+
+    // Merge each key from request body into logistics
+    for (const [key, value] of Object.entries(req.body)) {
+      if (typeof value === 'object' && !Array.isArray(value) && found.logistics[key] && typeof found.logistics[key] === 'object') {
+        // Merge object fields (don't overwrite entire object)
+        Object.assign(found.logistics[key], value);
+      } else {
+        found.logistics[key] = value;
+      }
+    }
+
+    const dir = path.dirname(OFFSITE_PATH);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(OFFSITE_PATH, JSON.stringify({ ...data, lastSynced: new Date().toISOString() }, null, 2));
+    res.json({ ok: true, updated: Object.keys(req.body) });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 app.post('/api/offsite/create', async (req, res) => {
   const authHeader = req.headers.authorization || '';
   const token = authHeader.replace('Bearer ', '');
@@ -541,7 +576,32 @@ app.post('/api/offsite/create', async (req, res) => {
       notionPageId: null,
       attendees: JSON.parse(JSON.stringify(data.defaultRoster || [])),
       phases: JSON.parse(JSON.stringify(data.template?.phases || [])),
-      logistics: { hotel: {confirmed:false}, venue: {confirmed:false}, dinner: {confirmed:false}, activity: {confirmed:false}, budget: {estimated:0, approved:false, committed:0, actual:0} },
+      logistics: {
+        hotel: { name: 'TBD', confirmed: false, status: 'Not Started', statusDetail: '', selectedOption: null, confirmationDetails: '', rate: null, nights: 2, rooms: null, roomsNote: '', contactPerson: 'Alice Zhao (travel agent, alice.zhao@fora.travel)' },
+        venue: { name: 'TBD', address: '', confirmed: false, status: 'Not Started', statusDetail: '', selectedOption: null, confirmationDetails: '', capacity: '10+', estimatedCost: '' },
+        dinner: { name: 'TBD', confirmed: false, status: 'Not Started', statusDetail: '', selectedOption: null, confirmationDetails: '', reservationDate: '', partySize: null, bookedVia: '', requirement: 'Strong vegetarian options + private dining' },
+        activity: { name: 'TBD', confirmed: false, status: 'Not Started', statusDetail: '', selectedOption: null, confirmationDetails: '', lesson: 'Group activity + dinner is a proven combo. Escape room was a hit in Denver.' },
+        hotelResearch: [],
+        weworkResearch: [],
+        dinnerResearch: [],
+        activityResearch: [],
+        meals: { day1Lunch: { link: '', notes: '' }, day2Lunch: { link: '', notes: '' } },
+        budget: {
+          estimated: null, approved: false, committed: 0, actual: 0, approver: 'Evelyn',
+          categories: [
+            { category: 'Hotel', estimated: null, committed: 0, actual: 0, notes: '' },
+            { category: 'Venue', estimated: null, committed: 0, actual: 0, notes: '' },
+            { category: 'Transportation', estimated: null, committed: 0, actual: 0, notes: '' },
+            { category: 'Food & Beverage', estimated: null, committed: 0, actual: 0, notes: '' },
+            { category: 'Social Activity', estimated: null, committed: 0, actual: 0, notes: '' },
+            { category: 'Misc', estimated: null, committed: 0, actual: 0, notes: '' }
+          ]
+        },
+        aliceCorrespondence: { threadSubject: '', lastEmailDate: '', summary: '', nextStep: '', keyEmails: [] },
+        coordinationContacts: [
+          { name: 'Alice Zhao', role: 'Travel agent (Fora Travel)', email: 'alice.zhao@fora.travel', reachOutFor: 'Hotel bookings, group rates, flight coordination' }
+        ]
+      },
       themes: [],
       lessonsLearned: data.template?.lessonsLearned || [],
       reviews: []

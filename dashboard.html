@@ -4020,8 +4020,8 @@ function renderOffsiteDetailView(el, OFFSITE, ALLDATA) {
   var lessonsLearned = OFFSITE.lessonsLearned || [];
   var reviews = OFFSITE.reviews || [];
   var agenda = OFFSITE.agenda || [];
-  var contacts = OFFSITE.coordinationContacts || [];
-  var aliceCorr = OFFSITE.aliceCorrespondence || {};
+  var contacts = OFFSITE.coordinationContacts || (logistics.coordinationContacts) || [];
+  var aliceCorr = OFFSITE.aliceCorrespondence || (logistics.aliceCorrespondence) || {};
 
   var hotel = logistics.hotel || {};
   var venue = logistics.venue || {};
@@ -4034,8 +4034,15 @@ function renderOffsiteDetailView(el, OFFSITE, ALLDATA) {
   var activityResearch = logistics.activityResearch || [];
   var budgetCategories = budget.categories || [];
 
-  // Days until
-  var daysUntil = Math.ceil((new Date('2026-04-20') - new Date()) / 86400000);
+  // Days until (derived from offsite dates)
+  var offsiteDates = OFFSITE.dates || '';
+  var daysUntil = 0;
+  if (offsiteDates && offsiteDates !== 'TBD') {
+    try {
+      var dateStr = offsiteDates.includes('202') ? offsiteDates : OFFSITE.year + ' ' + offsiteDates;
+      daysUntil = Math.ceil((new Date(dateStr) - new Date()) / 86400000);
+    } catch(e) {}
+  }
 
   // Count tasks across checklist
   function countChecklist(obj) {
@@ -4356,16 +4363,30 @@ function renderOffsiteDetailView(el, OFFSITE, ALLDATA) {
     var dinnerCard = renderCategoryCard('&#127869;', 'Dinner', 'dinner', dinner, dinnerResearch);
     var activityCard = renderCategoryCard('&#127918;', 'Activity', 'activity', activity, activityResearch);
 
+    // Compute dynamic meal labels from offsite dates
+    var day1Label = 'Day 1';
+    var day2Label = 'Day 2';
+    if (offsiteDates && offsiteDates !== 'TBD') {
+      try {
+        var ds = offsiteDates.includes('202') ? offsiteDates : OFFSITE.year + ' ' + offsiteDates;
+        var d1 = new Date(ds);
+        var dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+        day1Label = 'Day 1 (' + dayNames[d1.getDay()] + ' ' + (d1.getMonth()+1) + '/' + d1.getDate() + ')';
+        var d2 = new Date(d1); d2.setDate(d2.getDate()+1);
+        day2Label = 'Day 2 (' + dayNames[d2.getDay()] + ' ' + (d2.getMonth()+1) + '/' + d2.getDate() + ')';
+      } catch(e) {}
+    }
+
     // Meal planning card
     var mealCard = '<div class="card offsite-logistics-card" style="margin-bottom:14px">' +
       '<div class="card-head"><div class="card-title">&#127869; Meal Planning</div></div>' +
       '<div class="card-body" style="padding:12px 14px">' +
         '<div style="margin-bottom:10px">' +
-          '<div style="font-size:11px;font-weight:600;color:var(--text);margin-bottom:4px">Day 1 Lunch (Mon 4/20):</div>' +
+          '<div style="font-size:11px;font-weight:600;color:var(--text);margin-bottom:4px">' + day1Label + ' Lunch:</div>' +
           '<input class="offsite-budget-input" style="width:100%" value="' + ((meals.day1Lunch && meals.day1Lunch.link) || '').replace(/"/g, '&quot;') + '" placeholder="DoorDash group order link..." onblur="updateMealLink(\'day1Lunch\',this.value)">' +
         '</div>' +
         '<div>' +
-          '<div style="font-size:11px;font-weight:600;color:var(--text);margin-bottom:4px">Day 2 Lunch (Tue 4/21):</div>' +
+          '<div style="font-size:11px;font-weight:600;color:var(--text);margin-bottom:4px">' + day2Label + ' Lunch:</div>' +
           '<input class="offsite-budget-input" style="width:100%" value="' + ((meals.day2Lunch && meals.day2Lunch.link) || '').replace(/"/g, '&quot;') + '" placeholder="DoorDash group order link..." onblur="updateMealLink(\'day2Lunch\',this.value)">' +
         '</div>' +
       '</div>' +
