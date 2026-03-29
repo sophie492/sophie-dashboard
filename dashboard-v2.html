@@ -2171,20 +2171,10 @@ function renderPersonPage(person){
   const cls=key==='rishabh'?'rishabh':'shreyas';
   const dotColor=key==='rishabh'?'var(--lavender)':'var(--gold)';
   const prioData=key==='rishabh'?CEO_BRIEF.priorities:CEO_BRIEF.shreyasPriorities;
-  const prioCount=(prioData||[]).length;
-  const calDays=DATA.calendarDays||[];
-  const todayStr=new Date(new Date().toLocaleString('en-US',{timeZone:'America/Los_Angeles'})).toISOString().slice(0,10);
-  const todayCal=calDays.find(d=>d.date>=todayStr)||calDays[0];
-  const mtgCount=todayCal?((todayCal[key]||[]).length):0;
 
   let html=`
     <div class="page-header">
       <div class="page-title"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${dotColor};margin-right:8px"></span>${person}</div>
-      <div class="page-kpis">
-        <div class="kpi gold"><div class="num">${prioCount}</div><div class="lbl">Priorities</div></div>
-        <div class="kpi-divider"></div>
-        <div class="kpi blue"><div class="num">${mtgCount}</div><div class="lbl">Meetings Today</div></div>
-      </div>
     </div>
   `;
 
