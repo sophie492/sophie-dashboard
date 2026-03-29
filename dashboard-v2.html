@@ -5405,15 +5405,24 @@ async function fetchLiveFPPC(){
     const data=await res.json();
     if(!data.events)return;
     // Replace upcoming events with live data from the FPPC API
+    // Parse human-readable dates to ISO for filtering
+    function parseFppcDate(dateStr){
+      if(!dateStr)return '';
+      // Handle "Mar 28", "Mar 28–29", "Apr 11–12" etc
+      const months={Jan:'01',Feb:'02',Mar:'03',Apr:'04',May:'05',Jun:'06',Jul:'07',Aug:'08',Sep:'09',Oct:'10',Nov:'11',Dec:'12'};
+      const m=dateStr.match(/(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+(\d+)/);
+      if(!m)return '';
+      return '2026-'+months[m[1]]+'-'+m[2].padStart(2,'0');
+    }
     DATA.fppcEvents.upcoming=(data.events||[]).map(e=>({
       title:e.title,
       name:e.title,
       votes:e.votes||0,
       type:e.type||'social',
       date:e.date||'',
-      dateISO:e.date||'',
+      dateISO:e.dateISO||parseFppcDate(e.date),
       location:e.location||'',
-      free:false,
+      free:e.free||false,
       link:'https://fppc-dashboard-production-52d3.up.railway.app/'
     }));
     DATA.fppcEvents.totalEvents=data.events.length;
