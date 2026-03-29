@@ -4735,35 +4735,42 @@ function startAutoRefresh(){
 // ── Init ──
 
 async function init(){
-  applyPersistedState();
-  await loadServerCheckboxStates();
-  renderSidebar();
-  updateFreshness();
-  renderOverview();
-  renderPersonPage('Rishabh');
-  renderPersonPage('Shreyas');
-  renderTasksPage();
+  try{
+    applyPersistedState();
+    // Don't block on checkbox states — load them in background
+    loadServerCheckboxStates().catch(e=>console.warn('[Init] Checkbox load failed:',e.message));
+    renderSidebar();
+    updateFreshness();
+    renderOverview();
+    renderPersonPage('Rishabh');
+    renderPersonPage('Shreyas');
+    renderTasksPage();
+    renderNewsPage();
+    renderEventsPage();
+    renderProjectsPage();
+    renderSystemPage();
+  }catch(e){console.error('[Init] Core render failed:',e.message);}
 
-  renderNewsPage();
-  renderEventsPage();
-  renderProjectsPage();
-  renderSystemPage();
-  renderPodcastPage();
-  renderBDPage();
-  renderMarketingHubPage();
+  // Async pages — each wrapped independently so one failure doesn't block others
+  renderPodcastPage().catch(e=>console.warn('[Init] Podcast failed:',e.message));
+  renderBDPage().catch(e=>console.warn('[Init] BD failed:',e.message));
+  renderMarketingHubPage().catch(e=>console.warn('[Init] Marketing failed:',e.message));
 
-  const lastPage=loadActivePage();
-  if(lastPage&&lastPage!=='overview')navigateTo(lastPage);
+  try{
+    const lastPage=loadActivePage();
+    if(lastPage&&lastPage!=='overview')navigateTo(lastPage);
+  }catch(e){}
 
-  fetchLiveActionItems();
-  fetchLiveNews();
-  fetchLiveUtilities();
-  fetchLivePulse();
-  fetchLiveCalendar();
-  fetchLiveFPPC();
-  fetchLiveTasks();
-  fetchLiveEvents();
-  fetchLiveBrief();
+  // Live data fetches — all independent, all fire-and-forget
+  fetchLiveActionItems().catch(()=>{});
+  fetchLiveNews().catch(()=>{});
+  fetchLiveUtilities().catch(()=>{});
+  fetchLivePulse().catch(()=>{});
+  fetchLiveCalendar().catch(()=>{});
+  fetchLiveFPPC().catch(()=>{});
+  fetchLiveTasks().catch(()=>{});
+  fetchLiveEvents().catch(()=>{});
+  fetchLiveBrief().catch(()=>{});
 
   startAutoRefresh();
 }
