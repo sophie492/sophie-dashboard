@@ -3215,6 +3215,17 @@ async function renderEventsPage(){
     }
   });
 
+  // Auto-generate todos for events with empty todo lists
+  const todoPromises = MKT_EVENTS.filter(ev => !ev.todos || ev.todos.length === 0).map(ev =>
+    fetch('/api/events/generate-todos', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(ev)
+    }).then(r => r.json()).then(d => { if (d.todos && d.todos.length > 0) ev.todos = d.todos; })
+    .catch(() => {})
+  );
+  await Promise.all(todoPromises);
+
   const todayISO = new Date().toISOString().slice(0,10);
   const sixMonthsOut = new Date(); sixMonthsOut.setMonth(sixMonthsOut.getMonth() + 6);
   const sixMonthsISO = sixMonthsOut.toISOString().slice(0,10);

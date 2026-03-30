@@ -3229,6 +3229,135 @@ app.get('/', ensureAuth, (req, res) => {
 app.use(ensureAuth, express.static(__dirname));
 
 // ââ Start ââ
+// ── Event Todo Auto-Generation ──
+
+function generateEventTodos(event) {
+  if (event.todos && event.todos.length > 0) return event.todos;
+
+  const todos = [];
+  const type = (event.type || '').toLowerCase();
+
+  // Helper: format arrival date (startDate minus 1 day) as "Mon DD"
+  function getArrivalDate(startDate) {
+    if (!startDate) return 'TBD';
+    try {
+      const parts = startDate.split('-').map(Number);
+      const d = new Date(parts[0], parts[1] - 1, parts[2] - 1);
+      if (isNaN(d.getTime())) return 'TBD';
+      const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      return months[d.getMonth()] + ' ' + d.getDate();
+    } catch (e) {
+      return 'TBD';
+    }
+  }
+
+  const location = event.location || 'TBD';
+  const dates = event.dates || 'TBD';
+  const arrivalDate = getArrivalDate(event.startDate);
+
+  if (type.includes('irl')) {
+    // Per-exec IRL todos
+    const execs = [];
+    if (event.rishabh) execs.push('Rishabh');
+    if (event.shreyas) execs.push('Shreyas');
+
+    execs.forEach(name => {
+      todos.push({ text: `Book ${name}'s flight to ${location} (arrive ${arrivalDate})`, done: false });
+      todos.push({ text: `Book ${name}'s hotel in ${location}`, done: false });
+      todos.push({ text: `Block ${name}'s calendar ${dates}`, done: false });
+      todos.push({ text: `Clear / reschedule conflicts on ${name}'s calendar`, done: false });
+    });
+
+    // General IRL todos
+    todos.push({ text: 'Prep event materials / deck', done: false });
+    todos.push({ text: 'Confirm Fermat team travel logistics', done: false });
+    todos.push({ text: 'Send pre-event outreach to target accounts', done: false });
+  } else if (type.includes('virtual')) {
+    todos.push({ text: 'Send calendar invites to Fermat team', done: false });
+    todos.push({ text: 'Prep demo / presentation materials', done: false });
+    todos.push({ text: 'Test video/audio setup', done: false });
+    todos.push({ text: 'Send pre-event outreach to target accounts', done: false });
+  } else if (type.includes('dinner') || type.includes('food') || type.includes('social')) {
+    todos.push({ text: 'Confirm reservation details', done: false });
+    todos.push({ text: 'Send invites / confirm attendees', done: false });
+    todos.push({ text: 'Coordinate logistics (transportation, parking)', done: false });
+  }
+
+  // All events get this
+  todos.push({ text: 'Confirm event registration / tickets', done: false });
+
+  return todos;
+}
+
+function autoCheckEventTodos(todos, event) {
+  if (!todos || todos.length === 0) return todos;
+
+  let calendarData = null;
+  const calPath = path.join(__dirname, 'data', 'calendar.json');
+  try {
+    if (fs.existsSync(calPath)) {
+      calendarData = JSON.parse(fs.readFileSync(calPath, 'utf8'));
+    }
+  } catch (e) {
+    console.log('[EventTodos] Could not read calendar cache:', e.message);
+  }
+
+  if (!calendarData) return todos;
+
+  // Flatten calendar days into per-person event lists
+  const calDays = calendarData.calendarDays || [];
+  const eventStart = event.startDate ? new Date(event.startDate) : null;
+  const eventEnd = event.endDate ? new Date(event.endDate) : eventStart;
+
+  todos.forEach(todo => {
+    // Never un-check a manually checked todo
+    if (todo.done && !todo.autoChecked) return;
+
+    // Check "Book [Name]'s flight" todos
+    const flightMatch = todo.text.match(/Book (\w+)'s flight/);
+    if (flightMatch && eventStart) {
+      const personKey = flightMatch[1].toLowerCase();
+      const hasFlightEvent = calDays.some(day => {
+        const dayDate = new Date(day.date);
+        const dayDiff = Math.abs((dayDate - eventStart) / 86400000);
+        if (dayDiff > 2) return false;
+        const events = day[personKey] || [];
+        return events.some(e => {
+          const title = (e.title || '').toLowerCase();
+          return title.includes('flight') || title.includes('fly') || title.includes('travel') ||
+                 title.includes('sfo') || title.includes('jfk') || title.includes('ewr') ||
+                 title.includes('lax') || title.includes('phx') || title.includes('las');
+        });
+      });
+      if (hasFlightEvent) { todo.done = true; todo.autoChecked = true; }
+    }
+
+    // Check "Block [Name]'s calendar" todos
+    const blockMatch = todo.text.match(/Block (\w+)'s calendar/);
+    if (blockMatch && eventStart) {
+      const personKey = blockMatch[1].toLowerCase();
+      const evName = (event.name || event.shortName || '').toLowerCase();
+      const hasBlock = calDays.some(day => {
+        const dayDate = new Date(day.date);
+        if (dayDate < eventStart || (eventEnd && dayDate > eventEnd)) return false;
+        const events = day[personKey] || [];
+        return events.some(e => (e.title || '').toLowerCase().includes(evName.split(' ')[0]));
+      });
+      if (hasBlock) { todo.done = true; todo.autoChecked = true; }
+    }
+  });
+
+  return todos;
+}
+
+app.post('/api/events/generate-todos', (req, res) => {
+  const event = req.body;
+  if (!event) return res.status(400).json({ error: 'No event data' });
+  const todos = generateEventTodos(event);
+  autoCheckEventTodos(todos, event);
+  res.json({ todos });
+});
+
 // Calendar auto-refresh cron
 async function refreshCalendarCache() {
   try {
