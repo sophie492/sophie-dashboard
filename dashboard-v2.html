@@ -2024,6 +2024,14 @@ function renderPersonSection(person){
   // Today's Priorities card (from CEO brief)
   const overviewPrios = key === 'rishabh' ? CEO_BRIEF.priorities : CEO_BRIEF.shreyasPriorities;
   let prioHtml = '';
+  // Check if brief is stale (>18 hours old)
+  const briefAge = CEO_BRIEF.lastUpdated ? (Date.now() - new Date(CEO_BRIEF.lastUpdated).getTime()) / 3600000 : 999;
+  const briefDateStr = CEO_BRIEF.briefDate || '';
+  const todayISO = new Date(new Date().toLocaleString('en-US',{timeZone:'America/Los_Angeles'})).toISOString().slice(0,10);
+  const briefIsToday = briefDateStr && briefDateStr.includes(todayISO.slice(5));
+  if (briefAge > 18 && !briefIsToday) {
+    prioHtml += '<div style="background:var(--red-soft);border:1px solid var(--red);border-radius:6px;padding:6px 10px;margin-bottom:8px;font-size:10px;color:var(--red);display:flex;align-items:center;gap:6px"><span style="font-size:14px">&#9888;</span> Brief is stale (last updated ' + (CEO_BRIEF.lastUpdated ? new Date(CEO_BRIEF.lastUpdated).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}) : 'never') + '). Waiting for today\'s run.</div>';
+  }
   if (overviewPrios && overviewPrios.length > 0) {
     overviewPrios.forEach((p, i) => {
       prioHtml += `<div style="display:flex;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:11px;align-items:flex-start">
@@ -2032,7 +2040,7 @@ function renderPersonSection(person){
       </div>`;
     });
   } else {
-    prioHtml = '<div style="color:var(--text-muted);font-size:11px;padding:8px 0">No priorities set — next brief at 7am</div>';
+    prioHtml = (briefAge > 18 ? prioHtml : '') + '<div style="color:var(--text-muted);font-size:11px;padding:8px 0">No priorities set — next brief at 7am</div>';
   }
 
   return `
@@ -2216,14 +2224,25 @@ function renderPersonPage(person){
   html+=`<div id="person-cal-${key}">${renderPersonCalendar(person)}</div>`;
 
   // Today's Priorities (from CEO brief) — prioData already defined above
-  if (prioData && prioData.length > 0) {
-    let prioHtml = '';
-    prioData.forEach((p, i) => {
-      prioHtml += `<div style="display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px;align-items:flex-start">
-        <span style="font-size:16px;font-weight:800;color:var(--gold);min-width:20px">${i + 1}</span>
-        <span style="color:var(--text-dim);line-height:1.4">${p.text}</span>
-      </div>`;
-    });
+  {
+    const briefAge2 = CEO_BRIEF.lastUpdated ? (Date.now() - new Date(CEO_BRIEF.lastUpdated).getTime()) / 3600000 : 999;
+    const todayISO2 = new Date(new Date().toLocaleString('en-US',{timeZone:'America/Los_Angeles'})).toISOString().slice(0,10);
+    const briefIsToday2 = (CEO_BRIEF.briefDate || '').includes(todayISO2.slice(5));
+    let staleWarning = '';
+    if (briefAge2 > 18 && !briefIsToday2) {
+      staleWarning = '<div style="background:var(--red-soft);border:1px solid var(--red);border-radius:6px;padding:6px 10px;margin-bottom:8px;font-size:10px;color:var(--red)">&#9888; Brief is stale (last: ' + (CEO_BRIEF.lastUpdated ? new Date(CEO_BRIEF.lastUpdated).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}) : 'never') + ')</div>';
+    }
+    let prioHtml = staleWarning;
+    if (prioData && prioData.length > 0) {
+      prioData.forEach((p, i) => {
+        prioHtml += `<div style="display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px;align-items:flex-start">
+          <span style="font-size:16px;font-weight:800;color:var(--gold);min-width:20px">${i + 1}</span>
+          <span style="color:var(--text-dim);line-height:1.4">${p.text}</span>
+        </div>`;
+      });
+    } else {
+      prioHtml += '<div style="color:var(--text-muted);font-size:11px;padding:8px 0">No priorities set — next brief at 7am</div>';
+    }
     html += `<div style="margin-top:16px">
       <div class="card" style="border-left:3px solid var(--gold)">
         <div class="card-head"><span class="card-title" style="color:var(--gold)">&#127919; Today's Priorities</span></div>
@@ -5873,6 +5892,22 @@ function resolveActionItem(btn,notionId){
 
 // ── CEO Brief data for person pages ──
 let CEO_BRIEF = { flagged: [], priorities: [], actionItems: [], meetingPrep: [], lastUpdated: null };
+let _briefRetryTimer = null;
+
+function startBriefRetry() {
+  if (_briefRetryTimer) return;
+  _briefRetryTimer = setInterval(function() {
+    var age = CEO_BRIEF.lastUpdated ? (Date.now() - new Date(CEO_BRIEF.lastUpdated).getTime()) / 3600000 : 999;
+    if (age <= 18) {
+      clearInterval(_briefRetryTimer);
+      _briefRetryTimer = null;
+      console.log('[Brief] Fresh brief detected, stopping retry');
+      return;
+    }
+    console.log('[Brief] Brief is', Math.round(age), 'hours old, retrying fetch...');
+    fetchLiveBrief();
+  }, 300000); // 5 minutes
+}
 
 async function fetchLiveBrief() {
   try {
@@ -5883,7 +5918,7 @@ async function fetchLiveBrief() {
     const data = await res.json();
     if (data.lastUpdated) {
       CEO_BRIEF = data;
-      console.log('[Live] CEO brief loaded:', data.priorities?.length, 'priorities');
+      console.log('[Live] CEO brief loaded:', data.priorities?.length, 'priorities, age:', Math.round((Date.now() - new Date(data.lastUpdated).getTime()) / 3600000), 'h');
       // Re-render pages that depend on brief data
       renderOverview();
       renderPersonPage('Rishabh');
@@ -5891,6 +5926,9 @@ async function fetchLiveBrief() {
       renderSidebar();
       const activePage=loadActivePage();
       if(activePage&&activePage!=='overview')navigateTo(activePage);
+      // If brief is stale, start retrying every 5 min
+      var age = (Date.now() - new Date(data.lastUpdated).getTime()) / 3600000;
+      if (age > 18) startBriefRetry();
     }
   } catch (e) { console.warn('[Live] CEO brief fetch failed:', e.message); }
 }
