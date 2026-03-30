@@ -2190,33 +2190,35 @@ function renderConflictsCard() {
   });
 
   let detailHtml = '';
-  Object.keys(byDate).sort().slice(0, 7).forEach(date => {
+  Object.keys(byDate).sort().forEach(date => {
     const group = byDate[date];
     const isToday = date === todayISO;
-    detailHtml += '<div style="margin-bottom:8px">';
-    detailHtml += '<div style="font-size:10px;font-weight:700;color:' + (isToday ? 'var(--red)' : 'var(--text-muted)') + ';text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">' + group.label + (isToday ? ' (TODAY)' : '') + '</div>';
+    detailHtml += '<div style="margin-bottom:10px">';
+    detailHtml += '<div style="font-size:9px;font-weight:700;color:' + (isToday ? 'var(--red)' : 'var(--text-muted)') + ';text-transform:uppercase;letter-spacing:.7px;margin-bottom:4px">' + group.label + (isToday ? ' — TODAY' : '') + '</div>';
     group.conflicts.forEach(c => {
       const personDot = c.personKey === 'rishabh' ? 'var(--lavender)' : 'var(--gold)';
-      detailHtml += '<div style="display:flex;align-items:flex-start;gap:6px;padding:3px 0;font-size:10px">';
-      detailHtml += '<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:' + personDot + ';margin-top:4px;flex-shrink:0"></span>';
-      detailHtml += '<span style="color:var(--text-dim)">' + c.event1.time + ' ';
-      detailHtml += '<a href="' + (c.event1.link || '#') + '" target="_blank" style="color:var(--text);text-decoration:underline">' + c.event1.title.substring(0, 30) + '</a>';
-      detailHtml += ' <span style="color:var(--red)">\u2194</span> ';
-      detailHtml += '<a href="' + (c.event2.link || '#') + '" target="_blank" style="color:var(--text);text-decoration:underline">' + c.event2.title.substring(0, 30) + '</a>';
-      detailHtml += '</span></div>';
+      detailHtml += '<div class="ai-row" style="padding:4px 0;border-bottom:1px solid var(--border)">';
+      detailHtml += '<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:' + personDot + ';flex-shrink:0;margin-top:3px"></span>';
+      detailHtml += '<div style="flex:1;font-size:11px;color:var(--text-dim);line-height:1.3">';
+      detailHtml += '<span style="color:var(--text-muted);font-size:10px">' + c.event1.time + '</span> ';
+      detailHtml += '<a href="' + (c.event1.link || '#') + '" target="_blank" style="color:var(--text);font-weight:600;text-decoration:none">' + c.event1.title.substring(0, 35) + '</a>';
+      detailHtml += ' <span style="color:var(--red);font-size:9px">vs</span> ';
+      detailHtml += '<a href="' + (c.event2.link || '#') + '" target="_blank" style="color:var(--text);font-weight:600;text-decoration:none">' + c.event2.title.substring(0, 35) + '</a>';
+      detailHtml += '</div></div>';
     });
     detailHtml += '</div>';
   });
 
-  return '<div class="card" style="border-left:3px solid var(--red)">' +
-    '<div class="card-head"><span class="card-title" style="color:var(--red)">\u26a0\ufe0f Calendar Conflicts</span>' +
-    '<span class="card-badges"><span class="badge tag-red">' + allConflicts.length + ' conflicts</span>' +
+  return '<div class="card" style="margin-bottom:12px">' +
+    '<div class="card-head"><span class="card-title">\u26a0\ufe0f Calendar Conflicts</span>' +
+    '<span class="card-badges">' +
     (todayConflicts > 0 ? '<span class="badge tag-red">' + todayConflicts + ' today</span>' : '') +
+    '<span class="badge tag-yellow">' + allConflicts.length + ' total</span>' +
     '</span></div>' +
-    '<div class="card-body compact" style="max-height:200px;overflow-y:auto">' +
-    '<div style="display:flex;gap:12px;margin-bottom:8px;font-size:10px;color:var(--text-muted)">' +
-    '<span><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--lavender);vertical-align:middle"></span> Rishabh: ' + rishabhCount + '</span>' +
-    '<span><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--gold);vertical-align:middle"></span> Shreyas: ' + shreyasCount + '</span>' +
+    '<div class="card-body compact">' +
+    '<div style="display:flex;gap:16px;margin-bottom:8px;font-size:10px;color:var(--text-muted)">' +
+    '<span><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--lavender);vertical-align:middle;margin-right:4px"></span>Rishabh ' + rishabhCount + '</span>' +
+    '<span><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--gold);vertical-align:middle;margin-right:4px"></span>Shreyas ' + shreyasCount + '</span>' +
     '</div>' +
     detailHtml +
     '</div></div>';
