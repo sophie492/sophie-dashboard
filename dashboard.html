@@ -4385,7 +4385,7 @@ function renderOffsiteDetailView(el, OFFSITE, ALLDATA) {
       var autoTag = c.autoEstimated && c.estimated === c.autoEstimated ? ' <span style="font-size:9px;color:var(--text-muted);font-style:italic">(auto)</span>' : '';
       return '<tr style="border-bottom:1px solid var(--border)">' +
         '<td style="padding:8px 10px;font-weight:600;color:var(--text);font-size:11px">' + c.category + '</td>' +
-        '<td style="padding:8px 10px;white-space:nowrap"><span style="font-size:11px;color:var(--text-muted);margin-right:2px">$</span><input class="offsite-budget-input" value="' + (c.estimated || '') + '" onchange="updateOffsiteBudget(\'' + c.category.replace(/'/g, "\\'") + '\',\'estimated\',this.value)" placeholder="--"></td>' +
+        '<td style="padding:8px 10px;text-align:right"><input class="offsite-budget-input" value="' + (c.estimated ? '$' + Number(c.estimated).toLocaleString() : '') + '" onchange="updateOffsiteBudget(\'' + c.category.replace(/'/g, "\\'") + '\',\'estimated\',this.value.replace(/[$,]/g,\'\'))" placeholder="$0"></td>' +
         '<td style="padding:8px 10px;font-size:10px;color:var(--text-muted);line-height:1.4">' + (c.notes || '') + autoTag + '</td>' +
       '</tr>';
     }).join('');
