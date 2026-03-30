@@ -439,37 +439,37 @@
         "ratingDetails": [
           {
             "name": "Aless",
-            "rating": 8.0,
+            "rating": 8,
             "feedback": "$4M went better than expected, much more tangible"
           },
           {
             "name": "Josh",
-            "rating": 9.0,
+            "rating": 9,
             "feedback": "Wants more work"
           },
           {
             "name": "Azi",
-            "rating": 9.0,
+            "rating": 9,
             "feedback": "Got what you wanted out of it"
           },
           {
             "name": "Shreyas",
-            "rating": 7.0,
+            "rating": 7,
             "feedback": "Would be valuable to get one non-business activity"
           },
           {
             "name": "Rishabh",
-            "rating": 8.0,
+            "rating": 8,
             "feedback": "Debating is useful. Should've done more team building"
           },
           {
             "name": "Abe",
-            "rating": 8.0,
+            "rating": 8,
             "feedback": "Lots of meat, zooming in on what we want"
           },
           {
             "name": "Evelyn",
-            "rating": 7.0,
+            "rating": 7,
             "feedback": ""
           },
           {
@@ -482,7 +482,12 @@
           "Pre-reads and debate are useful - people did work beforehand",
           "Should've done more team building / non-business activities",
           "Attach more data to discussion points"
-        ]
+        ],
+        "logistics": {
+          "hotel": {
+            "rooms": 0
+          }
+        }
       },
       {
         "id": "2024-Q3",
@@ -517,7 +522,12 @@
         "lessonsLearned": [
           "Urban hike was a good team-building activity (low-intensity, inclusive)",
           "Pre-mortem format identifies real risks: product, sales, marketing, competitors, team"
-        ]
+        ],
+        "logistics": {
+          "hotel": {
+            "rooms": 0
+          }
+        }
       },
       {
         "id": "2024-Q4",
@@ -558,7 +568,7 @@
           },
           {
             "name": "Hult",
-            "rating": 9.0,
+            "rating": 9,
             "feedback": "Good reorientation on new initiatives"
           },
           {
@@ -573,12 +583,12 @@
           },
           {
             "name": "Evelyn",
-            "rating": 8.0,
+            "rating": 8,
             "feedback": "Did not enjoy Mon/Tue orientation"
           },
           {
             "name": "Azi",
-            "rating": 9.0,
+            "rating": 9,
             "feedback": "Dinner + early start on Tuesday did not work out well"
           }
         ],
@@ -588,7 +598,12 @@
           "More leading indicators vs. lagging indicators in discussions",
           "Build financial model beforehand",
           "Dinner + early start the next day was problematic"
-        ]
+        ],
+        "logistics": {
+          "hotel": {
+            "rooms": 0
+          }
+        }
       }
     ],
     "2025": [
@@ -625,7 +640,12 @@
           "Book club / pre-read requirement drives better conversations",
           "Kayak tour was a unique team building activity",
           "Different city (San Diego) was refreshing"
-        ]
+        ],
+        "logistics": {
+          "hotel": {
+            "rooms": 0
+          }
+        }
       },
       {
         "id": "2025-Q2",
@@ -662,22 +682,22 @@
           },
           {
             "name": "Shreyas",
-            "rating": 9.0,
+            "rating": 9,
             "feedback": ""
           },
           {
             "name": "Evelyn",
-            "rating": 9.0,
+            "rating": 9,
             "feedback": ""
           },
           {
             "name": "Rabah",
-            "rating": 9.0,
+            "rating": 9,
             "feedback": ""
           },
           {
             "name": "Hult",
-            "rating": 9.0,
+            "rating": 9,
             "feedback": ""
           },
           {
@@ -695,7 +715,12 @@
           "More push + pull in revenue makeup discussions",
           "Cooking class was a good social activity",
           "Need more debate - discussions sometimes too harmonious"
-        ]
+        ],
+        "logistics": {
+          "hotel": {
+            "rooms": 0
+          }
+        }
       },
       {
         "id": "2025-Q3",
@@ -735,25 +760,25 @@
           {
             "name": "Shreyas",
             "rating": 8.5,
-            "lqRating": 9.0,
+            "lqRating": 9,
             "feedback": "Tremendous execution risk"
           },
           {
             "name": "Evelyn",
             "rating": 9.5,
-            "lqRating": 9.0,
+            "lqRating": 9,
             "feedback": "Debate"
           },
           {
             "name": "Rabah",
             "rating": 8.5,
-            "lqRating": 9.0,
+            "lqRating": 9,
             "feedback": ""
           },
           {
             "name": "Hult",
-            "rating": 9.0,
-            "lqRating": 9.0,
+            "rating": 9,
+            "lqRating": 9,
             "feedback": "Identified future path with clarity, everyone bought in"
           },
           {
@@ -773,7 +798,12 @@
           "Dinner was too late - schedule social dinner earlier",
           "Candid discussion was highly valued",
           "AI readiness is an important recurring topic"
-        ]
+        ],
+        "logistics": {
+          "hotel": {
+            "rooms": 0
+          }
+        }
       },
       {
         "id": "2025-Q4",
@@ -813,7 +843,7 @@
           },
           {
             "name": "Shreyas",
-            "rating": 7.0,
+            "rating": 7,
             "lqRating": 8.5,
             "feedback": "Time management was medium. No wins recap. Mid-market could've been pushed more"
           },
@@ -825,13 +855,13 @@
           },
           {
             "name": "Hult",
-            "rating": 6.0,
-            "lqRating": 9.0,
+            "rating": 6,
+            "lqRating": 9,
             "feedback": "Before and after helpful. Pre-read should be one compiled doc. Prioritize what should not be prio'd"
           },
           {
             "name": "Bharat",
-            "rating": 6.0,
+            "rating": 6,
             "lqRating": 8.2,
             "feedback": "Need clearer structure, know major talking points. Outcomes were ok"
           },
@@ -843,17 +873,17 @@
           },
           {
             "name": "Isabel",
-            "rating": 5.0,
+            "rating": 5,
             "feedback": "Recap/celebratory things would help. Don't miss meetings"
           },
           {
             "name": "Jess",
-            "rating": 5.0,
+            "rating": 5,
             "feedback": "Preparation and pre-read needed. First time seeing info. People shouldn't miss meetings"
           },
           {
             "name": "Jennifer",
-            "rating": 6.0,
+            "rating": 6,
             "feedback": "One structure everyone follows. Broader company goals context needed"
           }
         ],
@@ -864,7 +894,12 @@
           "People should not be missing meetings",
           "Clearer structure with specific talking points per session",
           "One structure that everyone follows"
-        ]
+        ],
+        "logistics": {
+          "hotel": {
+            "rooms": 0
+          }
+        }
       }
     ],
     "2026": [
@@ -902,14 +937,14 @@
         "ratingDetails": [
           {
             "name": "Rishabh",
-            "rating": 9.0,
+            "rating": 9,
             "lqRating": 8.5,
             "feedback": "Enough trust in room. All appropriately anxious. Being execution-biased is better. Could walk everywhere"
           },
           {
             "name": "Shreyas",
-            "rating": 8.0,
-            "lqRating": 7.0,
+            "rating": 8,
+            "lqRating": 7,
             "feedback": "Openness best we've seen, everyone else needs stronger opinions"
           },
           {
@@ -921,13 +956,13 @@
           {
             "name": "Hult",
             "rating": 7.5,
-            "lqRating": 6.0,
+            "lqRating": 6,
             "feedback": "Aligned strategically. Agree 2 weeks before on what to bring"
           },
           {
             "name": "Bharat",
             "rating": 7.4,
-            "lqRating": 6.0,
+            "lqRating": 6,
             "feedback": "Want 3-month summary + focus areas. More tactical. Pre-read social pressure"
           },
           {
@@ -938,20 +973,20 @@
           },
           {
             "name": "Isabel",
-            "rating": 8.0,
-            "lqRating": 5.0,
+            "rating": 8,
+            "lqRating": 5,
             "feedback": "Enjoyed culture piece. Liked more tactical. Deal review (close won vs lost)"
           },
           {
             "name": "Jess",
             "rating": 8.75,
-            "lqRating": 5.0,
+            "lqRating": 5,
             "feedback": "More collaboration. Could do more pre-reads. Resolved future state items"
           },
           {
             "name": "Jennifer",
-            "rating": 8.0,
-            "lqRating": 6.0,
+            "rating": 8,
+            "lqRating": 6,
             "feedback": "Helpful to get into tactics. Enjoyed culture. More focused on future state"
           }
         ],
@@ -963,7 +998,12 @@
           "Include deal review (close won vs. close lost)",
           "Sophie attending was valuable for coordination",
           "More tactical focus appreciated alongside strategic"
-        ]
+        ],
+        "logistics": {
+          "hotel": {
+            "rooms": 0
+          }
+        }
       },
       {
         "id": "2026-Q2",
@@ -982,15 +1022,12 @@
             "role": "CEO",
             "email": "rishabh@fermatcommerce.com",
             "marriottNum": "241632843",
-            "needsHotel": true,
             "hotelConfirmed": false,
-            "flightBooked": false,
-            "travelCardIssued": false,
+            "flightBooked": true,
+            "travelCardIssued": true,
             "dietaryNeeds": "",
             "location": "San Francisco, CA",
             "title": "CEO",
-            "needsFlight": true,
-            "travelNotes": "SFO -> JFK/EWR (~5.5h flight)",
             "attending": true
           },
           {
@@ -998,15 +1035,12 @@
             "role": "CTO",
             "email": "shreyas@fermatcommerce.com",
             "marriottNum": "648366443",
-            "needsHotel": true,
             "hotelConfirmed": false,
             "flightBooked": false,
-            "travelCardIssued": false,
+            "travelCardIssued": true,
             "dietaryNeeds": "",
             "location": "San Francisco, CA",
             "title": "CTO",
-            "needsFlight": true,
-            "travelNotes": "SFO -> JFK/EWR (~5.5h flight)",
             "attending": true
           },
           {
@@ -1014,14 +1048,11 @@
             "role": "Finance / Budget Approver",
             "email": "evelyn@fermatcommerce.com",
             "marriottNum": "",
-            "needsHotel": false,
             "hotelConfirmed": true,
             "flightBooked": true,
-            "travelCardIssued": false,
+            "travelCardIssued": true,
             "dietaryNeeds": "",
             "location": "New York, NY",
-            "needsFlight": false,
-            "travelNotes": "NYC local -- no travel needed",
             "attending": true
           },
           {
@@ -1029,15 +1060,12 @@
             "role": "Sales Leader",
             "email": "jessica@fermatcommerce.com",
             "marriottNum": "",
-            "needsHotel": false,
             "hotelConfirmed": true,
             "flightBooked": true,
-            "travelCardIssued": false,
+            "travelCardIssued": true,
             "dietaryNeeds": "",
             "location": "New York, NY",
             "title": "General Manager, Agency",
-            "needsFlight": false,
-            "travelNotes": "NYC local -- no travel needed",
             "attending": true
           },
           {
@@ -1045,15 +1073,12 @@
             "role": "Marketing (Campaigns, ABM)",
             "email": "saunder@fermatcommerce.com",
             "marriottNum": "746587509",
-            "needsHotel": true,
             "hotelConfirmed": false,
             "flightBooked": false,
-            "travelCardIssued": false,
+            "travelCardIssued": true,
             "dietaryNeeds": "",
             "location": "Salt Lake City, UT",
             "title": "SVP, Growth",
-            "needsFlight": true,
-            "travelNotes": "SLC -> JFK/EWR (~4.5h flight)",
             "attending": true
           },
           {
@@ -1061,15 +1086,12 @@
             "role": "Engineering Lead",
             "email": "bharat@fermatcommerce.com",
             "marriottNum": "214468410",
-            "needsHotel": true,
             "hotelConfirmed": false,
             "flightBooked": false,
-            "travelCardIssued": false,
+            "travelCardIssued": true,
             "dietaryNeeds": "",
             "location": "San Francisco, CA",
             "title": "Eng Leadership",
-            "needsFlight": true,
-            "travelNotes": "SFO -> JFK/EWR (~5.5h flight)",
             "attending": true
           },
           {
@@ -1077,15 +1099,12 @@
             "role": "Product",
             "email": "isabel@fermatcommerce.com",
             "marriottNum": "634278963",
-            "needsHotel": true,
-            "hotelConfirmed": false,
-            "flightBooked": false,
-            "travelCardIssued": false,
+            "hotelConfirmed": true,
+            "flightBooked": true,
+            "travelCardIssued": true,
             "dietaryNeeds": "",
             "notes": "",
             "location": "New York, NY",
-            "needsFlight": true,
-            "travelNotes": "DEN -> JFK/EWR (~4h flight)",
             "attending": true
           },
           {
@@ -1093,15 +1112,12 @@
             "role": "Marketing (Content, PMM, PR)",
             "email": "jennifer@fermatcommerce.com",
             "marriottNum": "",
-            "needsHotel": false,
             "hotelConfirmed": true,
             "flightBooked": true,
-            "travelCardIssued": false,
+            "travelCardIssued": true,
             "dietaryNeeds": "",
             "location": "New York, NY",
             "title": "Chief of Staff",
-            "needsFlight": false,
-            "travelNotes": "NYC local -- no travel needed",
             "attending": true
           },
           {
@@ -1109,14 +1125,11 @@
             "role": "Leadership",
             "email": "khushy@fermatcommerce.com",
             "marriottNum": "",
-            "needsHotel": true,
             "hotelConfirmed": false,
             "flightBooked": false,
             "travelCardIssued": false,
             "dietaryNeeds": "",
             "location": "Mumbai, India",
-            "needsFlight": true,
-            "travelNotes": "International travel from Mumbai -- check visa requirements",
             "attending": false
           }
         ],
@@ -1580,7 +1593,6 @@
             "roomsNote": "4 rooms — Khushy not attending, 4 NYC locals (Evelyn, Jess, Isabel, Jennifer)",
             "confirmed": false,
             "contactPerson": "Alice Zhao (travel agent, alice.zhao@fora.travel)",
-            "roomsNeeded": 6,
             "status": "Booking",
             "selectedOption": 3,
             "confirmationDetails": ""
@@ -1676,7 +1688,7 @@
             "requirement": "Strong vegetarian options + private dining",
             "status": "Booked",
             "statusDetail": "OpenTable reservation confirmed 3/24. Previously had Yara reserved, cancelled same day in favor of Lulla.",
-            "selectedOption": null,
+            "selectedOption": 1,
             "confirmationDetails": "OpenTable confirmation received 3/24"
           },
           "activityResearch": [
@@ -1711,13 +1723,19 @@
             ],
             "confirmed": false,
             "lesson": "Group activity + dinner is a proven combo. Escape room was a hit in Denver.",
-            "status": "Not Started",
+            "status": "Booked",
             "selectedOption": null,
             "confirmationDetails": ""
           },
           "meals": {
-            "day1Lunch": { "link": "", "notes": "" },
-            "day2Lunch": { "link": "", "notes": "" }
+            "day1Lunch": {
+              "link": "",
+              "notes": ""
+            },
+            "day2Lunch": {
+              "link": "",
+              "notes": ""
+            }
           },
           "budget": {
             "estimated": 7015,
@@ -1878,7 +1896,8 @@
           "Send DoorDash links at the start of sessions so food arrives on time.",
           "Build flexible scheduling -- not every minute needs to be programmed. The team valued unstructured bonding time.",
           "Agenda content and topics come from Evelyn and leadership -- Sophie coordinates and organizes, but doesn't set the agenda."
-        ]
+        ],
+        "notionBudgetDbId": "3331ad76-fd2a-81cf-adc8-f58cd4d0402d"
       },
       {
         "id": "2026-Q3",
@@ -1892,26 +1911,128 @@
         "attendees": [],
         "phases": [],
         "logistics": {
-          "hotel": { "name": "TBD", "confirmed": false, "status": "Not Started", "statusDetail": "", "selectedOption": null, "confirmationDetails": "", "rate": null, "nights": 2, "rooms": null, "contactPerson": "Alice Zhao (travel agent, alice.zhao@fora.travel)" },
-          "venue": { "name": "TBD", "address": "", "confirmed": false, "status": "Not Started", "statusDetail": "", "selectedOption": null, "confirmationDetails": "" },
-          "dinner": { "name": "TBD", "confirmed": false, "status": "Not Started", "statusDetail": "", "selectedOption": null, "confirmationDetails": "", "reservationDate": "", "partySize": null, "requirement": "Strong vegetarian options + private dining" },
-          "activity": { "name": "TBD", "confirmed": false, "status": "Not Started", "statusDetail": "", "selectedOption": null, "confirmationDetails": "" },
+          "hotel": {
+            "name": "TBD",
+            "confirmed": false,
+            "status": "Not Started",
+            "statusDetail": "",
+            "selectedOption": null,
+            "confirmationDetails": "",
+            "rate": null,
+            "nights": 2,
+            "rooms": null,
+            "contactPerson": "Alice Zhao (travel agent, alice.zhao@fora.travel)"
+          },
+          "venue": {
+            "name": "TBD",
+            "address": "",
+            "confirmed": false,
+            "status": "Not Started",
+            "statusDetail": "",
+            "selectedOption": null,
+            "confirmationDetails": ""
+          },
+          "dinner": {
+            "name": "TBD",
+            "confirmed": false,
+            "status": "Not Started",
+            "statusDetail": "",
+            "selectedOption": null,
+            "confirmationDetails": "",
+            "reservationDate": "",
+            "partySize": null,
+            "requirement": "Strong vegetarian options + private dining"
+          },
+          "activity": {
+            "name": "TBD",
+            "confirmed": false,
+            "status": "Not Started",
+            "statusDetail": "",
+            "selectedOption": null,
+            "confirmationDetails": ""
+          },
           "hotelResearch": [],
           "weworkResearch": [],
           "dinnerResearch": [],
           "activityResearch": [],
-          "meals": { "day1Lunch": { "link": "", "notes": "" }, "day2Lunch": { "link": "", "notes": "" } },
-          "budget": { "estimated": null, "approved": false, "committed": 0, "actual": 0, "approver": "Evelyn", "categories": [
-            { "category": "Hotel", "estimated": null, "committed": 0, "actual": 0, "notes": "" },
-            { "category": "Venue", "estimated": null, "committed": 0, "actual": 0, "notes": "" },
-            { "category": "Transportation", "estimated": null, "committed": 0, "actual": 0, "notes": "" },
-            { "category": "Food & Beverage", "estimated": null, "committed": 0, "actual": 0, "notes": "" },
-            { "category": "Social Activity", "estimated": null, "committed": 0, "actual": 0, "notes": "" },
-            { "category": "Misc", "estimated": null, "committed": 0, "actual": 0, "notes": "" }
-          ] },
-          "aliceCorrespondence": { "threadSubject": "", "lastEmailDate": "", "summary": "", "nextStep": "", "keyEmails": [] },
+          "meals": {
+            "day1Lunch": {
+              "link": "",
+              "notes": ""
+            },
+            "day2Lunch": {
+              "link": "",
+              "notes": ""
+            }
+          },
+          "budget": {
+            "estimated": 1625,
+            "approved": false,
+            "committed": 0,
+            "actual": 0,
+            "approver": "Evelyn",
+            "categories": [
+              {
+                "category": "Hotel",
+                "estimated": null,
+                "committed": 0,
+                "actual": 0,
+                "notes": ""
+              },
+              {
+                "category": "Venue",
+                "estimated": null,
+                "committed": 0,
+                "actual": 0,
+                "notes": ""
+              },
+              {
+                "category": "Transportation",
+                "estimated": 0,
+                "committed": 0,
+                "actual": 0,
+                "notes": "",
+                "autoEstimated": 0
+              },
+              {
+                "category": "Food & Beverage",
+                "estimated": 1125,
+                "committed": 0,
+                "actual": 0,
+                "notes": "",
+                "autoEstimated": 1125
+              },
+              {
+                "category": "Social Activity",
+                "estimated": null,
+                "committed": 0,
+                "actual": 0,
+                "notes": ""
+              },
+              {
+                "category": "Misc",
+                "estimated": 500,
+                "committed": 0,
+                "actual": 0,
+                "notes": "",
+                "autoEstimated": 500
+              }
+            ]
+          },
+          "aliceCorrespondence": {
+            "threadSubject": "",
+            "lastEmailDate": "",
+            "summary": "",
+            "nextStep": "",
+            "keyEmails": []
+          },
           "coordinationContacts": [
-            { "name": "Alice Zhao", "role": "Travel agent (Fora Travel)", "email": "alice.zhao@fora.travel", "reachOutFor": "Hotel bookings, group rates, flight coordination" }
+            {
+              "name": "Alice Zhao",
+              "role": "Travel agent (Fora Travel)",
+              "email": "alice.zhao@fora.travel",
+              "reachOutFor": "Hotel bookings, group rates, flight coordination"
+            }
           ]
         },
         "themes": [],
@@ -1930,26 +2051,128 @@
         "attendees": [],
         "phases": [],
         "logistics": {
-          "hotel": { "name": "TBD", "confirmed": false, "status": "Not Started", "statusDetail": "", "selectedOption": null, "confirmationDetails": "", "rate": null, "nights": 2, "rooms": null, "contactPerson": "Alice Zhao (travel agent, alice.zhao@fora.travel)" },
-          "venue": { "name": "TBD", "address": "", "confirmed": false, "status": "Not Started", "statusDetail": "", "selectedOption": null, "confirmationDetails": "" },
-          "dinner": { "name": "TBD", "confirmed": false, "status": "Not Started", "statusDetail": "", "selectedOption": null, "confirmationDetails": "", "reservationDate": "", "partySize": null, "requirement": "Strong vegetarian options + private dining" },
-          "activity": { "name": "TBD", "confirmed": false, "status": "Not Started", "statusDetail": "", "selectedOption": null, "confirmationDetails": "" },
+          "hotel": {
+            "name": "TBD",
+            "confirmed": false,
+            "status": "Not Started",
+            "statusDetail": "",
+            "selectedOption": null,
+            "confirmationDetails": "",
+            "rate": null,
+            "nights": 2,
+            "rooms": null,
+            "contactPerson": "Alice Zhao (travel agent, alice.zhao@fora.travel)"
+          },
+          "venue": {
+            "name": "TBD",
+            "address": "",
+            "confirmed": false,
+            "status": "Not Started",
+            "statusDetail": "",
+            "selectedOption": null,
+            "confirmationDetails": ""
+          },
+          "dinner": {
+            "name": "TBD",
+            "confirmed": false,
+            "status": "Not Started",
+            "statusDetail": "",
+            "selectedOption": null,
+            "confirmationDetails": "",
+            "reservationDate": "",
+            "partySize": null,
+            "requirement": "Strong vegetarian options + private dining"
+          },
+          "activity": {
+            "name": "TBD",
+            "confirmed": false,
+            "status": "Not Started",
+            "statusDetail": "",
+            "selectedOption": null,
+            "confirmationDetails": ""
+          },
           "hotelResearch": [],
           "weworkResearch": [],
           "dinnerResearch": [],
           "activityResearch": [],
-          "meals": { "day1Lunch": { "link": "", "notes": "" }, "day2Lunch": { "link": "", "notes": "" } },
-          "budget": { "estimated": null, "approved": false, "committed": 0, "actual": 0, "approver": "Evelyn", "categories": [
-            { "category": "Hotel", "estimated": null, "committed": 0, "actual": 0, "notes": "" },
-            { "category": "Venue", "estimated": null, "committed": 0, "actual": 0, "notes": "" },
-            { "category": "Transportation", "estimated": null, "committed": 0, "actual": 0, "notes": "" },
-            { "category": "Food & Beverage", "estimated": null, "committed": 0, "actual": 0, "notes": "" },
-            { "category": "Social Activity", "estimated": null, "committed": 0, "actual": 0, "notes": "" },
-            { "category": "Misc", "estimated": null, "committed": 0, "actual": 0, "notes": "" }
-          ] },
-          "aliceCorrespondence": { "threadSubject": "", "lastEmailDate": "", "summary": "", "nextStep": "", "keyEmails": [] },
+          "meals": {
+            "day1Lunch": {
+              "link": "",
+              "notes": ""
+            },
+            "day2Lunch": {
+              "link": "",
+              "notes": ""
+            }
+          },
+          "budget": {
+            "estimated": 1625,
+            "approved": false,
+            "committed": 0,
+            "actual": 0,
+            "approver": "Evelyn",
+            "categories": [
+              {
+                "category": "Hotel",
+                "estimated": null,
+                "committed": 0,
+                "actual": 0,
+                "notes": ""
+              },
+              {
+                "category": "Venue",
+                "estimated": null,
+                "committed": 0,
+                "actual": 0,
+                "notes": ""
+              },
+              {
+                "category": "Transportation",
+                "estimated": 0,
+                "committed": 0,
+                "actual": 0,
+                "notes": "",
+                "autoEstimated": 0
+              },
+              {
+                "category": "Food & Beverage",
+                "estimated": 1125,
+                "committed": 0,
+                "actual": 0,
+                "notes": "",
+                "autoEstimated": 1125
+              },
+              {
+                "category": "Social Activity",
+                "estimated": null,
+                "committed": 0,
+                "actual": 0,
+                "notes": ""
+              },
+              {
+                "category": "Misc",
+                "estimated": 500,
+                "committed": 0,
+                "actual": 0,
+                "notes": "",
+                "autoEstimated": 500
+              }
+            ]
+          },
+          "aliceCorrespondence": {
+            "threadSubject": "",
+            "lastEmailDate": "",
+            "summary": "",
+            "nextStep": "",
+            "keyEmails": []
+          },
           "coordinationContacts": [
-            { "name": "Alice Zhao", "role": "Travel agent (Fora Travel)", "email": "alice.zhao@fora.travel", "reachOutFor": "Hotel bookings, group rates, flight coordination" }
+            {
+              "name": "Alice Zhao",
+              "role": "Travel agent (Fora Travel)",
+              "email": "alice.zhao@fora.travel",
+              "reachOutFor": "Hotel bookings, group rates, flight coordination"
+            }
           ]
         },
         "themes": [],
@@ -1958,5 +2181,5 @@
       }
     ]
   },
-  "lastSynced": "2026-03-27T21:00:00.000Z"
+  "lastSynced": "2026-03-30T16:01:09.834Z"
 }
