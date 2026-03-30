@@ -1721,7 +1721,9 @@
           },
           "budget": {
             "estimated": 7015,
-            "approved": false,
+            "approved": true,
+            "approvedDate": "2026-03-27",
+            "approvedVia": "Ramp card issued by Evelyn — $3,200 for Leadership Offsite",
             "committed": 0,
             "actual": 0,
             "approver": "Evelyn",
