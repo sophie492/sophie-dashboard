@@ -3439,9 +3439,8 @@ function renderOffsite() {
     return '<div class="card" style="flex:1;min-width:220px"><div class="card-head"><div class="card-title">' + icon + ' ' + title + '</div><span class="badge ' + (confirmed?'tag-green':'tag-yellow') + '">' + (confirmed?'Confirmed':'Pending') + '</span></div><div class="card-body" style="padding:10px 14px;font-size:11px;color:var(--text-dim)">' + lines.join('<br>') + '</div></div>';
   }
 
-  // Budget bar
-  const budgetPct = budget.estimated ? Math.round((budget.committed / budget.estimated) * 100) : 0;
-  const budgetActPct = budget.estimated ? Math.round((budget.actual / budget.estimated) * 100) : 0;
+  // Budget bar (estimated only)
+  const budgetPct = 0;
 
   return `
   <div class="offsite-nav">
@@ -3540,17 +3539,7 @@ function renderOffsite() {
       <div class="card-body" style="padding:10px 14px">
         <div style="display:flex;gap:24px;margin-bottom:10px;font-size:11px;flex-wrap:wrap">
           <div><span style="color:var(--text-muted)">Estimated:</span> <strong style="color:var(--text)">$${(budget.estimated||0).toLocaleString()}</strong></div>
-          <div><span style="color:var(--text-muted)">Committed:</span> <strong style="color:var(--gold)">$${(budget.committed||0).toLocaleString()}</strong></div>
-          <div><span style="color:var(--text-muted)">Actual:</span> <strong style="color:var(--green)">$${(budget.actual||0).toLocaleString()}</strong></div>
           <div><span style="color:var(--text-muted)">Approver:</span> <strong style="color:var(--text)">${budget.approver||'TBD'}</strong></div>
-        </div>
-        <div style="height:6px;background:var(--surface);border-radius:3px;overflow:hidden;border:1px solid var(--border);position:relative">
-          <div style="height:100%;width:${budgetPct}%;background:var(--gold);border-radius:3px;transition:width .5s;position:absolute;top:0;left:0"></div>
-          <div style="height:100%;width:${budgetActPct}%;background:var(--green);border-radius:3px;transition:width .5s;position:absolute;top:0;left:0"></div>
-        </div>
-        <div style="display:flex;gap:12px;margin-top:6px;font-size:9px;color:var(--text-muted)">
-          <span><span style="display:inline-block;width:8px;height:8px;background:var(--gold);border-radius:2px;vertical-align:middle"></span> Committed (${budgetPct}%)</span>
-          <span><span style="display:inline-block;width:8px;height:8px;background:var(--green);border-radius:2px;vertical-align:middle"></span> Actual (${budgetActPct}%)</span>
         </div>
       </div>
     </div>
@@ -4392,37 +4381,16 @@ function renderOffsiteDetailView(el, OFFSITE, ALLDATA) {
       '</div>' +
     '</div>';
 
-    // Budget card with color coding
-    function budgetRowColor(est, act) {
-      if (!est || !act) return '';
-      var ratio = act / est;
-      if (ratio > 1) return 'background:var(--red-soft)';
-      if (ratio >= 0.8) return 'background:var(--yellow-soft)';
-      return 'background:var(--green-soft)';
-    }
+    // Budget rows
     var budgetRows = budgetCategories.map(function(c) {
-      var est = parseFloat(c.estimated) || 0;
-      var act = parseFloat(c.actual) || 0;
-      var rowStyle = (est && act) ? budgetRowColor(est, act) : '';
-      return '<tr style="border-bottom:1px solid var(--border);' + rowStyle + '">' +
+      return '<tr style="border-bottom:1px solid var(--border)">' +
         '<td style="padding:6px 8px;font-weight:600;color:var(--text);font-size:11px">' + c.category + '</td>' +
         '<td style="padding:6px 8px"><input class="offsite-budget-input" value="' + (c.estimated || '') + '" onchange="updateOffsiteBudget(\'' + c.category.replace(/'/g, "\\'") + '\',\'estimated\',this.value)" placeholder="--">' + (c.autoEstimated && c.estimated === c.autoEstimated ? ' <span style="font-size:8px;color:var(--text-muted)">(auto)</span>' : '') + '</td>' +
-        '<td style="padding:6px 8px"><input class="offsite-budget-input" value="' + (c.committed || '') + '" onchange="updateOffsiteBudget(\'' + c.category.replace(/'/g, "\\'") + '\',\'committed\',this.value)" placeholder="--"></td>' +
-        '<td style="padding:6px 8px"><input class="offsite-budget-input" value="' + (c.actual || '') + '" onchange="updateOffsiteBudget(\'' + c.category.replace(/'/g, "\\'") + '\',\'actual\',this.value)" placeholder="--"></td>' +
         '<td style="padding:6px 8px;font-size:10px;color:var(--text-muted)">' + (c.notes || '') + '</td>' +
       '</tr>';
     }).join('');
 
     var totalEst = budgetCategories.reduce(function(s,c) { return s + (parseFloat(c.estimated) || 0); }, 0);
-    var totalComm = budgetCategories.reduce(function(s,c) { return s + (parseFloat(c.committed) || 0); }, 0);
-    var totalAct = budgetCategories.reduce(function(s,c) { return s + (parseFloat(c.actual) || 0); }, 0);
-    var totalColor = '';
-    if (totalEst && totalAct) {
-      var totalRatio = totalAct / totalEst;
-      totalColor = totalRatio > 1 ? 'var(--red)' : totalRatio >= 0.8 ? 'var(--yellow)' : 'var(--green)';
-    } else {
-      totalColor = 'var(--green)';
-    }
 
     var budgetCard = '<div class="card offsite-logistics-card">' +
       '<div class="card-head"><div class="card-title">&#128176; Budget</div>' +
@@ -4433,16 +4401,12 @@ function renderOffsiteDetailView(el, OFFSITE, ALLDATA) {
           '<thead><tr style="border-bottom:2px solid var(--border);font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px">' +
             '<th style="padding:6px 8px;text-align:left">Category</th>' +
             '<th style="padding:6px 8px;text-align:right">Estimated</th>' +
-            '<th style="padding:6px 8px;text-align:right">Committed</th>' +
-            '<th style="padding:6px 8px;text-align:right">Actual</th>' +
             '<th style="padding:6px 8px;text-align:left">Notes</th>' +
           '</tr></thead>' +
           '<tbody>' + budgetRows +
             '<tr style="border-top:2px solid var(--border);font-weight:700">' +
               '<td style="padding:6px 8px;color:var(--text)">TOTAL</td>' +
               '<td style="padding:6px 8px;text-align:right;color:var(--text)">$' + totalEst.toLocaleString() + '</td>' +
-              '<td style="padding:6px 8px;text-align:right;color:var(--gold)">$' + totalComm.toLocaleString() + '</td>' +
-              '<td style="padding:6px 8px;text-align:right;color:' + totalColor + '">$' + totalAct.toLocaleString() + '</td>' +
               '<td style="padding:6px 8px"></td>' +
             '</tr>' +
           '</tbody>' +
@@ -4457,7 +4421,7 @@ function renderOffsiteDetailView(el, OFFSITE, ALLDATA) {
             (OFFSITE.budgetSheetId ? '<a href="https://docs.google.com/spreadsheets/d/' + OFFSITE.budgetSheetId + '" target="_blank" style="font-size:10px;color:var(--blue);text-decoration:underline">Open Sheet</a>' : '') +
           '</div>' +
         '</div>' +
-        '<div style="margin-top:4px;font-size:9px;color:var(--text-muted)">Row colors: <span style="color:var(--green)">&#9679;</span> under budget &middot; <span style="color:var(--yellow)">&#9679;</span> near budget (80-100%) &middot; <span style="color:var(--red)">&#9679;</span> over budget</div>' +
+        '<div style="margin-top:4px;font-size:9px;color:var(--text-muted)">Estimates auto-computed from research data. Edit any value to override.</div>' +
       '</div>' +
     '</div>';
 
