@@ -2178,16 +2178,25 @@ function renderConflictsCard() {
     });
   });
 
-  if (allConflicts.length === 0) return '';
+  // Generate unique key per conflict for acknowledgment
+  allConflicts.forEach(c => {
+    c.key = 'conflict-' + c.personKey + '-' + c.date + '-' + c.event1.title.substring(0,20).replace(/[^a-zA-Z0-9]/g,'') + '-' + c.event2.title.substring(0,20).replace(/[^a-zA-Z0-9]/g,'');
+  });
 
-  const rishabhCount = allConflicts.filter(c => c.personKey === 'rishabh').length;
-  const shreyasCount = allConflicts.filter(c => c.personKey === 'shreyas').length;
+  // Filter out acknowledged conflicts
+  const ackStates = _conflictAcks || {};
+  const activeConflicts = allConflicts.filter(c => !ackStates[c.key]);
+
+  if (activeConflicts.length === 0) return '';
+
+  const rishabhCount = activeConflicts.filter(c => c.personKey === 'rishabh').length;
+  const shreyasCount = activeConflicts.filter(c => c.personKey === 'shreyas').length;
   const todayISO = new Date(new Date().toLocaleString('en-US', {timeZone: 'America/Los_Angeles'})).toISOString().slice(0, 10);
-  const todayConflicts = allConflicts.filter(c => c.date === todayISO).length;
+  const todayConflicts = activeConflicts.filter(c => c.date === todayISO).length;
 
   // Group by date for compact view
   const byDate = {};
-  allConflicts.forEach(c => {
+  activeConflicts.forEach(c => {
     if (!byDate[c.date]) byDate[c.date] = { label: c.label, conflicts: [] };
     byDate[c.date].conflicts.push(c);
   });
@@ -2207,7 +2216,9 @@ function renderConflictsCard() {
       detailHtml += '<a href="' + (c.event1.link || '#') + '" target="_blank" style="color:var(--text);text-decoration:none">' + c.event1.title.substring(0, 35) + '</a>';
       detailHtml += ' <span style="color:var(--red)">vs</span> ';
       detailHtml += '<a href="' + (c.event2.link || '#') + '" target="_blank" style="color:var(--text);text-decoration:none">' + c.event2.title.substring(0, 35) + '</a>';
-      detailHtml += '</span></div>';
+      detailHtml += '</span>';
+      detailHtml += '<button onclick="ackConflict(\'' + c.key + '\',this)" style="background:var(--surface);border:1px solid var(--border);color:var(--text-muted);padding:2px 6px;border-radius:4px;font-size:9px;cursor:pointer;font-family:inherit;flex-shrink:0">OK</button>';
+      detailHtml += '</div>';
     });
     detailHtml += '</div>';
   });
@@ -2216,7 +2227,7 @@ function renderConflictsCard() {
     '<div class="card-head"><span class="card-title">\u26a0\ufe0f Calendar Conflicts</span>' +
     '<span class="card-badges">' +
     (todayConflicts > 0 ? '<span class="badge tag-red">' + todayConflicts + ' today</span>' : '') +
-    '<span class="badge tag-yellow">' + allConflicts.length + ' total</span>' +
+    '<span class="badge tag-yellow">' + activeConflicts.length + ' total</span>' +
     '</span></div>' +
     '<div class="card-body compact">' +
     '<div style="display:flex;gap:16px;margin-bottom:6px;font-size:11px;color:var(--text-muted)">' +
@@ -6043,6 +6054,10 @@ async function loadServerCheckboxStates() {
         if (s) t.done = s.checked;
       });
     });
+    // Apply conflict acknowledgments
+    Object.keys(states).filter(k => k.startsWith('conflict-')).forEach(k => {
+      if (states[k] && states[k].checked) _conflictAcks[k] = true;
+    });
     console.log('[Checkbox] Server states loaded:', Object.keys(states).length, 'keys');
   } catch (e) { console.warn('[Checkbox] Load failed:', e.message); }
 }
@@ -6068,6 +6083,27 @@ function resolveActionItem(btn,notionId){
 
 // ── CEO Brief data for person pages ──
 let CEO_BRIEF = { flagged: [], priorities: [], actionItems: [], meetingPrep: [], lastUpdated: null };
+
+// Conflict acknowledgment state
+let _conflictAcks = {};
+try { _conflictAcks = JSON.parse(localStorage.getItem('sophie-dash-conflict-acks') || '{}'); } catch(e) {}
+
+function ackConflict(key, btn) {
+  _conflictAcks[key] = true;
+  try { localStorage.setItem('sophie-dash-conflict-acks', JSON.stringify(_conflictAcks)); } catch(e) {}
+  // Also persist to server
+  syncCheckbox(key, true);
+  // Remove the row
+  var row = btn.closest('.ai-row');
+  if (row) {
+    row.style.transition = 'opacity .2s, height .2s';
+    row.style.opacity = '0';
+    setTimeout(function() { row.style.height = '0'; row.style.overflow = 'hidden'; row.style.padding = '0'; }, 200);
+    setTimeout(function() { row.remove(); }, 400);
+  }
+  // Update badges
+  renderOverview();
+}
 let _briefRetryTimer = null;
 
 function startBriefRetry() {
