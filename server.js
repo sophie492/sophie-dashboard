@@ -3386,12 +3386,43 @@ function autoCheckEventTodos(todos, event) {
   return todos;
 }
 
+const EVENT_TODOS_PATH = path.join(__dirname, 'data', 'event-todos.json');
+function loadEventTodos() {
+  try { return fs.existsSync(EVENT_TODOS_PATH) ? JSON.parse(fs.readFileSync(EVENT_TODOS_PATH, 'utf8')) : {}; } catch(e) { return {}; }
+}
+function saveEventTodos(data) {
+  const dir = path.dirname(EVENT_TODOS_PATH);
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(EVENT_TODOS_PATH, JSON.stringify(data, null, 2));
+}
+
 app.post('/api/events/generate-todos', (req, res) => {
   const event = req.body;
-  if (!event) return res.status(400).json({ error: 'No event data' });
+  if (!event || !event.id) return res.status(400).json({ error: 'No event data or missing id' });
+
+  const stored = loadEventTodos();
+
+  // If we already generated + stored todos for this event, return those (preserves done states)
+  if (stored[event.id] && stored[event.id].length > 0) {
+    // Apply checkbox states on top
+    const cbStates = loadCheckboxStates();
+    stored[event.id].forEach((t, i) => {
+      const s = cbStates['mkt-' + event.id + '-' + i];
+      if (s) t.done = s.checked;
+    });
+    autoCheckEventTodos(stored[event.id], event);
+    return res.json({ todos: stored[event.id], source: 'stored' });
+  }
+
+  // Generate fresh todos
   const todos = generateEventTodos(event);
   autoCheckEventTodos(todos, event);
-  res.json({ todos });
+
+  // Persist so they survive refreshes
+  stored[event.id] = todos;
+  saveEventTodos(stored);
+
+  res.json({ todos, source: 'generated' });
 });
 
 // Calendar auto-refresh cron
