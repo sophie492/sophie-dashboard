@@ -896,8 +896,17 @@ app.post('/api/offsite/create', async (req, res) => {
       city: city || 'TBD',
       status: dates && dates !== 'TBD' ? 'Planning' : 'Placeholder',
       notionPageId: null,
-      attendees: JSON.parse(JSON.stringify(data.defaultRoster || [])),
-      phases: JSON.parse(JSON.stringify(data.template?.phases || [])),
+      attendees: (JSON.parse(JSON.stringify(data.defaultRoster || []))).map(a => ({
+        ...a,
+        hotelConfirmed: false,
+        flightBooked: false,
+        travelCardIssued: false,
+        dietaryNeeds: a.dietaryNeeds || ''
+      })),
+      phases: (JSON.parse(JSON.stringify(data.template?.phases || []))).map(phase => ({
+        ...phase,
+        tasks: (phase.tasks || []).map(t => ({ ...t, done: false }))
+      })),
       logistics: {
         hotel: { name: 'TBD', confirmed: false, status: 'Not Started', statusDetail: '', selectedOption: null, confirmationDetails: '', rate: null, nights: 2, rooms: null, roomsNote: '', contactPerson: 'Alice Zhao (travel agent, alice.zhao@fora.travel)' },
         venue: { name: 'TBD', address: '', confirmed: false, status: 'Not Started', statusDetail: '', selectedOption: null, confirmationDetails: '', capacity: '10+', estimatedCost: '' },
