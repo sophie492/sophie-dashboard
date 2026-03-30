@@ -6035,6 +6035,9 @@ function startAutoRefresh(){
 async function init(){
   try{
     applyPersistedState();
+    // Load calendar + brief before first render so pages aren't empty
+    await fetchLiveCalendar().catch(()=>{});
+    await fetchLiveBrief().catch(()=>{});
     // Don't block on checkbox states — load them in background
     loadServerCheckboxStates().catch(e=>console.warn('[Init] Checkbox load failed:',e.message));
     renderSidebar();
@@ -6060,16 +6063,14 @@ async function init(){
     if(lastPage&&lastPage!=='overview')navigateTo(lastPage);
   }catch(e){}
 
-  // Live data fetches — all independent, all fire-and-forget
+  // Live data fetches — calendar + brief already loaded above
   fetchLiveActionItems().catch(()=>{});
   fetchLiveNews().catch(()=>{});
   fetchLiveUtilities().catch(()=>{});
   fetchLivePulse().catch(()=>{});
-  fetchLiveCalendar().catch(()=>{});
   fetchLiveFPPC().catch(()=>{});
   fetchLiveTasks().catch(()=>{});
   fetchLiveEvents().catch(()=>{});
-  fetchLiveBrief().catch(()=>{});
 
   startAutoRefresh();
 }
