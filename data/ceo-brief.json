@@ -1,1 +1,54 @@
-{"briefDate":"2026-03-28","priorities":[{"text":"Review Town Hall slides before Monday — Sophie is building them, you need to approve.","rank":1},{"text":"Coach intro or tell Gillian your plan — demo is April 2, 5 days out.","rank":2},{"text":"Confirm GNC Pittsburgh date with Shreyas — Daniel needs answer by Monday.","rank":3}],"shreyasPriorities":[{"text":"Confirm GNC Pittsburgh date with Rishabh — Daniel needs answer by Monday.","rank":1}],"lastUpdated":"2026-03-29T05:19:46.811Z"}
+{
+  "briefDate": "2026-03-30",
+  "flagged": [
+    {
+      "text": "Lock in GNC Pittsburgh date — TODAY. Daniel waiting, May 18 or 19.",
+      "priority": "red",
+      "source": "Slack"
+    },
+    {
+      "text": "Send board materials — April 2 board meeting, Indy needs doc link access, 3:30 PM call today.",
+      "priority": "red",
+      "source": "Gmail"
+    },
+    {
+      "text": "Bissell pricing ownership reassign — Alec let go, James needs partner, 1:30 PM Bissell call today.",
+      "priority": "red",
+      "source": "Granola"
+    },
+    {
+      "text": "Send teamlink emails — 2:00 PM calendar block, slid 4+ times.",
+      "priority": "red",
+      "source": "Calendar"
+    },
+    {
+      "text": "Pick podcast episode topic — April 10 recording, 11 days out.",
+      "priority": "yellow",
+      "source": "Slack"
+    }
+  ],
+  "priorities": [
+    "Lock GNC Pittsburgh date and send board materials before your 3:30 PM Indy call",
+    "Decide Bissell pricing ownership before 1:30 PM Matt Kruer call",
+    "Send teamlink emails during your 2:00 PM block — this has slid 4 times"
+  ],
+  "shreyasPriorities": [
+    "Confirm GNC Pittsburgh on-site date (May 18 or 19) with Rishabh — deadline is today",
+    "Connect with Isabel on Perry Ellis AI shopping agent visuals before Wednesday POC review"
+  ],
+  "shreyasFlagged": [
+    {
+      "text": "GNC Pittsburgh on-site date — confirm May 18 or 19 with Rishabh, Daniel waiting",
+      "priority": "red",
+      "source": "Slack"
+    },
+    {
+      "text": "Perry Ellis AI shopping agent visuals — Gillian needs mocks for Wednesday POC review, connect with Isabel today",
+      "priority": "red",
+      "source": "Slack"
+    }
+  ],
+  "actionItems": [],
+  "meetingPrep": [],
+  "lastUpdated": "2026-03-30T19:21:13.582Z"
+}
