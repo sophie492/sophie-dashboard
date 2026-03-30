@@ -1983,7 +1983,10 @@ function renderOverview(){
 
   html+=renderPersonSection('Rishabh');
   html+=renderPersonSection('Shreyas');
-  html+=renderConflictsCard();
+  const conflictsHtml = renderConflictsCard();
+  if (conflictsHtml) {
+    html += '<div style="margin-top:16px">' + conflictsHtml + '</div>';
+  }
   html+=renderMyWorkSection();
   html+=renderDeliveriesStrip();
   html+=renderCompanyPills();
@@ -5745,10 +5748,13 @@ function fetchLiveCalendar(){
       // Always use cache — it's fresher than embedded data
       if(cached.calendarDays.length>0){
         DATA.calendarDays=cached.calendarDays;
+        // Reset today index so calendar starts on today
+        personCalDayIdx.rishabh=getTodayCalIdx();personCalDayIdx.shreyas=getTodayCalIdx();
+        personCalDayIdx.rishabh_set=true;personCalDayIdx.shreyas_set=true;
         renderOverview();
         renderPersonPage('Rishabh');
         renderPersonPage('Shreyas');
-        console.log('[Calendar] Loaded from cache:',cached.calendarDays.length,'days');
+        console.log('[Calendar] Loaded from cache:',cached.calendarDays.length,'days, today idx:',personCalDayIdx.rishabh);
       }
     }
   })
@@ -5767,10 +5773,12 @@ function fetchLiveCalendar(){
       // Always use live data — it's the freshest
       if(data.calendarDays.length>0){
         DATA.calendarDays=data.calendarDays;
+        personCalDayIdx.rishabh=getTodayCalIdx();personCalDayIdx.shreyas=getTodayCalIdx();
+        personCalDayIdx.rishabh_set=true;personCalDayIdx.shreyas_set=true;
         renderOverview();
         renderPersonPage('Rishabh');
         renderPersonPage('Shreyas');
-        console.log('[Calendar] Live update:',data.calendarDays.length,'days');
+        console.log('[Calendar] Live update:',data.calendarDays.length,'days, today idx:',personCalDayIdx.rishabh);
       }
     })
     .catch(()=>{});
