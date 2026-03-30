@@ -3255,6 +3255,18 @@ function generateEventTodos(event) {
   const dates = event.dates || 'TBD';
   const arrivalDate = getArrivalDate(event.startDate);
 
+  // Exec home locations (from offsite defaultRoster)
+  const execLocations = { 'Rishabh': 'San Francisco', 'Shreyas': 'San Francisco' };
+  const execAirports = { 'Rishabh': 'SFO', 'Shreyas': 'SFO' };
+
+  // Check if event is local to an exec
+  function isLocalEvent(name) {
+    const home = (execLocations[name] || '').toLowerCase();
+    const evLoc = location.toLowerCase();
+    return evLoc.includes('san francisco') || evLoc.includes('sf') ||
+           (home && (evLoc.includes(home) || home.includes(evLoc.split(',')[0])));
+  }
+
   if (type.includes('irl')) {
     // Per-exec travel prep (Sophie's EA tasks)
     const execs = [];
@@ -3262,11 +3274,18 @@ function generateEventTodos(event) {
     if (event.shreyas) execs.push('Shreyas');
 
     execs.forEach(name => {
-      todos.push({ text: `Book ${name}'s flight to ${location} (arrive ${arrivalDate})`, done: false });
-      todos.push({ text: `Book ${name}'s hotel in ${location}`, done: false });
-      todos.push({ text: `Block ${name}'s calendar ${dates}`, done: false });
-      todos.push({ text: `Clear / reschedule conflicts on ${name}'s calendar`, done: false });
-      todos.push({ text: `Issue travel card for ${name} (Ramp)`, done: false });
+      const airport = execAirports[name] || 'SFO';
+      if (isLocalEvent(name)) {
+        // Local event — no flight or hotel needed
+        todos.push({ text: `Block ${name}'s calendar ${dates}`, done: false });
+        todos.push({ text: `Clear / reschedule conflicts on ${name}'s calendar`, done: false });
+      } else {
+        todos.push({ text: `Book ${name}'s flight ${airport} to ${location} (arrive ${arrivalDate})`, done: false });
+        todos.push({ text: `Book ${name}'s hotel in ${location}`, done: false });
+        todos.push({ text: `Block ${name}'s calendar ${dates}`, done: false });
+        todos.push({ text: `Clear / reschedule conflicts on ${name}'s calendar`, done: false });
+        todos.push({ text: `Issue travel card for ${name} (Ramp)`, done: false });
+      }
     });
 
     // EA coordination tasks
