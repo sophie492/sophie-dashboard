@@ -2021,7 +2021,8 @@ function renderPersonSection(person){
     if(events.length>maxCal) calHtml+=`<div style="font-size:10px;color:var(--text-muted);padding:4px 6px">${events.length-maxCal} more events</div>`;
   }
 
-  // Today's Priorities card (from CEO brief)
+  // Today's action items + priorities (from CEO brief)
+  const overviewFlagged = key === 'rishabh' ? CEO_BRIEF.flagged : CEO_BRIEF.shreyasFlagged;
   const overviewPrios = key === 'rishabh' ? CEO_BRIEF.priorities : CEO_BRIEF.shreyasPriorities;
   let prioHtml = '';
   // Check if brief is stale — compare briefDate to today
@@ -2030,16 +2031,30 @@ function renderPersonSection(person){
   if (!briefIsToday && CEO_BRIEF.lastUpdated) {
     prioHtml += '<div style="background:var(--red-soft);border:1px solid var(--red);border-radius:6px;padding:6px 10px;margin-bottom:8px;font-size:10px;color:var(--red);display:flex;align-items:center;gap:6px"><span style="font-size:14px">&#9888;</span> Brief is from ' + (CEO_BRIEF.briefDate || 'unknown date') + ' — waiting for today\'s run.</div>';
   }
-  if (overviewPrios && overviewPrios.length > 0) {
+  // Show flagged action items first
+  if (overviewFlagged && overviewFlagged.length > 0) {
+    overviewFlagged.forEach((f) => {
+      const fText = typeof f === 'string' ? f : (f.text || '');
+      const fPriority = typeof f === 'object' ? f.priority : 'red';
+      const dotColor = fPriority === 'red' ? 'var(--red)' : fPriority === 'yellow' ? 'var(--yellow)' : 'var(--green)';
+      prioHtml += `<div style="display:flex;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);font-size:11px;align-items:flex-start">
+        <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${dotColor};margin-top:4px;flex-shrink:0"></span>
+        <span style="color:var(--text-dim);line-height:1.3">${fText}</span>
+      </div>`;
+    });
+  }
+  // Then show priorities summary if different from flagged
+  if (overviewPrios && overviewPrios.length > 0 && (!overviewFlagged || overviewFlagged.length === 0)) {
     overviewPrios.forEach((p, i) => {
       const pText = typeof p === 'string' ? p : (p.text || '');
-      prioHtml += `<div style="display:flex;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:11px;align-items:flex-start">
+      prioHtml += `<div style="display:flex;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);font-size:11px;align-items:flex-start">
         <span style="font-size:14px;font-weight:800;color:var(--gold);min-width:18px">${i + 1}</span>
         <span style="color:var(--text-dim);line-height:1.3">${pText}</span>
       </div>`;
     });
-  } else {
-    prioHtml = (briefAge > 18 ? prioHtml : '') + '<div style="color:var(--text-muted);font-size:11px;padding:8px 0">No priorities set — next brief at 7am</div>';
+  }
+  if ((!overviewFlagged || overviewFlagged.length === 0) && (!overviewPrios || overviewPrios.length === 0)) {
+    prioHtml += '<div style="color:var(--text-muted);font-size:11px;padding:8px 0">No action items — next brief at 7am</div>';
   }
 
   return `
@@ -2212,6 +2227,7 @@ function renderPersonPage(person){
   const cls=key==='rishabh'?'rishabh':'shreyas';
   const dotColor=key==='rishabh'?'var(--lavender)':'var(--gold)';
   const prioData=key==='rishabh'?CEO_BRIEF.priorities:CEO_BRIEF.shreyasPriorities;
+  const flaggedData=key==='rishabh'?CEO_BRIEF.flagged:CEO_BRIEF.shreyasFlagged;
 
   let html=`
     <div class="page-header">
@@ -2231,20 +2247,31 @@ function renderPersonPage(person){
       staleWarning = '<div style="background:var(--red-soft);border:1px solid var(--red);border-radius:6px;padding:6px 10px;margin-bottom:8px;font-size:10px;color:var(--red)">&#9888; Brief is from ' + (CEO_BRIEF.briefDate || 'unknown date') + '</div>';
     }
     let prioHtml = staleWarning;
-    if (prioData && prioData.length > 0) {
+    // Show flagged action items
+    if (flaggedData && flaggedData.length > 0) {
+      flaggedData.forEach((f) => {
+        const fText = typeof f === 'string' ? f : (f.text || '');
+        const fPri = typeof f === 'object' ? f.priority : 'red';
+        const dc = fPri === 'red' ? 'var(--red)' : fPri === 'yellow' ? 'var(--yellow)' : 'var(--green)';
+        prioHtml += `<div style="display:flex;gap:10px;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px;align-items:flex-start">
+          <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${dc};margin-top:5px;flex-shrink:0"></span>
+          <span style="color:var(--text-dim);line-height:1.4">${fText}</span>
+        </div>`;
+      });
+    } else if (prioData && prioData.length > 0) {
       prioData.forEach((p, i) => {
         const pText2 = typeof p === 'string' ? p : (p.text || '');
-        prioHtml += `<div style="display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px;align-items:flex-start">
+        prioHtml += `<div style="display:flex;gap:10px;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px;align-items:flex-start">
           <span style="font-size:16px;font-weight:800;color:var(--gold);min-width:20px">${i + 1}</span>
           <span style="color:var(--text-dim);line-height:1.4">${pText2}</span>
         </div>`;
       });
     } else {
-      prioHtml += '<div style="color:var(--text-muted);font-size:11px;padding:8px 0">No priorities set — next brief at 7am</div>';
+      prioHtml += '<div style="color:var(--text-muted);font-size:11px;padding:8px 0">No action items — next brief at 7am</div>';
     }
     html += `<div style="margin-top:16px">
       <div class="card" style="border-left:3px solid var(--gold)">
-        <div class="card-head"><span class="card-title" style="color:var(--gold)">&#127919; Today's Priorities</span></div>
+        <div class="card-head"><span class="card-title" style="color:var(--gold)">&#127919; Action Items</span><span class="badge tag-gray">${(flaggedData||[]).length || (prioData||[]).length} items</span></div>
         <div class="card-body">${prioHtml}</div>
       </div>
     </div>`;
