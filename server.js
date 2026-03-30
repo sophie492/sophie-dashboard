@@ -475,11 +475,14 @@ function computeTravelNeeds(offsite) {
     }
   });
 
-  // Count rooms needed
-  const roomsNeeded = offsite.attendees.filter(a => a.needsHotel).length;
+  // Count rooms needed (only attending non-locals)
+  const attendingList = offsite.attendees.filter(a => a.attending !== false);
+  const roomsNeeded = attendingList.filter(a => a.needsHotel).length;
   if (!offsite.logistics) offsite.logistics = {};
   if (!offsite.logistics.hotel) offsite.logistics.hotel = {};
   offsite.logistics.hotel.roomsNeeded = roomsNeeded;
+  offsite.logistics.hotel.rooms = roomsNeeded;
+  offsite.attendingCount = attendingList.length;
 }
 
 function computeBudgetEstimates(offsite) {
@@ -497,8 +500,9 @@ function computeBudgetEstimates(offsite) {
 
     if (catName.includes('hotel')) {
       if (l.hotel && l.hotel.rate && l.hotel.nights) {
+        const attending = (offsite.attendees || []).filter(a => a.attending !== false);
         const rooms = l.hotel.rooms || l.hotel.roomsNeeded ||
-          ((offsite.attendees || []).length - (offsite.attendees || []).filter(a => a.needsHotel === false).length);
+          (attending.length - attending.filter(a => a.needsHotel === false).length);
         if (rooms > 0) est = l.hotel.rate * rooms * l.hotel.nights;
       }
     } else if (catName.includes('venue') || catName.includes('cowork')) {
@@ -511,7 +515,7 @@ function computeBudgetEstimates(offsite) {
     } else if (catName.includes('transport')) {
       est = 0;
     } else if (catName.includes('food') || catName.includes('beverage')) {
-      const numAttendees = (offsite.attendees || []).length || 9;
+      const numAttendees = (offsite.attendees || []).filter(a => a.attending !== false).length || 9;
       est = (25 * numAttendees * 2) + (75 * numAttendees);
     } else if (catName.includes('activity') || catName.includes('social')) {
       if (l.activityResearch && l.activityResearch.length > 0) {
@@ -757,6 +761,34 @@ app.post('/api/offsite/:id/budget/sheet-sync', async (req, res) => {
     let spreadsheetId = offsite.budgetSheetId;
 
     if (!spreadsheetId) {
+      // Get or create shared "Leadership Offsites" folder
+      let folderId = process.env.OFFSITE_BUDGET_FOLDER_ID || null;
+      if (!folderId) {
+        try {
+          const folderSearch = await drive.files.list({
+            q: "name='Leadership Offsites' and mimeType='application/vnd.google-apps.folder' and trashed=false",
+            fields: 'files(id)'
+          });
+          if (folderSearch.data.files.length > 0) {
+            folderId = folderSearch.data.files[0].id;
+          } else {
+            const folder = await drive.files.create({
+              requestBody: { name: 'Leadership Offsites', mimeType: 'application/vnd.google-apps.folder' }
+            });
+            folderId = folder.data.id;
+            await drive.permissions.create({
+              fileId: folderId,
+              requestBody: { type: 'user', role: 'writer', emailAddress: 'evelyn@fermatcommerce.com' }
+            });
+            await drive.permissions.create({
+              fileId: folderId,
+              requestBody: { type: 'user', role: 'writer', emailAddress: 'sophie@fermatcommerce.com' }
+            });
+          }
+        } catch (e) { console.log('[Sheets] Folder setup skipped:', e.message); }
+      }
+
+      // Create the budget spreadsheet
       const spreadsheet = await sheets.spreadsheets.create({
         requestBody: {
           properties: { title: offsite.name + ' — Budget Estimates' },
@@ -765,6 +797,13 @@ app.post('/api/offsite/:id/budget/sheet-sync', async (req, res) => {
       });
       spreadsheetId = spreadsheet.data.spreadsheetId;
       offsite.budgetSheetId = spreadsheetId;
+
+      // Move into folder
+      if (folderId) {
+        try {
+          await drive.files.update({ fileId: spreadsheetId, addParents: folderId, fields: 'id, parents' });
+        } catch (e) { console.log('[Sheets] Move to folder skipped:', e.message); }
+      }
 
       // Share with Evelyn and Sophie
       await drive.permissions.create({
@@ -791,6 +830,8 @@ app.post('/api/offsite/:id/budget/sheet-sync', async (req, res) => {
       ['Offsite', offsite.name, '', ''],
       ['Dates', offsite.dates, '', ''],
       ['City', offsite.city, '', ''],
+      ['Attending', offsite.attendingCount || (offsite.attendees || []).filter(a => a.attending !== false).length, '', ''],
+      ['Hotel Rooms', (offsite.logistics.hotel && offsite.logistics.hotel.rooms) || '—', '', ''],
       ['Approver', budget.approver || 'Evelyn', '', ''],
       ['Status', budget.approved ? 'Approved' : 'Pending Approval', '', ''],
       [],

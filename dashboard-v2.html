@@ -4217,9 +4217,11 @@ function renderOffsiteDetailView(el, OFFSITE, ALLDATA) {
 
   // ── Attendees tab ──
   function renderAttendeesTab() {
-    var travelers = attendees.filter(function(a) { return a.needsHotel !== false; });
+    var attendingList = attendees.filter(function(a) { return a.attending !== false; });
+    var notAttending = attendees.length - attendingList.length;
+    var travelers = attendingList.filter(function(a) { return a.needsHotel !== false; });
     var confirmed = travelers.filter(function(a) { return a.hotelConfirmed && a.flightBooked; }).length;
-    var locals = attendees.filter(function(a) { return a.needsHotel === false; }).length;
+    var locals = attendingList.filter(function(a) { return a.needsHotel === false || a.needsFlight === false; }).length;
     function attendeeToggle(a, field) {
       var isLocal = a.needsHotel === false || a.needsFlight === false;
       if (isLocal && (field === 'hotelConfirmed' || field === 'flightBooked' || field === 'travelCardIssued')) {
@@ -4231,7 +4233,11 @@ function renderOffsiteDetailView(el, OFFSITE, ALLDATA) {
     var attendeeRows = attendees.map(function(a, ai) {
       var locationTag = a.location ? '<div style="font-size:9px;color:var(--text-muted);margin-top:1px">' + a.location + '</div>' : '';
       var travelTag = a.travelNotes ? '<div style="font-size:9px;color:' + (a.needsFlight === false ? 'var(--green)' : 'var(--text-muted)') + ';margin-top:1px">' + a.travelNotes + '</div>' : '';
-      return '<tr style="border-bottom:1px solid var(--border);font-size:11px">' +
+      var rowOpacity = a.attending === false ? 'opacity:0.4;' : '';
+      return '<tr style="border-bottom:1px solid var(--border);font-size:11px;' + rowOpacity + '">' +
+        '<td style="padding:6px 8px;text-align:center">' +
+          '<button class="offsite-status-toggle" onclick="toggleAttendeeStatus(\'' + a.name.replace(/'/g, "\\'") + '\',\'attending\')" style="background:' + (a.attending !== false ? 'var(--green-soft)' : 'var(--red-soft)') + ';color:' + (a.attending !== false ? 'var(--green)' : 'var(--red)') + ';border:1px solid ' + (a.attending !== false ? 'var(--green)' : 'var(--red)') + ';padding:2px 8px;border-radius:4px;font-size:10px;cursor:pointer;font-family:inherit">' + (a.attending !== false ? '\u2713' : '\u2717') + '</button>' +
+        '</td>' +
         '<td style="padding:6px 8px;font-weight:600;color:var(--text)">' + a.name + (a.title ? '<div style="font-size:9px;color:var(--text-dim)">' + a.title + '</div>' : '') + locationTag + '</td>' +
         '<td style="padding:6px 8px;color:var(--text-muted);font-size:10px">' + (a.email || '') + '</td>' +
         '<td style="padding:6px 8px;color:var(--text-muted);font-family:monospace;font-size:10px">' + (a.marriottNum || '<span style="color:var(--red)">missing</span>') + '</td>' +
@@ -4244,7 +4250,7 @@ function renderOffsiteDetailView(el, OFFSITE, ALLDATA) {
 
     return '<div class="offsite-tab-pane" id="offsite-attendees">' +
       '<div style="display:flex;align-items:center;gap:16px;margin-bottom:12px">' +
-        '<div style="font-size:13px;font-weight:700;color:var(--text)">' + confirmed + '/' + travelers.length + ' travelers confirmed' + (locals > 0 ? ' <span style="font-size:10px;color:var(--text-muted);font-weight:500">(' + locals + ' local — N/A)</span>' : '') + '</div>' +
+        '<div style="font-size:13px;font-weight:700;color:var(--text)">' + attendingList.length + '/' + attendees.length + ' attending' + (notAttending > 0 ? ' <span style="font-size:10px;color:var(--text-muted);font-weight:500">(' + notAttending + ' not attending)</span>' : '') + ' &middot; ' + confirmed + '/' + travelers.length + ' travelers confirmed' + (locals > 0 ? ' <span style="font-size:10px;color:var(--text-muted);font-weight:500">(' + locals + ' local)</span>' : '') + '</div>' +
         '<div style="flex:1;height:6px;background:var(--surface);border-radius:3px;overflow:hidden;max-width:300px"><div style="height:100%;width:' + (attendees.length ? Math.round(confirmed/attendees.length*100) : 0) + '%;background:var(--green);border-radius:3px;transition:width .3s"></div></div>' +
       '</div>' +
       '<div class="card">' +
@@ -4252,6 +4258,7 @@ function renderOffsiteDetailView(el, OFFSITE, ALLDATA) {
         '<div class="card-body" style="padding:0;overflow-x:auto">' +
           '<table style="width:100%;border-collapse:collapse">' +
             '<thead><tr style="border-bottom:2px solid var(--border);font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px">' +
+              '<th style="padding:8px;text-align:center">Attending</th>' +
               '<th style="padding:8px;text-align:left">Name</th>' +
               '<th style="padding:8px;text-align:left">Email</th>' +
               '<th style="padding:8px;text-align:left">Marriott #</th>' +
@@ -4619,10 +4626,20 @@ function toggleAttendeeStatus(name, field) {
     if (onclick.includes(name) && onclick.includes(field)) btn = b;
   });
   if (btn) {
-    btn.style.background = val ? 'var(--green-soft)' : 'var(--surface)';
-    btn.style.color = val ? 'var(--green)' : 'var(--text-muted)';
-    btn.style.borderColor = val ? 'var(--green)' : 'var(--border)';
-    btn.textContent = val ? '\u2713' : '\u2014';
+    if (field === 'attending') {
+      btn.style.background = val ? 'var(--green-soft)' : 'var(--red-soft)';
+      btn.style.color = val ? 'var(--green)' : 'var(--red)';
+      btn.style.borderColor = val ? 'var(--green)' : 'var(--red)';
+      btn.textContent = val ? '\u2713' : '\u2717';
+      // Update row opacity
+      var row = btn.closest('tr');
+      if (row) row.style.opacity = val ? '1' : '0.4';
+    } else {
+      btn.style.background = val ? 'var(--green-soft)' : 'var(--surface)';
+      btn.style.color = val ? 'var(--green)' : 'var(--text-muted)';
+      btn.style.borderColor = val ? 'var(--green)' : 'var(--border)';
+      btn.textContent = val ? '\u2713' : '\u2014';
+    }
   }
 
   // Save to server (fire and forget — no re-render)
@@ -4631,7 +4648,18 @@ function toggleAttendeeStatus(name, field) {
     headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer sophie-dashboard-secret-change-me'},
     body: JSON.stringify(_offsiteApiData)
   }).then(function(r) { return r.json(); }).then(function(d) {
-    if (d.ok) console.log('[Offsite] ' + name + ' ' + field + ' \u2192 ' + val);
+    if (d.ok) {
+      console.log('[Offsite] ' + name + ' ' + field + ' \u2192 ' + val);
+      // If attending changed, re-sync budget (room count + estimates change)
+      if (field === 'attending') {
+        fetch('/api/offsite/' + _activeOffsiteId + '/budget/notion-sync', {
+          method: 'POST', headers: { 'Authorization': 'Bearer sophie-dashboard-secret-change-me' }
+        }).catch(function() {});
+        fetch('/api/offsite/' + _activeOffsiteId + '/budget/sheet-sync', {
+          method: 'POST', headers: { 'Authorization': 'Bearer sophie-dashboard-secret-change-me' }
+        }).catch(function() {});
+      }
+    }
   }).catch(function(e) { console.error('[Offsite] Toggle failed:', e); });
 }
 
@@ -4642,13 +4670,24 @@ function updateOffsiteBudget(category, field, value) {
   if (!offsite || !offsite.logistics || !offsite.logistics.budget) return;
   var cat = offsite.logistics.budget.categories.find(function(c) { return c.category === category; });
   if (!cat) return;
-  cat[field] = parseFloat(value) || null;
+  var cleanVal = String(value).replace(/[$,]/g, '');
+  cat[field] = parseFloat(cleanVal) || null;
+  if (field === 'estimated') { cat.autoEstimated = null; }
   fetch('/api/offsite', {
     method: 'POST',
     headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer sophie-dashboard-secret-change-me'},
     body: JSON.stringify(_offsiteApiData)
   }).then(function(r) { return r.json(); }).then(function(d) {
-    if (d.ok) console.log('[Offsite] Budget updated: ' + category + ' ' + field + ' = ' + value);
+    if (d.ok) {
+      console.log('[Offsite] Budget updated: ' + category + ' ' + field + ' = ' + cleanVal);
+      // Auto-sync to Notion and Sheet
+      fetch('/api/offsite/' + _activeOffsiteId + '/budget/notion-sync', {
+        method: 'POST', headers: { 'Authorization': 'Bearer sophie-dashboard-secret-change-me' }
+      }).catch(function() {});
+      fetch('/api/offsite/' + _activeOffsiteId + '/budget/sheet-sync', {
+        method: 'POST', headers: { 'Authorization': 'Bearer sophie-dashboard-secret-change-me' }
+      }).catch(function() {});
+    }
   }).catch(function(e) { console.error('[Offsite] Budget update failed:', e); });
 }
 

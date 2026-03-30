@@ -8,7 +8,8 @@
       "location": "San Francisco, CA",
       "title": "CEO",
       "needsHotel": true,
-      "needsFlight": true
+      "needsFlight": true,
+      "attending": true
     },
     {
       "name": "Shreyas Kumar",
@@ -18,7 +19,8 @@
       "location": "San Francisco, CA",
       "title": "CTO",
       "needsHotel": true,
-      "needsFlight": true
+      "needsFlight": true,
+      "attending": true
     },
     {
       "name": "Evelyn Xue",
@@ -28,7 +30,8 @@
       "location": "New York, NY",
       "title": "Finance",
       "needsHotel": false,
-      "needsFlight": false
+      "needsFlight": false,
+      "attending": true
     },
     {
       "name": "Jess McDaid",
@@ -38,7 +41,8 @@
       "location": "New York, NY",
       "title": "General Manager, Agency",
       "needsHotel": false,
-      "needsFlight": false
+      "needsFlight": false,
+      "attending": true
     },
     {
       "name": "Saunder Schroeder",
@@ -48,7 +52,8 @@
       "location": "Salt Lake City, UT",
       "title": "SVP, Growth",
       "needsHotel": true,
-      "needsFlight": true
+      "needsFlight": true,
+      "attending": true
     },
     {
       "name": "Bharat Murali",
@@ -58,7 +63,8 @@
       "location": "San Francisco, CA",
       "title": "Eng Leadership",
       "needsHotel": true,
-      "needsFlight": true
+      "needsFlight": true,
+      "attending": true
     },
     {
       "name": "Isabel O'Keefe",
@@ -67,8 +73,9 @@
       "marriottNum": "634278963",
       "location": "New York, NY",
       "title": "Product",
-      "needsHotel": true,
-      "needsFlight": true
+      "needsHotel": false,
+      "needsFlight": false,
+      "attending": true
     },
     {
       "name": "Jennifer Schnadig",
@@ -78,7 +85,8 @@
       "location": "New York, NY",
       "title": "Chief of Staff",
       "needsHotel": false,
-      "needsFlight": false
+      "needsFlight": false,
+      "attending": true
     },
     {
       "name": "Khushy",
@@ -88,7 +96,8 @@
       "location": "Mumbai, India",
       "title": "Leadership",
       "needsHotel": true,
-      "needsFlight": true
+      "needsFlight": true,
+      "attending": false
     }
   ],
   "template": {
@@ -981,7 +990,8 @@
             "location": "San Francisco, CA",
             "title": "CEO",
             "needsFlight": true,
-            "travelNotes": "SFO -> JFK/EWR (~5.5h flight)"
+            "travelNotes": "SFO -> JFK/EWR (~5.5h flight)",
+            "attending": true
           },
           {
             "name": "Shreyas Kumar",
@@ -996,7 +1006,8 @@
             "location": "San Francisco, CA",
             "title": "CTO",
             "needsFlight": true,
-            "travelNotes": "SFO -> JFK/EWR (~5.5h flight)"
+            "travelNotes": "SFO -> JFK/EWR (~5.5h flight)",
+            "attending": true
           },
           {
             "name": "Evelyn Xue",
@@ -1010,7 +1021,8 @@
             "dietaryNeeds": "",
             "location": "New York, NY",
             "needsFlight": false,
-            "travelNotes": "NYC local -- no travel needed"
+            "travelNotes": "NYC local -- no travel needed",
+            "attending": true
           },
           {
             "name": "Jess McDaid",
@@ -1025,7 +1037,8 @@
             "location": "New York, NY",
             "title": "General Manager, Agency",
             "needsFlight": false,
-            "travelNotes": "NYC local -- no travel needed"
+            "travelNotes": "NYC local -- no travel needed",
+            "attending": true
           },
           {
             "name": "Saunder Schroeder",
@@ -1040,7 +1053,8 @@
             "location": "Salt Lake City, UT",
             "title": "SVP, Growth",
             "needsFlight": true,
-            "travelNotes": "SLC -> JFK/EWR (~4.5h flight)"
+            "travelNotes": "SLC -> JFK/EWR (~4.5h flight)",
+            "attending": true
           },
           {
             "name": "Bharat Murali",
@@ -1055,7 +1069,8 @@
             "location": "San Francisco, CA",
             "title": "Eng Leadership",
             "needsFlight": true,
-            "travelNotes": "SFO -> JFK/EWR (~5.5h flight)"
+            "travelNotes": "SFO -> JFK/EWR (~5.5h flight)",
+            "attending": true
           },
           {
             "name": "Isabel O'Keefe",
@@ -1070,7 +1085,8 @@
             "notes": "",
             "location": "New York, NY",
             "needsFlight": true,
-            "travelNotes": "DEN -> JFK/EWR (~4h flight)"
+            "travelNotes": "DEN -> JFK/EWR (~4h flight)",
+            "attending": true
           },
           {
             "name": "Jennifer Schnadig",
@@ -1085,7 +1101,8 @@
             "location": "New York, NY",
             "title": "Chief of Staff",
             "needsFlight": false,
-            "travelNotes": "NYC local -- no travel needed"
+            "travelNotes": "NYC local -- no travel needed",
+            "attending": true
           },
           {
             "name": "Khushy",
@@ -1099,7 +1116,8 @@
             "dietaryNeeds": "",
             "location": "Mumbai, India",
             "needsFlight": true,
-            "travelNotes": "International travel from Mumbai -- check visa requirements"
+            "travelNotes": "International travel from Mumbai -- check visa requirements",
+            "attending": false
           }
         ],
         "phases": [
@@ -1558,8 +1576,8 @@
             "rate": 420,
             "rateNote": "~$420/room with 10% Fermat discount",
             "nights": 2,
-            "rooms": 6,
-            "roomsNote": "6 rooms needed — 3 NYC locals (Evelyn, Jess, Jennifer) don't need hotel",
+            "rooms": 4,
+            "roomsNote": "4 rooms — Khushy not attending, 4 NYC locals (Evelyn, Jess, Isabel, Jennifer)",
             "confirmed": false,
             "contactPerson": "Alice Zhao (travel agent, alice.zhao@fora.travel)",
             "roomsNeeded": 6,
@@ -1702,7 +1720,7 @@
             "day2Lunch": { "link": "", "notes": "" }
           },
           "budget": {
-            "estimated": 8820,
+            "estimated": 7015,
             "approved": false,
             "committed": 0,
             "actual": 0,
@@ -1710,11 +1728,11 @@
             "categories": [
               {
                 "category": "Hotel",
-                "estimated": 5040,
-                "autoEstimated": 5040,
+                "estimated": 3360,
+                "autoEstimated": 3360,
                 "committed": null,
                 "actual": null,
-                "notes": "6 rooms x 2 nights x $420/room (Moxy NYC Chelsea)"
+                "notes": "4 rooms x 2 nights x $420/room (Moxy NYC Chelsea)"
               },
               {
                 "category": "Venue / Coworking",
@@ -1734,11 +1752,11 @@
               },
               {
                 "category": "Food & Beverage",
-                "estimated": 1125,
-                "autoEstimated": 1125,
+                "estimated": 1000,
+                "autoEstimated": 1000,
                 "committed": null,
                 "actual": null,
-                "notes": "DoorDash $25/person x 9 x 2 days + dinner $75/person x 9"
+                "notes": "DoorDash $25/person x 8 x 2 days + dinner $75/person x 8"
               },
               {
                 "category": "Social Activity",
