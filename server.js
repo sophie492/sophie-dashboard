@@ -3256,7 +3256,7 @@ function generateEventTodos(event) {
   const arrivalDate = getArrivalDate(event.startDate);
 
   if (type.includes('irl')) {
-    // Per-exec IRL todos
+    // Per-exec travel prep (Sophie's EA tasks)
     const execs = [];
     if (event.rishabh) execs.push('Rishabh');
     if (event.shreyas) execs.push('Shreyas');
@@ -3266,25 +3266,42 @@ function generateEventTodos(event) {
       todos.push({ text: `Book ${name}'s hotel in ${location}`, done: false });
       todos.push({ text: `Block ${name}'s calendar ${dates}`, done: false });
       todos.push({ text: `Clear / reschedule conflicts on ${name}'s calendar`, done: false });
+      todos.push({ text: `Issue travel card for ${name} (Ramp)`, done: false });
     });
 
-    // General IRL todos
-    todos.push({ text: 'Prep event materials / deck', done: false });
+    // EA coordination tasks
+    todos.push({ text: 'Confirm event registration / tickets', done: false });
+    todos.push({ text: 'Share event brief with attending execs (agenda, contacts, goals)', done: false });
     todos.push({ text: 'Confirm Fermat team travel logistics', done: false });
-    todos.push({ text: 'Send pre-event outreach to target accounts', done: false });
   } else if (type.includes('virtual')) {
-    todos.push({ text: 'Send calendar invites to Fermat team', done: false });
-    todos.push({ text: 'Prep demo / presentation materials', done: false });
-    todos.push({ text: 'Test video/audio setup', done: false });
-    todos.push({ text: 'Send pre-event outreach to target accounts', done: false });
-  } else if (type.includes('dinner') || type.includes('food') || type.includes('social')) {
-    todos.push({ text: 'Confirm reservation details', done: false });
-    todos.push({ text: 'Send invites / confirm attendees', done: false });
-    todos.push({ text: 'Coordinate logistics (transportation, parking)', done: false });
-  }
+    // Virtual event EA prep
+    const execs = [];
+    if (event.rishabh) execs.push('Rishabh');
+    if (event.shreyas) execs.push('Shreyas');
 
-  // All events get this
-  todos.push({ text: 'Confirm event registration / tickets', done: false });
+    execs.forEach(name => {
+      todos.push({ text: `Block ${name}'s calendar ${dates}`, done: false });
+      todos.push({ text: `Clear / reschedule conflicts on ${name}'s calendar`, done: false });
+    });
+
+    todos.push({ text: 'Confirm event registration / login details', done: false });
+    todos.push({ text: 'Share event brief with attending execs (agenda, contacts, goals)', done: false });
+  } else if (type.includes('dinner') || type.includes('food') || type.includes('social')) {
+    // Dinner/social EA prep
+    const execs = [];
+    if (event.rishabh) execs.push('Rishabh');
+    if (event.shreyas) execs.push('Shreyas');
+
+    execs.forEach(name => {
+      todos.push({ text: `Block ${name}'s calendar for ${event.shortName || event.name || 'event'}`, done: false });
+    });
+
+    todos.push({ text: 'Confirm reservation details (time, party size, location)', done: false });
+    todos.push({ text: 'Send attendee list / confirm RSVPs', done: false });
+  } else {
+    // Unknown type fallback
+    todos.push({ text: 'Confirm event registration / tickets', done: false });
+  }
 
   return todos;
 }
