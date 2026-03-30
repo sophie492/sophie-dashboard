@@ -2146,16 +2146,26 @@ function renderConflictsCard() {
 
   const allConflicts = [];
 
+  const nowMin = (function() {
+    const now = new Date(new Date().toLocaleString('en-US', {timeZone: 'America/Los_Angeles'}));
+    return now.getHours() * 60 + now.getMinutes();
+  })();
+  const todayISO2 = new Date(new Date().toLocaleString('en-US', {timeZone: 'America/Los_Angeles'})).toISOString().slice(0, 10);
+
   days.forEach(day => {
     ['rishabh', 'shreyas'].forEach(person => {
       const events = day[person] || [];
       const skipPattern = /sitter|gym|standup/i;
       const optPattern = /\[optional\]/i;
+      const isToday2 = day.date === todayISO2;
 
       for (let i = 0; i < events.length; i++) {
         if (skipPattern.test(events[i].title) || optPattern.test(events[i].title) || events[i].rsvp === 'declined') continue;
+        // Skip events that already ended today
+        if (isToday2 && calToMin(events[i].end) <= nowMin) continue;
         for (let j = i + 1; j < events.length; j++) {
           if (skipPattern.test(events[j].title) || optPattern.test(events[j].title) || events[j].rsvp === 'declined') continue;
+          if (isToday2 && calToMin(events[j].end) <= nowMin) continue;
 
           // Check time overlap
           const iStart = calToMin(events[i].time);
