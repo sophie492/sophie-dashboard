@@ -1983,6 +1983,7 @@ function renderOverview(){
 
   html+=renderPersonSection('Rishabh');
   html+=renderPersonSection('Shreyas');
+  html+=renderConflictsCard();
   html+=renderMyWorkSection();
   html+=renderDeliveriesStrip();
   html+=renderCompanyPills();
@@ -2134,6 +2135,91 @@ function renderMyWorkSection(){
       </div>`:''}
     </div>
   `;
+}
+
+function renderConflictsCard() {
+  const days = DATA.calendarDays || [];
+  if (days.length === 0) return '';
+
+  const allConflicts = [];
+
+  days.forEach(day => {
+    ['rishabh', 'shreyas'].forEach(person => {
+      const events = day[person] || [];
+      const skipPattern = /sitter|gym|standup/i;
+      const optPattern = /\[optional\]/i;
+
+      for (let i = 0; i < events.length; i++) {
+        if (skipPattern.test(events[i].title) || optPattern.test(events[i].title) || events[i].rsvp === 'declined') continue;
+        for (let j = i + 1; j < events.length; j++) {
+          if (skipPattern.test(events[j].title) || optPattern.test(events[j].title) || events[j].rsvp === 'declined') continue;
+
+          // Check time overlap
+          const iStart = calToMin(events[i].time);
+          const iEnd = calToMin(events[i].end);
+          const jStart = calToMin(events[j].time);
+          const jEnd = calToMin(events[j].end);
+
+          if (iStart < jEnd && jStart < iEnd) {
+            allConflicts.push({
+              person: person.charAt(0).toUpperCase() + person.slice(1),
+              personKey: person,
+              date: day.date,
+              label: day.label,
+              event1: events[i],
+              event2: events[j]
+            });
+          }
+        }
+      }
+    });
+  });
+
+  if (allConflicts.length === 0) return '';
+
+  const rishabhCount = allConflicts.filter(c => c.personKey === 'rishabh').length;
+  const shreyasCount = allConflicts.filter(c => c.personKey === 'shreyas').length;
+  const todayISO = new Date(new Date().toLocaleString('en-US', {timeZone: 'America/Los_Angeles'})).toISOString().slice(0, 10);
+  const todayConflicts = allConflicts.filter(c => c.date === todayISO).length;
+
+  // Group by date for compact view
+  const byDate = {};
+  allConflicts.forEach(c => {
+    if (!byDate[c.date]) byDate[c.date] = { label: c.label, conflicts: [] };
+    byDate[c.date].conflicts.push(c);
+  });
+
+  let detailHtml = '';
+  Object.keys(byDate).sort().slice(0, 7).forEach(date => {
+    const group = byDate[date];
+    const isToday = date === todayISO;
+    detailHtml += '<div style="margin-bottom:8px">';
+    detailHtml += '<div style="font-size:10px;font-weight:700;color:' + (isToday ? 'var(--red)' : 'var(--text-muted)') + ';text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">' + group.label + (isToday ? ' (TODAY)' : '') + '</div>';
+    group.conflicts.forEach(c => {
+      const personDot = c.personKey === 'rishabh' ? 'var(--lavender)' : 'var(--gold)';
+      detailHtml += '<div style="display:flex;align-items:flex-start;gap:6px;padding:3px 0;font-size:10px">';
+      detailHtml += '<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:' + personDot + ';margin-top:4px;flex-shrink:0"></span>';
+      detailHtml += '<span style="color:var(--text-dim)">' + c.event1.time + ' ';
+      detailHtml += '<a href="' + (c.event1.link || '#') + '" target="_blank" style="color:var(--text);text-decoration:underline">' + c.event1.title.substring(0, 30) + '</a>';
+      detailHtml += ' <span style="color:var(--red)">\u2194</span> ';
+      detailHtml += '<a href="' + (c.event2.link || '#') + '" target="_blank" style="color:var(--text);text-decoration:underline">' + c.event2.title.substring(0, 30) + '</a>';
+      detailHtml += '</span></div>';
+    });
+    detailHtml += '</div>';
+  });
+
+  return '<div class="card" style="border-left:3px solid var(--red)">' +
+    '<div class="card-head"><span class="card-title" style="color:var(--red)">\u26a0\ufe0f Calendar Conflicts</span>' +
+    '<span class="card-badges"><span class="badge tag-red">' + allConflicts.length + ' conflicts</span>' +
+    (todayConflicts > 0 ? '<span class="badge tag-red">' + todayConflicts + ' today</span>' : '') +
+    '</span></div>' +
+    '<div class="card-body compact" style="max-height:200px;overflow-y:auto">' +
+    '<div style="display:flex;gap:12px;margin-bottom:8px;font-size:10px;color:var(--text-muted)">' +
+    '<span><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--lavender);vertical-align:middle"></span> Rishabh: ' + rishabhCount + '</span>' +
+    '<span><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--gold);vertical-align:middle"></span> Shreyas: ' + shreyasCount + '</span>' +
+    '</div>' +
+    detailHtml +
+    '</div></div>';
 }
 
 function renderDeliveriesStrip(){
@@ -2734,6 +2820,7 @@ function renderTasksPage(){
       <div class="page-title">My Tasks</div>
       <div class="page-kpis"><a href="https://notion.so/ec04c3e35f534ee487592c1fb304991e" target="_blank" style="font-size:11px;color:var(--gold)">Open in Notion &#8599;</a></div>
     </div>
+    ${renderConflictsCard()}
     ${renderMyTasks()}
   `;
 }
