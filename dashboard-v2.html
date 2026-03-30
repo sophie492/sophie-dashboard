@@ -2189,6 +2189,12 @@ function renderCompanyPills(){
 // TASK 5: PERSON DETAIL PAGES
 // ============================================================
 
+function getTodayCalIdx(){
+  var days=DATA.calendarDays||[];
+  var todayStr=new Date(new Date().toLocaleString('en-US',{timeZone:'America/Los_Angeles'})).toISOString().slice(0,10);
+  var idx=days.findIndex(function(d){return d.date>=todayStr;});
+  return idx>=0?idx:0;
+}
 const personCalDayIdx={rishabh:0,shreyas:0};
 
 function renderPersonPage(person){
@@ -2260,6 +2266,7 @@ function renderPersonCalendar(person){
   const days=DATA.calendarDays||[];
   if(days.length===0) return '<div style="color:var(--text-muted);font-size:11px;padding:8px 0">No calendar data</div>';
 
+  if(personCalDayIdx[key]===0 && !personCalDayIdx[key+'_set']){personCalDayIdx[key]=getTodayCalIdx();personCalDayIdx[key+'_set']=true;}
   const currentIdx=personCalDayIdx[key]||0;
   const day=days[currentIdx]||days[0];
   const events=day[key]||[];
