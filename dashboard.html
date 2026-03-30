@@ -2015,7 +2015,7 @@ function renderPersonSection(person){
       calHtml+=`<a class="cal-ev${isConflict?' conflict':''}" href="${e.link||'#'}" target="_blank" rel="noopener">
         <span class="ct">${e.time}</span>
         <span class="cd ${typeClass}"></span>
-        <span class="cn">${e.title}${e.rsvp==='needsAction'?' <span class="badge tag-yellow" style="font-size:8px">RSVP</span>':''}</span>
+        <span class="cn">${e.title}${e.rsvp==='needsAction'&&!CAL_SKIP.test(e.title)&&e.type==='external'?' <span class="badge tag-yellow" style="font-size:8px">RSVP</span>':''}</span>
       </a>`;
     });
     if(events.length>maxCal) calHtml+=`<div style="font-size:10px;color:var(--text-muted);padding:4px 6px">${events.length-maxCal} more events</div>`;
@@ -2339,7 +2339,7 @@ function renderPersonCalendar(person){
     events.forEach((e,i)=>{
       const typeClass=e.type==='external'?'external':e.type==='1on1'?'one-on-one':'internal';
       const isConflict=conflicts.has(i);
-      const needsRsvp=e.rsvp==='needsAction';
+      const needsRsvp=e.rsvp==='needsAction' && !CAL_SKIP.test(e.title) && e.type==='external';
       const badges=[];
       if(needsRsvp) badges.push('<span class="badge tag-yellow" style="font-size:8px">NEEDS RSVP</span>');
       if(isConflict) badges.push('<span class="badge tag-red" style="font-size:8px">CONFLICT</span>');
