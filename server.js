@@ -33,6 +33,7 @@ const BASE_URL = process.env.RAILWAY_PUBLIC_DOMAIN
   : process.env.BASE_URL || `http://localhost:${PORT}`;
 
 const ALLOWED_DOMAIN = 'fermatcommerce.com';
+const TOKEN_PATH = path.join(__dirname, 'data', '.google-refresh-token');
 
 // ââ Session ââ
 app.set('trust proxy', 1);
@@ -63,6 +64,15 @@ if (GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET) {
     const domain = email.split('@')[1];
     if (domain !== ALLOWED_DOMAIN) {
       return done(null, false, { message: `Only @${ALLOWED_DOMAIN} accounts allowed.` });
+    }
+    // Store refresh token for server-side cron (survives restarts)
+    if (refreshToken) {
+      try {
+        const dir = path.dirname(TOKEN_PATH);
+        if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+        fs.writeFileSync(TOKEN_PATH, refreshToken);
+        console.log('[Auth] Refresh token stored for cron use');
+      } catch (e) { console.error('[Auth] Failed to store refresh token:', e.message); }
     }
     return done(null, {
       id: profile.id, email, name: profile.displayName,
@@ -3195,7 +3205,57 @@ app.get('/', ensureAuth, (req, res) => {
 app.use(ensureAuth, express.static(__dirname));
 
 // ââ Start ââ
+// Calendar auto-refresh cron
+async function refreshCalendarCache() {
+  try {
+    if (!fs.existsSync(TOKEN_PATH)) {
+      console.log('[Cal Cron] No stored refresh token - login once to enable.');
+      return;
+    }
+    const refreshToken = fs.readFileSync(TOKEN_PATH, 'utf8').trim();
+    if (!refreshToken || !GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) return;
+
+    const token = await refreshGoogleToken(refreshToken);
+    if (!token) { console.log('[Cal Cron] Token refresh failed'); return; }
+
+    const now = new Date(); now.setHours(0, 0, 0, 0);
+    const end = new Date(now); end.setDate(end.getDate() + 15);
+
+    const results = await Promise.all(CAL_IDS.map(id => fetchGCalEvents(token, id, now, end)));
+    const totalEvents = results.reduce((sum, r) => sum + r.items.length, 0);
+    if (totalEvents === 0) { console.log('[Cal Cron] No events - keeping cache'); return; }
+
+    const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const dayMap = {};
+    for (let i = 0; i < 15; i++) {
+      const d = new Date(now); d.setDate(d.getDate() + i);
+      const key = d.toISOString().slice(0, 10);
+      const dow = d.getDay();
+      dayMap[key] = { date: key, label: dayNames[dow] + ', ' + monthNames[d.getMonth()] + ' ' + d.getDate(), isWeekend: dow === 0 || dow === 6, rishabh: [], shreyas: [] };
+    }
+    CAL_NAMES.forEach((name, idx) => {
+      results[idx].items.forEach(ev => {
+        if (!ev.start || !ev.start.dateTime) return;
+        const key = ev.start.dateTime.slice(0, 10);
+        if (dayMap[key]) dayMap[key][name].push(...transformEvents([ev]));
+      });
+    });
+
+    const calendarDays = Object.values(dayMap).sort((a, b) => a.date.localeCompare(b.date));
+    const payload = { calendarDays, lastUpdated: new Date().toISOString(), source: 'cron' };
+    const dir = path.dirname(CALENDAR_PATH);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(CALENDAR_PATH, JSON.stringify(payload, null, 2));
+    console.log('[Cal Cron] Refreshed:', totalEvents, 'events,', calendarDays.length, 'days');
+  } catch (e) { console.error('[Cal Cron] Error:', e.message); }
+}
+
 app.listen(PORT, () => {
-  console.log(`Dashboard running on ${BASE_URL}`);
-  if (!GOOGLE_CLIENT_ID) console.log('\u26a0\ufe0f GOOGLE_CLIENT_ID not set - auth disabled (dev mode)');
+  console.log('Dashboard running on ' + BASE_URL);
+  if (!GOOGLE_CLIENT_ID) console.log('GOOGLE_CLIENT_ID not set - auth disabled (dev mode)');
+  // Refresh calendar on startup + every 30 minutes
+  refreshCalendarCache();
+  setInterval(refreshCalendarCache, 30 * 60 * 1000);
+  console.log('[Cal Cron] Auto-refresh every 30 min');
 });
