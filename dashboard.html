@@ -2024,13 +2024,11 @@ function renderPersonSection(person){
   // Today's Priorities card (from CEO brief)
   const overviewPrios = key === 'rishabh' ? CEO_BRIEF.priorities : CEO_BRIEF.shreyasPriorities;
   let prioHtml = '';
-  // Check if brief is stale (>18 hours old)
-  const briefAge = CEO_BRIEF.lastUpdated ? (Date.now() - new Date(CEO_BRIEF.lastUpdated).getTime()) / 3600000 : 999;
-  const briefDateStr = CEO_BRIEF.briefDate || '';
-  const todayISO = new Date(new Date().toLocaleString('en-US',{timeZone:'America/Los_Angeles'})).toISOString().slice(0,10);
-  const briefIsToday = briefDateStr && briefDateStr.includes(todayISO.slice(5));
-  if (briefAge > 18 && !briefIsToday) {
-    prioHtml += '<div style="background:var(--red-soft);border:1px solid var(--red);border-radius:6px;padding:6px 10px;margin-bottom:8px;font-size:10px;color:var(--red);display:flex;align-items:center;gap:6px"><span style="font-size:14px">&#9888;</span> Brief is stale (last updated ' + (CEO_BRIEF.lastUpdated ? new Date(CEO_BRIEF.lastUpdated).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}) : 'never') + '). Waiting for today\'s run.</div>';
+  // Check if brief is stale — compare briefDate to today
+  const todayPT = new Date(new Date().toLocaleString('en-US',{timeZone:'America/Los_Angeles'})).toISOString().slice(0,10);
+  const briefIsToday = (CEO_BRIEF.briefDate || '') === todayPT;
+  if (!briefIsToday && CEO_BRIEF.lastUpdated) {
+    prioHtml += '<div style="background:var(--red-soft);border:1px solid var(--red);border-radius:6px;padding:6px 10px;margin-bottom:8px;font-size:10px;color:var(--red);display:flex;align-items:center;gap:6px"><span style="font-size:14px">&#9888;</span> Brief is from ' + (CEO_BRIEF.briefDate || 'unknown date') + ' — waiting for today\'s run.</div>';
   }
   if (overviewPrios && overviewPrios.length > 0) {
     overviewPrios.forEach((p, i) => {
@@ -2226,12 +2224,11 @@ function renderPersonPage(person){
 
   // Today's Priorities (from CEO brief) — prioData already defined above
   {
-    const briefAge2 = CEO_BRIEF.lastUpdated ? (Date.now() - new Date(CEO_BRIEF.lastUpdated).getTime()) / 3600000 : 999;
-    const todayISO2 = new Date(new Date().toLocaleString('en-US',{timeZone:'America/Los_Angeles'})).toISOString().slice(0,10);
-    const briefIsToday2 = (CEO_BRIEF.briefDate || '').includes(todayISO2.slice(5));
+    const todayPT2 = new Date(new Date().toLocaleString('en-US',{timeZone:'America/Los_Angeles'})).toISOString().slice(0,10);
+    const briefIsToday2 = (CEO_BRIEF.briefDate || '') === todayPT2;
     let staleWarning = '';
-    if (briefAge2 > 18 && !briefIsToday2) {
-      staleWarning = '<div style="background:var(--red-soft);border:1px solid var(--red);border-radius:6px;padding:6px 10px;margin-bottom:8px;font-size:10px;color:var(--red)">&#9888; Brief is stale (last: ' + (CEO_BRIEF.lastUpdated ? new Date(CEO_BRIEF.lastUpdated).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}) : 'never') + ')</div>';
+    if (!briefIsToday2 && CEO_BRIEF.lastUpdated) {
+      staleWarning = '<div style="background:var(--red-soft);border:1px solid var(--red);border-radius:6px;padding:6px 10px;margin-bottom:8px;font-size:10px;color:var(--red)">&#9888; Brief is from ' + (CEO_BRIEF.briefDate || 'unknown date') + '</div>';
     }
     let prioHtml = staleWarning;
     if (prioData && prioData.length > 0) {
@@ -5928,9 +5925,9 @@ async function fetchLiveBrief() {
       renderSidebar();
       const activePage=loadActivePage();
       if(activePage&&activePage!=='overview')navigateTo(activePage);
-      // If brief is stale, start retrying every 5 min
-      var age = (Date.now() - new Date(data.lastUpdated).getTime()) / 3600000;
-      if (age > 18) startBriefRetry();
+      // If brief is not from today, start retrying every 5 min
+      var todayCheck = new Date(new Date().toLocaleString('en-US',{timeZone:'America/Los_Angeles'})).toISOString().slice(0,10);
+      if ((data.briefDate || '') !== todayCheck) startBriefRetry();
     }
   } catch (e) { console.warn('[Live] CEO brief fetch failed:', e.message); }
 }
