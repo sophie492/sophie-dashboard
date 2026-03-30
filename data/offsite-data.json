@@ -1702,7 +1702,7 @@
             "day2Lunch": { "link": "", "notes": "" }
           },
           "budget": {
-            "estimated": null,
+            "estimated": 8820,
             "approved": false,
             "committed": 0,
             "actual": 0,
@@ -1710,45 +1710,51 @@
             "categories": [
               {
                 "category": "Hotel",
-                "estimated": null,
+                "estimated": 5040,
+                "autoEstimated": 5040,
                 "committed": null,
                 "actual": null,
-                "notes": "8 rooms x 2 nights. Moxy ~$420/room = ~$6,720 estimated"
+                "notes": "6 rooms x 2 nights x $420/room (Moxy NYC Chelsea)"
               },
               {
                 "category": "Venue / Coworking",
-                "estimated": null,
+                "estimated": 1750,
+                "autoEstimated": 1750,
                 "committed": null,
                 "actual": null,
-                "notes": "WeWork ~$1,500-2,000 for 2 full days"
+                "notes": "WeWork 135 Madison Ave — midpoint of $1,500-2,000"
               },
               {
                 "category": "Transportation",
-                "estimated": null,
+                "estimated": 0,
+                "autoEstimated": 0,
                 "committed": null,
                 "actual": null,
                 "notes": "People arrange own flights"
               },
               {
                 "category": "Food & Beverage",
-                "estimated": null,
+                "estimated": 1125,
+                "autoEstimated": 1125,
                 "committed": null,
                 "actual": null,
-                "notes": "DoorDash group orders x2 days + dinner"
+                "notes": "DoorDash $25/person x 9 x 2 days + dinner $75/person x 9"
               },
               {
                 "category": "Social Activity",
-                "estimated": null,
+                "estimated": 405,
+                "autoEstimated": 405,
                 "committed": null,
                 "actual": null,
-                "notes": "Range: $360-1,125 depending on activity"
+                "notes": "Escape room midpoint ($360-450 for 9 people)"
               },
               {
                 "category": "Miscellaneous",
-                "estimated": null,
+                "estimated": 500,
+                "autoEstimated": 500,
                 "committed": null,
                 "actual": null,
-                "notes": ""
+                "notes": "Buffer for incidentals"
               }
             ]
           }

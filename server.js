@@ -6,6 +6,20 @@ const cookieParser = require('cookie-parser');
 const path = require('path');
 const fs = require('fs');
 const { Client } = require('@notionhq/client');
+const { google } = require('googleapis');
+
+function getGoogleSheetsAuth() {
+  if (process.env.GOOGLE_SERVICE_ACCOUNT_KEY) {
+    try {
+      const key = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_KEY);
+      return new google.auth.JWT(key.client_email, null, key.private_key, [
+        'https://www.googleapis.com/auth/spreadsheets',
+        'https://www.googleapis.com/auth/drive.file'
+      ]);
+    } catch (e) { return null; }
+  }
+  return null;
+}
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -468,6 +482,66 @@ function computeTravelNeeds(offsite) {
   offsite.logistics.hotel.roomsNeeded = roomsNeeded;
 }
 
+function computeBudgetEstimates(offsite) {
+  if (!offsite || !offsite.logistics) return;
+  const l = offsite.logistics;
+  const budget = l.budget;
+  if (!budget || !budget.categories) return;
+
+  budget.categories.forEach(cat => {
+    // Only auto-fill if estimated is null (never overwrite manual edits)
+    if (cat.estimated !== null) return;
+
+    let est = null;
+    const catName = cat.category.toLowerCase();
+
+    if (catName.includes('hotel')) {
+      if (l.hotel && l.hotel.rate && l.hotel.nights) {
+        const rooms = l.hotel.rooms || l.hotel.roomsNeeded ||
+          ((offsite.attendees || []).length - (offsite.attendees || []).filter(a => a.needsHotel === false).length);
+        if (rooms > 0) est = l.hotel.rate * rooms * l.hotel.nights;
+      }
+    } else if (catName.includes('venue') || catName.includes('cowork')) {
+      if (l.venue && l.venue.estimatedCost) {
+        const costStr = l.venue.estimatedCost.replace(/[$,]/g, '');
+        const parts = costStr.split('-').map(Number).filter(n => !isNaN(n));
+        if (parts.length === 2) est = Math.round((parts[0] + parts[1]) / 2);
+        else if (parts.length === 1) est = parts[0];
+      }
+    } else if (catName.includes('transport')) {
+      est = 0;
+    } else if (catName.includes('food') || catName.includes('beverage')) {
+      const numAttendees = (offsite.attendees || []).length || 9;
+      est = (25 * numAttendees * 2) + (75 * numAttendees);
+    } else if (catName.includes('activity') || catName.includes('social')) {
+      if (l.activityResearch && l.activityResearch.length > 0) {
+        const selected = l.activityResearch.find(a => a.selected);
+        const source = selected || l.activityResearch[0];
+        if (source && source.estimatedCost) {
+          const nums = source.estimatedCost.match(/\d[\d,]*/g);
+          if (nums) {
+            const parsed = nums.map(n => parseInt(n.replace(/,/g, '')));
+            est = parsed.length >= 2 ? Math.round((parsed[parsed.length - 2] + parsed[parsed.length - 1]) / 2) : parsed[0];
+          }
+        }
+      }
+    } else if (catName.includes('misc')) {
+      est = 500;
+    }
+
+    if (est !== null) {
+      cat.autoEstimated = est;
+      cat.estimated = est;
+    }
+  });
+
+  // Compute top-level total from categories
+  const total = budget.categories.reduce((sum, c) => sum + (c.estimated || 0), 0);
+  if (budget.estimated === null || budget.estimated === 0) {
+    budget.estimated = total;
+  }
+}
+
 app.get('/api/offsite', (req, res) => {
   try {
     const data = loadOffsiteData();
@@ -481,6 +555,7 @@ app.get('/api/offsite', (req, res) => {
         }
         // Auto-compute travel needs based on attendee locations vs offsite city
         computeTravelNeeds(o);
+        computeBudgetEstimates(o);
       });
     });
     res.json(data);
@@ -492,7 +567,7 @@ app.get('/api/offsite/:id', (req, res) => {
     const data = loadOffsiteData();
     for (const year of Object.values(data.offsites)) {
       const offsite = year.find(o => o.id === req.params.id);
-      if (offsite) { computeTravelNeeds(offsite); return res.json(offsite); }
+      if (offsite) { computeTravelNeeds(offsite); computeBudgetEstimates(offsite); return res.json(offsite); }
     }
     res.status(404).json({ error: 'Offsite not found' });
   } catch(e) { res.status(500).json({ error: e.message }); }
@@ -544,6 +619,212 @@ app.patch('/api/offsite/:id/logistics', (req, res) => {
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
     fs.writeFileSync(OFFSITE_PATH, JSON.stringify({ ...data, lastSynced: new Date().toISOString() }, null, 2));
     res.json({ ok: true, updated: Object.keys(req.body) });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// Push budget to Notion
+app.post('/api/offsite/:id/budget/notion-sync', async (req, res) => {
+  const authHeader = req.headers.authorization || '';
+  const token = authHeader.replace('Bearer ', '');
+  if (token !== (process.env.DASHBOARD_API_KEY || 'sophie-dashboard-secret-change-me')) {
+    return res.status(401).json({ error: 'Invalid API key' });
+  }
+  try {
+    const data = loadOffsiteData();
+    let offsite = null;
+    for (const year of Object.values(data.offsites)) {
+      offsite = year.find(o => o.id === req.params.id);
+      if (offsite) break;
+    }
+    if (!offsite) return res.status(404).json({ error: 'Offsite not found' });
+    if (!offsite.notionPageId) return res.status(400).json({ error: 'No Notion page for this offsite' });
+
+    const budget = offsite.logistics && offsite.logistics.budget;
+    if (!budget || !budget.categories) return res.status(400).json({ error: 'No budget data' });
+
+    let dbId = offsite.notionBudgetDbId;
+
+    if (!dbId) {
+      const db = await notion.databases.create({
+        parent: { page_id: offsite.notionPageId },
+        title: [{ text: { content: offsite.name + ' — Budget' } }],
+        properties: {
+          'Category': { title: {} },
+          'Estimated': { number: { format: 'dollar' } },
+          'Committed': { number: { format: 'dollar' } },
+          'Actual': { number: { format: 'dollar' } },
+          'Notes': { rich_text: {} }
+        }
+      });
+      dbId = db.id;
+      offsite.notionBudgetDbId = dbId;
+    }
+
+    for (const cat of budget.categories) {
+      const existing = await notion.databases.query({
+        database_id: dbId,
+        filter: { property: 'Category', title: { equals: cat.category } }
+      });
+
+      const props = {
+        'Category': { title: [{ text: { content: cat.category } }] },
+        'Estimated': { number: cat.estimated || 0 },
+        'Committed': { number: cat.committed || 0 },
+        'Actual': { number: cat.actual || 0 },
+        'Notes': { rich_text: [{ text: { content: cat.notes || '' } }] }
+      };
+
+      if (existing.results.length > 0) {
+        await notion.pages.update({ page_id: existing.results[0].id, properties: props });
+      } else {
+        await notion.pages.create({ parent: { database_id: dbId }, properties: props });
+      }
+    }
+
+    fs.writeFileSync(OFFSITE_PATH, JSON.stringify({ ...data, lastSynced: new Date().toISOString() }, null, 2));
+    res.json({ ok: true, notionBudgetDbId: dbId });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// Pull budget from Notion
+app.get('/api/offsite/:id/budget/notion-sync', async (req, res) => {
+  try {
+    const data = loadOffsiteData();
+    let offsite = null;
+    for (const year of Object.values(data.offsites)) {
+      offsite = year.find(o => o.id === req.params.id);
+      if (offsite) break;
+    }
+    if (!offsite) return res.status(404).json({ error: 'Offsite not found' });
+    if (!offsite.notionBudgetDbId) return res.status(400).json({ error: 'No Notion budget database' });
+
+    const results = await notion.databases.query({ database_id: offsite.notionBudgetDbId });
+    const budget = offsite.logistics && offsite.logistics.budget;
+    if (!budget || !budget.categories) return res.status(400).json({ error: 'No budget data' });
+
+    let updated = false;
+    for (const row of results.results) {
+      const titleProp = row.properties['Category'];
+      const catName = titleProp && titleProp.title && titleProp.title[0] && titleProp.title[0].text ? titleProp.title[0].text.content : null;
+      if (!catName) continue;
+      const cat = budget.categories.find(c => c.category === catName);
+      if (!cat) continue;
+
+      const notionComm = row.properties['Committed'] && row.properties['Committed'].number;
+      const notionAct = row.properties['Actual'] && row.properties['Actual'].number;
+      const notesProp = row.properties['Notes'] && row.properties['Notes'].rich_text;
+      const notionNotes = notesProp && notesProp[0] && notesProp[0].text ? notesProp[0].text.content : '';
+
+      if (notionComm !== null && notionComm !== undefined && notionComm !== cat.committed) { cat.committed = notionComm; updated = true; }
+      if (notionAct !== null && notionAct !== undefined && notionAct !== cat.actual) { cat.actual = notionAct; updated = true; }
+      if (notionNotes && notionNotes !== cat.notes) { cat.notes = notionNotes; updated = true; }
+    }
+
+    if (updated) {
+      budget.committed = budget.categories.reduce((s, c) => s + (c.committed || 0), 0);
+      budget.actual = budget.categories.reduce((s, c) => s + (c.actual || 0), 0);
+      fs.writeFileSync(OFFSITE_PATH, JSON.stringify({ ...data, lastSynced: new Date().toISOString() }, null, 2));
+    }
+
+    res.json({ ok: true, updated, budget });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// Sync budget estimated costs to Google Sheet
+app.post('/api/offsite/:id/budget/sheet-sync', async (req, res) => {
+  const authHeader = req.headers.authorization || '';
+  const token = authHeader.replace('Bearer ', '');
+  if (token !== (process.env.DASHBOARD_API_KEY || 'sophie-dashboard-secret-change-me')) {
+    return res.status(401).json({ error: 'Invalid API key' });
+  }
+  try {
+    const auth = getGoogleSheetsAuth();
+    if (!auth) return res.status(400).json({ error: 'Google Sheets not configured — set GOOGLE_SERVICE_ACCOUNT_KEY env var' });
+
+    const data = loadOffsiteData();
+    let offsite = null;
+    for (const year of Object.values(data.offsites)) {
+      offsite = year.find(o => o.id === req.params.id);
+      if (offsite) break;
+    }
+    if (!offsite) return res.status(404).json({ error: 'Offsite not found' });
+
+    const budget = offsite.logistics && offsite.logistics.budget;
+    if (!budget || !budget.categories) return res.status(400).json({ error: 'No budget data' });
+
+    const sheets = google.sheets({ version: 'v4', auth });
+    const drive = google.drive({ version: 'v3', auth });
+    let spreadsheetId = offsite.budgetSheetId;
+
+    if (!spreadsheetId) {
+      const spreadsheet = await sheets.spreadsheets.create({
+        requestBody: {
+          properties: { title: offsite.name + ' — Budget Estimates' },
+          sheets: [{ properties: { title: 'Budget' } }]
+        }
+      });
+      spreadsheetId = spreadsheet.data.spreadsheetId;
+      offsite.budgetSheetId = spreadsheetId;
+
+      // Share with Evelyn and Sophie
+      await drive.permissions.create({
+        fileId: spreadsheetId,
+        requestBody: { type: 'user', role: 'writer', emailAddress: 'evelyn@fermatcommerce.com' }
+      });
+      await drive.permissions.create({
+        fileId: spreadsheetId,
+        requestBody: { type: 'user', role: 'writer', emailAddress: 'sophie@fermatcommerce.com' }
+      });
+    }
+
+    const values = [
+      ['Category', 'Estimated Cost', 'Notes', 'Source'],
+      ...budget.categories.map(c => [
+        c.category,
+        c.estimated || 0,
+        c.notes || '',
+        c.autoEstimated ? 'Auto-computed from research' : 'Manual'
+      ]),
+      [],
+      ['TOTAL', budget.estimated || budget.categories.reduce((s, c) => s + (c.estimated || 0), 0), '', ''],
+      [],
+      ['Offsite', offsite.name, '', ''],
+      ['Dates', offsite.dates, '', ''],
+      ['City', offsite.city, '', ''],
+      ['Approver', budget.approver || 'Evelyn', '', ''],
+      ['Status', budget.approved ? 'Approved' : 'Pending Approval', '', ''],
+      [],
+      ['Last synced', new Date().toISOString(), '', '']
+    ];
+
+    await sheets.spreadsheets.values.update({
+      spreadsheetId,
+      range: 'Budget!A1',
+      valueInputOption: 'USER_ENTERED',
+      requestBody: { values }
+    });
+
+    // Format header and currency
+    await sheets.spreadsheets.batchUpdate({
+      spreadsheetId,
+      requestBody: {
+        requests: [
+          { repeatCell: {
+            range: { sheetId: 0, startRowIndex: 0, endRowIndex: 1 },
+            cell: { userEnteredFormat: { textFormat: { bold: true }, backgroundColor: { red: 0.9, green: 0.9, blue: 0.9 } } },
+            fields: 'userEnteredFormat(textFormat,backgroundColor)'
+          }},
+          { repeatCell: {
+            range: { sheetId: 0, startColumnIndex: 1, endColumnIndex: 2, startRowIndex: 1, endRowIndex: budget.categories.length + 2 },
+            cell: { userEnteredFormat: { numberFormat: { type: 'CURRENCY', pattern: '$#,##0' } } },
+            fields: 'userEnteredFormat.numberFormat'
+          }}
+        ]
+      }
+    });
+
+    fs.writeFileSync(OFFSITE_PATH, JSON.stringify({ ...data, lastSynced: new Date().toISOString() }, null, 2));
+    res.json({ ok: true, spreadsheetId, url: 'https://docs.google.com/spreadsheets/d/' + spreadsheetId });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
@@ -606,6 +887,9 @@ app.post('/api/offsite/create', async (req, res) => {
       lessonsLearned: data.template?.lessonsLearned || [],
       reviews: []
     };
+
+    computeTravelNeeds(newOffsite);
+    computeBudgetEstimates(newOffsite);
 
     if (existing) {
       const idx = data.offsites[year].findIndex(o => o.id === id);
