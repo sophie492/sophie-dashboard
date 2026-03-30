@@ -508,15 +508,20 @@ function computeBudgetEstimates(offsite) {
     } else if (catName.includes('venue') || catName.includes('cowork')) {
       if (l.venue && l.venue.estimatedCost) {
         const costStr = l.venue.estimatedCost.replace(/[$,]/g, '');
-        const parts = costStr.split('-').map(Number).filter(n => !isNaN(n));
-        if (parts.length === 2) est = Math.round((parts[0] + parts[1]) / 2);
-        else if (parts.length === 1) est = parts[0];
+        // Handle "/day" format (e.g. "994.50/day" → multiply by nights)
+        const perDay = costStr.match(/([\d.]+)\/day/i);
+        if (perDay) {
+          const nights = (l.hotel && l.hotel.nights) || 2;
+          est = Math.round(parseFloat(perDay[1]) * nights);
+        } else {
+          const parts = costStr.split('-').map(Number).filter(n => !isNaN(n));
+          if (parts.length === 2) est = Math.round((parts[0] + parts[1]) / 2);
+          else if (parts.length === 1) est = parts[0];
+        }
       }
-    } else if (catName.includes('transport')) {
-      est = 0;
-    } else if (catName.includes('food') || catName.includes('beverage')) {
+    } else if (catName.includes('lunch') || catName.includes('snack')) {
       const numAttendees = (offsite.attendees || []).filter(a => a.attending !== false).length || 9;
-      est = (25 * numAttendees * 2) + (75 * numAttendees);
+      est = 25 * numAttendees * 2;
     } else if (catName.includes('activity') || catName.includes('social')) {
       if (l.activityResearch && l.activityResearch.length > 0) {
         const selected = l.activityResearch.find(a => a.selected);
@@ -921,10 +926,9 @@ app.post('/api/offsite/create', async (req, res) => {
           estimated: null, approved: false, committed: 0, actual: 0, approver: 'Evelyn',
           categories: [
             { category: 'Hotel', estimated: null, committed: 0, actual: 0, notes: '' },
-            { category: 'Venue', estimated: null, committed: 0, actual: 0, notes: '' },
-            { category: 'Transportation', estimated: null, committed: 0, actual: 0, notes: '' },
-            { category: 'Food & Beverage', estimated: null, committed: 0, actual: 0, notes: '' },
+            { category: 'Venue / Coworking', estimated: null, committed: 0, actual: 0, notes: '' },
             { category: 'Social Activity', estimated: null, committed: 0, actual: 0, notes: '' },
+            { category: 'Lunch / Snacks', estimated: null, committed: 0, actual: 0, notes: '' },
             { category: 'Misc', estimated: null, committed: 0, actual: 0, notes: '' }
           ]
         },

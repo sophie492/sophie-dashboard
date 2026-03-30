@@ -1632,8 +1632,8 @@
             "address": "135 Madison Ave, New York, NY 10016",
             "confirmed": false,
             "capacity": "10+",
-            "estimatedCost": "$1,500-2,000",
-            "costNote": "Day pass conference rooms start ~$10/seat/hr. 10-person room for 2 full days.",
+            "estimatedCost": "$994.50/day",
+            "costNote": "Ramp transaction 3/27: $994.50 for Day 2 meeting room (Room 12B). Expect same for Day 1.",
             "status": "Partially Booked",
             "statusDetail": "Day 2 (4/21) booked — Room 12B, 8:30am-5pm. Day 1 (4/20) NOT YET BOOKED.",
             "selectedOption": 0,
@@ -1738,7 +1738,7 @@
             }
           },
           "budget": {
-            "estimated": 7015,
+            "estimated": 5655,
             "approved": true,
             "approvedDate": "2026-03-27",
             "approvedVia": "Ramp card issued by Evelyn — $3,200 for Leadership Offsite",
@@ -1750,49 +1750,41 @@
                 "category": "Hotel",
                 "estimated": 3360,
                 "autoEstimated": 3360,
-                "committed": null,
-                "actual": null,
+                "committed": 0,
+                "actual": 0,
                 "notes": "4 rooms x 2 nights x $420/room (Moxy NYC Chelsea)"
               },
               {
                 "category": "Venue / Coworking",
-                "estimated": 1750,
-                "autoEstimated": 1750,
-                "committed": null,
-                "actual": null,
-                "notes": "WeWork 135 Madison Ave — midpoint of $1,500-2,000"
-              },
-              {
-                "category": "Transportation",
-                "estimated": 0,
-                "autoEstimated": 0,
-                "committed": null,
-                "actual": null,
-                "notes": "People arrange own flights"
-              },
-              {
-                "category": "Food & Beverage",
-                "estimated": 1000,
-                "autoEstimated": 1000,
-                "committed": null,
-                "actual": null,
-                "notes": "DoorDash $25/person x 8 x 2 days + dinner $75/person x 8"
+                "estimated": 1989,
+                "autoEstimated": null,
+                "committed": 994.5,
+                "actual": 994.5,
+                "notes": "WeWork 135 Madison Ave — $994.50/day (Ramp charge 3/27). Day 2 paid, Day 1 still needs booking."
               },
               {
                 "category": "Social Activity",
                 "estimated": 405,
                 "autoEstimated": 405,
-                "committed": null,
-                "actual": null,
-                "notes": "Escape room midpoint ($360-450 for 9 people)"
+                "committed": 0,
+                "actual": 0,
+                "notes": "Escape room midpoint ($360-450 for group)"
               },
               {
                 "category": "Miscellaneous",
                 "estimated": 500,
                 "autoEstimated": 500,
-                "committed": null,
-                "actual": null,
+                "committed": 0,
+                "actual": 0,
                 "notes": "Buffer for incidentals"
+              },
+              {
+                "category": "Lunch / Snacks",
+                "estimated": 400,
+                "autoEstimated": 400,
+                "committed": 0,
+                "actual": 0,
+                "notes": "DoorDash group orders x2 days (~$25/person x 8)"
               }
             ]
           }
@@ -1980,27 +1972,11 @@
                 "notes": ""
               },
               {
-                "category": "Venue",
+                "category": "Venue / Coworking",
                 "estimated": null,
                 "committed": 0,
                 "actual": 0,
                 "notes": ""
-              },
-              {
-                "category": "Transportation",
-                "estimated": 0,
-                "committed": 0,
-                "actual": 0,
-                "notes": "",
-                "autoEstimated": 0
-              },
-              {
-                "category": "Food & Beverage",
-                "estimated": 1125,
-                "committed": 0,
-                "actual": 0,
-                "notes": "",
-                "autoEstimated": 1125
               },
               {
                 "category": "Social Activity",
@@ -2010,12 +1986,18 @@
                 "notes": ""
               },
               {
-                "category": "Misc",
-                "estimated": 500,
+                "category": "Lunch / Snacks",
+                "estimated": null,
                 "committed": 0,
                 "actual": 0,
-                "notes": "",
-                "autoEstimated": 500
+                "notes": ""
+              },
+              {
+                "category": "Misc",
+                "estimated": null,
+                "committed": 0,
+                "actual": 0,
+                "notes": ""
               }
             ]
           },
@@ -2120,27 +2102,11 @@
                 "notes": ""
               },
               {
-                "category": "Venue",
+                "category": "Venue / Coworking",
                 "estimated": null,
                 "committed": 0,
                 "actual": 0,
                 "notes": ""
-              },
-              {
-                "category": "Transportation",
-                "estimated": 0,
-                "committed": 0,
-                "actual": 0,
-                "notes": "",
-                "autoEstimated": 0
-              },
-              {
-                "category": "Food & Beverage",
-                "estimated": 1125,
-                "committed": 0,
-                "actual": 0,
-                "notes": "",
-                "autoEstimated": 1125
               },
               {
                 "category": "Social Activity",
@@ -2150,12 +2116,18 @@
                 "notes": ""
               },
               {
-                "category": "Misc",
-                "estimated": 500,
+                "category": "Lunch / Snacks",
+                "estimated": null,
                 "committed": 0,
                 "actual": 0,
-                "notes": "",
-                "autoEstimated": 500
+                "notes": ""
+              },
+              {
+                "category": "Misc",
+                "estimated": null,
+                "committed": 0,
+                "actual": 0,
+                "notes": ""
               }
             ]
           },
