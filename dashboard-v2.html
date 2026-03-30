@@ -5599,8 +5599,10 @@ function fetchLiveCalendar(){
   .then(r=>r.ok?r.json():null)
   .then(cached=>{
     if(cached&&Array.isArray(cached.calendarDays)&&cached.calendarDays.length>0){
-      // Only use cache if it has MORE days than current data
-      if(cached.calendarDays.length>(DATA.calendarDays||[]).length){
+      // Use cache if it has more days OR more recent data than embedded
+      var cachedFirst = cached.calendarDays[0] && cached.calendarDays[0].date;
+      var embeddedFirst = (DATA.calendarDays||[])[0] && (DATA.calendarDays||[])[0].date;
+      if(cached.calendarDays.length>=(DATA.calendarDays||[]).length || (cachedFirst && embeddedFirst && cachedFirst > embeddedFirst)){
         DATA.calendarDays=cached.calendarDays;
         renderOverview();
         renderPersonPage('Rishabh');
@@ -5621,8 +5623,10 @@ function fetchLiveCalendar(){
     })
     .then(data=>{
       if(!data||!Array.isArray(data.calendarDays)||data.calendarDays.length===0)return;
-      // Only override if live has MORE data than cache
-      if(data.calendarDays.length>(DATA.calendarDays||[]).length){
+      // Override if live has more data OR more recent data
+      var liveFirst = data.calendarDays[0] && data.calendarDays[0].date;
+      var currentFirst = (DATA.calendarDays||[])[0] && (DATA.calendarDays||[])[0].date;
+      if(data.calendarDays.length>=(DATA.calendarDays||[]).length || (liveFirst && currentFirst && liveFirst > currentFirst)){
         DATA.calendarDays=data.calendarDays;
         renderOverview();
         renderPersonPage('Rishabh');
