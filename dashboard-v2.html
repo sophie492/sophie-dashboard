@@ -477,7 +477,7 @@ a.loop-row:hover .loop-source{color:var(--gold)}
 .offsite-status-toggle:hover{filter:brightness(1.2)}
 .offsite-logistics-card{margin-bottom:12px}
 .offsite-logistics-card .card-head{display:flex;justify-content:space-between;align-items:center}
-.offsite-budget-input{background:var(--surface);border:1px solid var(--border);color:var(--text);font-size:11px;padding:4px 6px;border-radius:4px;width:80px;font-family:inherit;text-align:right}
+.offsite-budget-input{background:var(--surface);border:1px solid var(--border);color:var(--text);font-size:11px;padding:4px 8px;border-radius:4px;width:100px;font-family:inherit;text-align:right}
 .offsite-budget-input:focus{border-color:var(--gold);outline:none}
 .offsite-theme-card{border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:8px;cursor:pointer;transition:all .15s;background:var(--surface)}
 .offsite-theme-card:hover{border-color:var(--border-light);background:var(--card-hover)}
@@ -3532,15 +3532,14 @@ function renderOffsite() {
       ${logCard('Dinner', '&#127869;', ['<strong>' + (dinner.name || 'TBD') + '</strong>', dinner.reservationDate ? dinner.reservationDate + ' — ' + (dinner.partySize || '?') + ' guests' : '', dinner.statusDetail ? '<span style="font-size:10px;color:var(--text-muted)">' + dinner.statusDetail + '</span>' : (dinner.options ? 'Options: ' + dinner.options.join(', ') : '')].filter(Boolean), dinner.confirmed)}
       ${logCard('Activity', '&#127918;', ['<strong>' + (activity.name || 'TBD') + '</strong>', activity.statusDetail ? '<span style="color:' + (activity.status === 'Not Started' ? 'var(--red)' : 'var(--yellow)') + '">' + activity.statusDetail + '</span>' : (activity.options ? 'Options: ' + activity.options.join(', ') : 'No research yet')], activity.confirmed)}
     </div>
-    <div class="card">
-      <div class="card-head"><div class="card-title">&#128176; Budget</div>
+    <div class="card" style="flex:1;min-width:220px">
+      <div class="card-head">
+        <div class="card-title">&#128176; Budget</div>
         <span class="badge ${budget.approved?'tag-green':'tag-yellow'}">${budget.approved?'Approved':'Pending Approval'}</span>
       </div>
-      <div class="card-body" style="padding:10px 14px">
-        <div style="display:flex;gap:24px;margin-bottom:10px;font-size:11px;flex-wrap:wrap">
-          <div><span style="color:var(--text-muted)">Estimated:</span> <strong style="color:var(--text)">$${(budget.estimated||0).toLocaleString()}</strong></div>
-          <div><span style="color:var(--text-muted)">Approver:</span> <strong style="color:var(--text)">${budget.approver||'TBD'}</strong></div>
-        </div>
+      <div class="card-body" style="padding:14px">
+        <div style="font-size:22px;font-weight:700;color:var(--text);margin-bottom:6px">$${(budget.estimated||0).toLocaleString()}</div>
+        <div style="font-size:10px;color:var(--text-muted)">Estimated total &middot; Approver: <strong style="color:var(--text)">${budget.approver||'TBD'}</strong></div>
       </div>
     </div>
   </div>
@@ -4383,10 +4382,11 @@ function renderOffsiteDetailView(el, OFFSITE, ALLDATA) {
 
     // Budget rows
     var budgetRows = budgetCategories.map(function(c) {
+      var autoTag = c.autoEstimated && c.estimated === c.autoEstimated ? ' <span style="font-size:9px;color:var(--text-muted);font-style:italic">(auto)</span>' : '';
       return '<tr style="border-bottom:1px solid var(--border)">' +
-        '<td style="padding:6px 8px;font-weight:600;color:var(--text);font-size:11px">' + c.category + '</td>' +
-        '<td style="padding:6px 8px"><input class="offsite-budget-input" value="' + (c.estimated || '') + '" onchange="updateOffsiteBudget(\'' + c.category.replace(/'/g, "\\'") + '\',\'estimated\',this.value)" placeholder="--">' + (c.autoEstimated && c.estimated === c.autoEstimated ? ' <span style="font-size:8px;color:var(--text-muted)">(auto)</span>' : '') + '</td>' +
-        '<td style="padding:6px 8px;font-size:10px;color:var(--text-muted)">' + (c.notes || '') + '</td>' +
+        '<td style="padding:8px 10px;font-weight:600;color:var(--text);font-size:11px">' + c.category + '</td>' +
+        '<td style="padding:8px 10px;white-space:nowrap"><span style="font-size:11px;color:var(--text-muted);margin-right:2px">$</span><input class="offsite-budget-input" value="' + (c.estimated || '') + '" onchange="updateOffsiteBudget(\'' + c.category.replace(/'/g, "\\'") + '\',\'estimated\',this.value)" placeholder="--"></td>' +
+        '<td style="padding:8px 10px;font-size:10px;color:var(--text-muted);line-height:1.4">' + (c.notes || '') + autoTag + '</td>' +
       '</tr>';
     }).join('');
 
@@ -4399,15 +4399,15 @@ function renderOffsiteDetailView(el, OFFSITE, ALLDATA) {
       '<div class="card-body" style="padding:0;overflow-x:auto">' +
         '<table style="width:100%;border-collapse:collapse">' +
           '<thead><tr style="border-bottom:2px solid var(--border);font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px">' +
-            '<th style="padding:6px 8px;text-align:left">Category</th>' +
-            '<th style="padding:6px 8px;text-align:right">Estimated</th>' +
-            '<th style="padding:6px 8px;text-align:left">Notes</th>' +
+            '<th style="padding:8px 10px;text-align:left">Category</th>' +
+            '<th style="padding:8px 10px;text-align:right">Estimated</th>' +
+            '<th style="padding:8px 10px;text-align:left">Notes</th>' +
           '</tr></thead>' +
           '<tbody>' + budgetRows +
             '<tr style="border-top:2px solid var(--border);font-weight:700">' +
-              '<td style="padding:6px 8px;color:var(--text)">TOTAL</td>' +
-              '<td style="padding:6px 8px;text-align:right;color:var(--text)">$' + totalEst.toLocaleString() + '</td>' +
-              '<td style="padding:6px 8px"></td>' +
+              '<td style="padding:8px 10px;color:var(--text)">TOTAL</td>' +
+              '<td style="padding:8px 10px;text-align:right;color:var(--text);font-size:13px">$' + totalEst.toLocaleString() + '</td>' +
+              '<td style="padding:8px 10px"></td>' +
             '</tr>' +
           '</tbody>' +
         '</table>' +
