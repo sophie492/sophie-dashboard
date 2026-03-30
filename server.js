@@ -2727,6 +2727,17 @@ const NOTION_MKT_EVENTS_DB = '19fd16cfaa714c6ebc783a8cc23ba1cf';
 const NOTION_OFFSITES_PARENT = 'ca7532fd33714488ba26507ff5bed79b';
 const NOTION_HACKWEEK_PARENT = '2b01ad76fd2a81a39933d57ffed44277';
 
+// ── Cached Tasks (no auth, refreshed by cron) ──
+app.get('/api/tasks/cached', (req, res) => {
+  try {
+    if (fs.existsSync(TASKS_PATH)) {
+      const data = JSON.parse(fs.readFileSync(TASKS_PATH, 'utf8'));
+      return res.json(data);
+    }
+    res.json({ tasks: [], lastUpdated: null, source: 'none' });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 // ── Live Tasks from Notion ──
 app.get('/api/tasks/live', ensureAuth, async (req, res) => {
   if (!notion) return res.status(503).json({ error: 'Notion not configured' });
@@ -3251,6 +3262,46 @@ async function refreshCalendarCache() {
   } catch (e) { console.error('[Cal Cron] Error:', e.message); }
 }
 
+// Task auto-refresh from Notion
+async function refreshTasksFromNotion() {
+  if (!notion) { console.log('[Task Cron] No Notion token - skipping'); return; }
+  try {
+    const response = await notion.databases.query({
+      database_id: NOTION_TASK_DB,
+      filter: {
+        and: [
+          { property: 'Task', title: { contains: '[Sophie]' } },
+          { property: 'Task', title: { does_not_contain: '[ARCHIVED]' } }
+        ]
+      },
+      sorts: [{ property: 'Priority', direction: 'ascending' }]
+    });
+    const tasks = response.results.map(page => {
+      const props = page.properties;
+      const titleRaw = props.Task?.title?.[0]?.plain_text || '';
+      const title = titleRaw.replace(/^\[Sophie\]\s*/, '');
+      return {
+        id: page.id,
+        notionPageId: page.id,
+        title,
+        done: props.Done?.checkbox || false,
+        priority: props.Priority?.select?.name || 'Medium',
+        due: props['Due Date']?.date?.start || null,
+        context: props.Source?.rich_text?.[0]?.plain_text || '',
+        sourceLink: props['Source Link']?.url || '',
+        owner: 'Sophie'
+      };
+    });
+    // Save to tasks.json — only open tasks
+    const openTasks = tasks.filter(t => !t.done);
+    const payload = { tasks: openTasks, lastUpdated: new Date().toISOString(), source: 'notion-cron' };
+    const dir = path.dirname(TASKS_PATH);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(TASKS_PATH, JSON.stringify(payload, null, 2));
+    console.log('[Task Cron] Refreshed:', openTasks.length, 'open tasks from Notion');
+  } catch (e) { console.error('[Task Cron] Error:', e.message); }
+}
+
 app.listen(PORT, () => {
   console.log('Dashboard running on ' + BASE_URL);
   if (!GOOGLE_CLIENT_ID) console.log('GOOGLE_CLIENT_ID not set - auth disabled (dev mode)');
@@ -3258,4 +3309,8 @@ app.listen(PORT, () => {
   refreshCalendarCache();
   setInterval(refreshCalendarCache, 30 * 60 * 1000);
   console.log('[Cal Cron] Auto-refresh every 30 min');
+  // Refresh tasks from Notion on startup + every 15 minutes
+  refreshTasksFromNotion();
+  setInterval(refreshTasksFromNotion, 15 * 60 * 1000);
+  console.log('[Task Cron] Auto-refresh every 15 min');
 });

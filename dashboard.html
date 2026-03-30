@@ -5757,12 +5757,28 @@ function applyDoneStatesAndMergeManual(tasks){
 
 async function fetchLiveTasks(){
   try{
+    // Try cached first (no auth, refreshed from Notion every 15 min)
+    try{
+      const cached=await fetch('/api/tasks/cached');
+      if(cached.ok){
+        const ct=cached.headers.get('content-type')||'';
+        if(ct.includes('json')){
+          const cdata=await cached.json();
+          if(cdata.tasks&&cdata.tasks.length>0){
+            DATA.myTasks=applyDoneStatesAndMergeManual(cdata.tasks);
+            renderTasksPage();renderOverview();renderSidebar();
+            console.log('[Live] Tasks from cache:',cdata.tasks.length,'tasks');
+          }
+        }
+      }
+    }catch(e){}
+    // Then try deduped (auth required, may fail)
     const res=await fetch('/api/tasks/deduped',{credentials:'include',redirect:'error'});
     if(!res.ok){
       const fallback=await fetch('/api/tasks/live',{credentials:'include',redirect:'error'});
       if(!fallback.ok)return;
       const ct=fallback.headers.get('content-type')||'';
-      if(!ct.includes('json'))return; // Auth redirect — don't overwrite with HTML
+      if(!ct.includes('json'))return;
       const data=await fallback.json();
       if(data.tasks){
         DATA.myTasks=applyDoneStatesAndMergeManual(data.tasks);
