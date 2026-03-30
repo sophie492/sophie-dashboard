@@ -2924,10 +2924,16 @@ function extractEntities(text) {
     'tinuiti','away','murad','glossier','spanx','albertsons','j.jill','perry ellis',
     'backcountry','moma','stripe','salesforce','anthropic','webflow','vmg','omaha',
     'gen digital','shopify','sephora','pandora','fabletics','knitwell','brooks running',
-    'meta','fermat','podcast'];
+    'meta','fermat','podcast','tenuity','ramp','wework','moxy','greenhouse'];
   const people = ['rishabh','shreyas','sophie','evelyn','jess','bharat','jennifer','saunder',
     'isabel','khushy','daniel','alec','james','talia','gillian','rhea','maya','ashley',
-    'mehdi','anshuman','alice','sarah','becky','helena','jack','matt kruer','kira','jillian'];
+    'mehdi','anshuman','alice','sarah','becky','helena','jack','matt kruer','kira','jillian',
+    'erika','emily','kunal','sriram'];
+  // Topic entities — broad subjects that indicate same task area
+  const topics = ['insurance','building management','office','offsite','hotel','travel card',
+    'disclosure form','director disclosure','name plates','standup brief','podcast',
+    'town hall','hack week','board meeting','calendar invite'];
+  const foundTopics = topics.filter(t => lower.includes(t));
 
   // Action verb GROUPS — verbs in the same group are synonymous
   const actionGroups = {
@@ -2949,7 +2955,7 @@ function extractEntities(text) {
     if (verbs.some(v => lower.includes(v))) foundActionGroups.push(group);
   }
 
-  return { companies: foundCompanies, people: foundPeople, actionGroups: foundActionGroups };
+  return { companies: foundCompanies, people: foundPeople, actionGroups: foundActionGroups, topics: foundTopics };
 }
 
 function taskSimilarity(a, b) {
@@ -2958,30 +2964,37 @@ function taskSimilarity(a, b) {
 
   const sharedCompanies = entA.companies.filter(c => entB.companies.includes(c));
   const sharedPeople = entA.people.filter(p => entB.people.includes(p));
-  // Actions only match if they're in the SAME group (schedule≠follow up)
   const sharedActionGroups = entA.actionGroups.filter(g => entB.actionGroups.includes(g));
+  const sharedTopics = (entA.topics || []).filter(t => (entB.topics || []).includes(t));
 
   // Exact normalized match — always a duplicate
   const normA = a.toLowerCase().replace(/[^a-z0-9 ]/g, '').replace(/\s+/g, ' ').trim();
   const normB = b.toLowerCase().replace(/[^a-z0-9 ]/g, '').replace(/\s+/g, ' ').trim();
   if (normA === normB) return 1.0;
 
-  // Entity-based scoring — requires action match to reach threshold
+  // Entity-based scoring
   let score = 0;
   if (sharedCompanies.length > 0) score += 0.3;
   if (sharedPeople.length > 0) score += 0.15;
   if (sharedActionGroups.length > 0) score += 0.25;
-  // Bonus: all three match = very likely duplicate
+  if (sharedTopics.length > 0) score += 0.35; // Topics are strong signal
+  // Bonus: multiple entity types match
   if (sharedCompanies.length > 0 && sharedPeople.length > 0 && sharedActionGroups.length > 0) score += 0.15;
+  // Topic + action = very likely same task
+  if (sharedTopics.length > 0 && sharedActionGroups.length > 0) score += 0.15;
+  // Topic + person = very likely same task
+  if (sharedTopics.length > 0 && sharedPeople.length > 0) score += 0.15;
 
-  // Word overlap ratio
+  // Word overlap ratio — use both max and shared count
   const wordsA = new Set(normA.split(' ').filter(w => w.length > 2));
   const wordsB = new Set(normB.split(' ').filter(w => w.length > 2));
   const shared = [...wordsA].filter(w => wordsB.has(w));
   const overlap = shared.length / Math.max(wordsA.size, wordsB.size, 1);
-  score = Math.max(score, overlap * 0.8);
+  // If 5+ meaningful words overlap, strong duplicate signal
+  const overlapScore = shared.length >= 5 ? Math.max(overlap * 0.85, 0.7) : overlap * 0.8;
+  score = Math.max(score, overlapScore);
 
-  return score;
+  return Math.min(score, 1.0);
 }
 
 const DEDUP_THRESHOLD = 0.65; // Raised from 0.55 — better to show a duplicate than hide a real task
