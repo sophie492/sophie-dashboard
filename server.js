@@ -872,14 +872,32 @@ app.post('/api/offsite/:id/budget/sheet-sync', async (req, res) => {
       spreadsheetId = createResult.data.spreadsheetId;
       offsite.budgetSheetId = spreadsheetId;
 
-      // Step 2: Save immediately
+      // Step 2: Get or create "Leadership Offsites" folder
+      try {
+        const folderSearch = await drive.files.list({
+          q: "name='Leadership Offsites' and mimeType='application/vnd.google-apps.folder' and trashed=false",
+          fields: 'files(id)'
+        });
+        let folderId;
+        if (folderSearch.data.files.length > 0) {
+          folderId = folderSearch.data.files[0].id;
+        } else {
+          const folder = await drive.files.create({
+            requestBody: { name: 'Leadership Offsites', mimeType: 'application/vnd.google-apps.folder' }
+          });
+          folderId = folder.data.id;
+          console.log('[Sheets] Created folder:', folderId);
+        }
+        // Move sheet into folder
+        await drive.files.update({ fileId: spreadsheetId, addParents: folderId, fields: 'id, parents' });
+        console.log('[Sheets] Moved to Leadership Offsites folder');
+      } catch (e) { console.log('[Sheets] Folder setup skipped:', e.message); }
+
+      // Step 3: Save immediately
       const dir2 = path.dirname(OFFSITE_PATH);
       if (!fs.existsSync(dir2)) fs.mkdirSync(dir2, { recursive: true });
       fs.writeFileSync(OFFSITE_PATH, JSON.stringify({ ...data, lastSynced: new Date().toISOString() }, null, 2));
       console.log('[Sheets] Created:', spreadsheetId);
-
-      // Step 3: Try sharing (non-blocking)
-      try { await drive.permissions.create({ fileId: spreadsheetId, requestBody: { type: 'anyone', role: 'writer' } }); } catch(e) { console.log('[Sheets] Sharing failed:', e.message); }
     }
 
     // Step 4: Write data
