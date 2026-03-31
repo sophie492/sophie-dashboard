@@ -12,37 +12,22 @@ async function getGoogleSheetsAuth() {
   const rawKey = process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
   if (!rawKey) { console.log('[Sheets] No GOOGLE_SERVICE_ACCOUNT_KEY env var'); return null; }
   try {
-    // Railway may escape newlines in the private key — fix them
-    const fixedKey = rawKey.replace(/\\n/g, '\n');
-    const key = JSON.parse(fixedKey);
+    const key = JSON.parse(rawKey);
     if (!key.client_email || !key.private_key) {
       console.error('[Sheets] Key missing client_email or private_key');
       return null;
     }
-    const auth = new google.auth.JWT(key.client_email, null, key.private_key, [
-      'https://www.googleapis.com/auth/spreadsheets',
-      'https://www.googleapis.com/auth/drive'
-    ]);
+    const auth = new google.auth.JWT({
+      email: key.client_email,
+      key: key.private_key,
+      scopes: ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive']
+    });
     await auth.authorize();
     console.log('[Sheets] Service account authorized:', key.client_email);
     return auth;
   } catch (e) {
     console.error('[Sheets] Auth failed:', e.message);
-    // Try with newline fix on private_key directly
-    try {
-      const key = JSON.parse(rawKey);
-      key.private_key = key.private_key.replace(/\\n/g, '\n');
-      const auth = new google.auth.JWT(key.client_email, null, key.private_key, [
-        'https://www.googleapis.com/auth/spreadsheets',
-        'https://www.googleapis.com/auth/drive'
-      ]);
-      await auth.authorize();
-      console.log('[Sheets] Service account authorized (fixed newlines):', key.client_email);
-      return auth;
-    } catch (e2) {
-      console.error('[Sheets] Auth failed even with newline fix:', e2.message);
-      return null;
-    }
+    return null;
   }
 }
 
@@ -408,7 +393,7 @@ app.get('/api/debug/sheets-auth', async (req, res) => {
     const key = JSON.parse(rawKey);
     const result = { hasKey: true, keyLength: rawKey.length, clientEmail: key.client_email, hasPrivateKey: !!key.private_key, privateKeyStart: key.private_key?.substring(0, 40) };
     try {
-      const auth = new google.auth.JWT(key.client_email, null, key.private_key, ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive']);
+      const auth = new google.auth.JWT({ email: key.client_email, key: key.private_key, scopes: ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive'] });
       await auth.authorize();
       result.auth = 'SUCCESS';
     } catch (e) {
