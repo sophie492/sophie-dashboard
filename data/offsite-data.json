@@ -1036,7 +1036,7 @@
             "email": "shreyas@fermatcommerce.com",
             "marriottNum": "648366443",
             "hotelConfirmed": false,
-            "flightBooked": false,
+            "flightBooked": true,
             "travelCardIssued": true,
             "dietaryNeeds": "",
             "location": "San Francisco, CA",
@@ -2211,5 +2211,5 @@
       }
     ]
   },
-  "lastSynced": "2026-03-31T20:14:23.852Z"
+  "lastSynced": "2026-03-31T20:31:40.521Z"
 }
