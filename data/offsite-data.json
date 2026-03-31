@@ -1942,7 +1942,8 @@
           "Build flexible scheduling -- not every minute needs to be programmed. The team valued unstructured bonding time.",
           "Agenda content and topics come from Evelyn and leadership -- Sophie coordinates and organizes, but doesn't set the agenda."
         ],
-        "notionBudgetDbId": "3331ad76-fd2a-81cf-adc8-f58cd4d0402d"
+        "notionBudgetDbId": "3331ad76-fd2a-81cf-adc8-f58cd4d0402d",
+        "budgetSheetId": "1fUbe-YyrwnuK5EFmJiA0wLYHxLZTPId_mnX318ISu7M"
       },
       {
         "id": "2026-Q3",
@@ -2210,5 +2211,5 @@
       }
     ]
   },
-  "lastSynced": "2026-03-31T05:10:48.568Z"
+  "lastSynced": "2026-03-31T17:57:06.010Z"
 }
