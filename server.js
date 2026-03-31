@@ -912,6 +912,130 @@ app.post('/api/offsite/:id/budget/sheet-sync', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// City research lookup — seeds research arrays when offsite is created
+const CITY_RESEARCH = {
+  'new york': {
+    lunchResearch: [
+      { name: 'DIG', cuisine: 'Seasonal bowls — chicken, salmon, steak, roasted veggies', vegOptions: 'Strong — charred broccoli, sweet potato bowls + protein options', priceRange: '$14-19/person', doordashUrl: 'https://www.doordash.com/store/dig-new-york-76938/', highlights: 'Farm-to-table quality, seasonal menu. Great for groups.', notes: '' },
+      { name: 'CAVA', cuisine: 'Mediterranean bowls, pitas — grilled chicken, lamb, falafel', vegOptions: 'Excellent — falafel, hummus bowls alongside protein', priceRange: '$12-16/person', doordashUrl: 'https://www.doordash.com/store/cava-new-york-1752302/', highlights: 'Build-your-own = everyone gets what they want. Best value.', notes: '' },
+      { name: 'Sweetgreen', cuisine: 'Seasonal salads, warm bowls — chicken, salmon, plant protein', vegOptions: 'Good — plant protein + seasonal veggie alongside chicken/salmon', priceRange: '$15-18/person', doordashUrl: 'https://www.doordash.com/store/sweetgreen-new-york-30166/', highlights: 'Reliable, everyone knows the menu. Easy group order.', notes: '' },
+      { name: 'Chopt', cuisine: 'Build-your-own salads — chicken, steak, shrimp, tofu', vegOptions: 'Good — tofu, grain bowls alongside protein options', priceRange: '$14-18/person', highlights: 'Most customizable. Catering trays available.', notes: '' }
+    ],
+    weworkResearch: [],
+    dinnerResearch: [
+      { name: 'BLACKBARN', cuisine: 'Farm-to-table American', privateDining: 'Yes (12-300)', vegetarianOptions: 'Excellent — seasonal vegetarian dishes', notes: 'Locally sourced, relaxed but upscale. Multiple private spaces.' },
+      { name: 'The Modern', cuisine: 'French / New American', privateDining: 'Yes (large groups)', vegetarianOptions: 'Excellent — seasonal vegetable-forward menu', notes: 'Fine dining at MoMA. Impressive setting.' },
+      { name: 'Yara', cuisine: 'Mediterranean / Middle Eastern', privateDining: 'Yes (groups)', vegetarianOptions: 'Outstanding — 18+ vegan dishes, shareable mezze', notes: 'Great for diverse dietary needs. Fun shared-plates format.' }
+    ],
+    activityResearch: [
+      { name: 'Escape Room (Escape Room Madness)', type: 'Puzzle/teamwork', groupSize: 'Up to 10', estimatedCost: '~$40-50/person', why: 'Proven hit from Denver offsite.' },
+      { name: 'Cooking Class', type: 'Food competition', groupSize: '10+', estimatedCost: '~$75-125/person', why: 'Relaxed, social, flexible participation.' },
+      { name: 'Improv Workshop (UCB Theatre)', type: 'Creative/communication', groupSize: '10+', estimatedCost: '~$75-100/person', why: 'Unique NYC experience. Builds communication.' }
+    ]
+  },
+  'san francisco': {
+    lunchResearch: [
+      { name: 'Souvla', cuisine: 'Greek — rotisserie chicken, lamb, pork, veggies over salad/rice', vegOptions: 'Good — roasted veggie wrap/salad + fries alongside proteins', priceRange: '$14-18/person', highlights: 'SF favorite. Fast, healthy, crowd-pleasing.', notes: '' },
+      { name: 'DIG', cuisine: 'Seasonal bowls — chicken, salmon, steak, roasted veggies', vegOptions: 'Strong — farm-to-table veggie bowls + protein', priceRange: '$14-19/person', highlights: 'Seasonal menu rotates. Great variety.', notes: '' },
+      { name: 'MIXT', cuisine: 'Salads and grain bowls — chicken, steak, salmon, tofu', vegOptions: 'Strong — tofu, roasted veggies, grain bowls', priceRange: '$14-18/person', highlights: 'SF-born chain. Catering trays available.', notes: '' },
+      { name: 'Mendocino Farms', cuisine: 'Sandwiches, salads, bowls — chicken, steak, plant-based', vegOptions: 'Excellent — multiple plant-based entrees + protein options', priceRange: '$14-19/person', highlights: 'The gold standard. Group catering built-in.', notes: '' }
+    ],
+    weworkResearch: [],
+    dinnerResearch: [
+      { name: 'Foreign Cinema', cuisine: 'California/Mediterranean', privateDining: 'Yes', vegetarianOptions: 'Good', notes: 'Iconic SF spot. Outdoor courtyard with projected films.' },
+      { name: 'Nopa', cuisine: 'Seasonal Californian', privateDining: 'Semi-private available', vegetarianOptions: 'Good — seasonal veggie dishes', notes: 'Farm-to-table, great cocktails. Vibrant atmosphere.' }
+    ],
+    activityResearch: [
+      { name: 'Escape Room (Palace Games)', type: 'Puzzle/teamwork', groupSize: 'Up to 12', estimatedCost: '~$40-50/person', why: 'Highly rated SF escape rooms.' },
+      { name: 'Bowling (Urban Putt)', type: 'Social/games', groupSize: '10+', estimatedCost: '~$30-40/person', why: 'Mini golf + bar. Relaxed group activity.' },
+      { name: 'Kayaking (McCovey Cove)', type: 'Outdoor/adventure', groupSize: '10+', estimatedCost: '~$50-75/person', why: 'Unique SF experience. Weather dependent.' }
+    ]
+  },
+  'denver': {
+    lunchResearch: [
+      { name: 'Illegal Pete\'s', cuisine: 'Burritos, bowls — chicken, steak, carnitas, sofritas', vegOptions: 'Good — sofritas, veggie bowls', priceRange: '$12-16/person', highlights: 'Denver staple. Build-your-own. Great for groups.', notes: '' },
+      { name: 'Sweetgreen', cuisine: 'Seasonal salads, warm bowls', vegOptions: 'Good — plant protein + seasonal veggie', priceRange: '$15-18/person', highlights: 'Reliable option available in Denver.', notes: '' },
+      { name: 'CAVA', cuisine: 'Mediterranean bowls, pitas', vegOptions: 'Excellent — falafel, hummus alongside protein', priceRange: '$12-16/person', highlights: 'Build-your-own, best value.', notes: '' }
+    ],
+    weworkResearch: [],
+    dinnerResearch: [
+      { name: 'Guard and Grace', cuisine: 'Steakhouse / Seafood', privateDining: 'Yes', vegetarianOptions: 'Moderate', notes: 'Upscale downtown Denver. Great for team celebrations.' },
+      { name: 'Mercantile Dining', cuisine: 'New American / Farm-to-table', privateDining: 'Semi-private', vegetarianOptions: 'Good', notes: 'Union Station location. Seasonal Colorado ingredients.' }
+    ],
+    activityResearch: [
+      { name: 'Escape Room (EscapeWorks Denver)', type: 'Puzzle/teamwork', groupSize: 'Up to 10', estimatedCost: '~$35-45/person', why: 'Proven hit from Q1 2026 offsite.' },
+      { name: 'Axe Throwing (Bad Axe)', type: 'Physical/fun', groupSize: '10+', estimatedCost: '~$30-40/person', why: 'Unique group activity. Competitive and fun.' }
+    ]
+  },
+  'phoenix': {
+    lunchResearch: [
+      { name: 'Flower Child', cuisine: 'Healthy bowls, salads — chicken, salmon, steak, veggie', vegOptions: 'Excellent — multiple vegan/veggie bowls alongside proteins', priceRange: '$13-18/person', highlights: 'Phoenix-born healthy chain. Great variety.', notes: '' },
+      { name: 'CAVA', cuisine: 'Mediterranean bowls, pitas', vegOptions: 'Excellent — falafel, hummus alongside protein', priceRange: '$12-16/person', highlights: 'Build-your-own, reliable.', notes: '' },
+      { name: 'Sweetgreen', cuisine: 'Seasonal salads, warm bowls', vegOptions: 'Good — plant protein + seasonal veggie', priceRange: '$15-18/person', highlights: 'Available in Scottsdale area.', notes: '' }
+    ],
+    weworkResearch: [],
+    dinnerResearch: [
+      { name: 'The Arrogant Butcher', cuisine: 'American / Steakhouse', privateDining: 'Yes', vegetarianOptions: 'Moderate', notes: 'Downtown Phoenix. Great group dining space.' },
+      { name: 'Beckett\'s Table', cuisine: 'Farm-to-table American', privateDining: 'Semi-private', vegetarianOptions: 'Good', notes: 'Cozy neighborhood feel. Seasonal ingredients.' }
+    ],
+    activityResearch: [
+      { name: 'Desert Jeep Tour', type: 'Outdoor/adventure', groupSize: '10+', estimatedCost: '~$80-120/person', why: 'Unique Arizona experience. Sonoran Desert scenery.' },
+      { name: 'Top Golf', type: 'Social/games', groupSize: '10+', estimatedCost: '~$40-60/person', why: 'Easy group activity. No golf skill required.' }
+    ]
+  },
+  'salt lake city': {
+    lunchResearch: [
+      { name: 'Sweetgreen', cuisine: 'Seasonal salads, warm bowls', vegOptions: 'Good — plant protein + seasonal veggie', priceRange: '$15-18/person', highlights: 'Available in SLC.', notes: '' },
+      { name: 'Chipotle', cuisine: 'Burritos, bowls — chicken, steak, carnitas, sofritas', vegOptions: 'Good — sofritas, veggie bowls', priceRange: '$11-15/person', highlights: 'Reliable, affordable, everyone knows it. Catering available.', notes: '' }
+    ],
+    weworkResearch: [],
+    dinnerResearch: [],
+    activityResearch: [
+      { name: 'Escape Room', type: 'Puzzle/teamwork', groupSize: 'Up to 10', estimatedCost: '~$30-40/person', why: 'Proven team activity format.' }
+    ]
+  }
+};
+
+function getCityKey(city) {
+  if (!city || city === 'TBD') return null;
+  const lower = city.toLowerCase().replace(/[^a-z ]/g, '').trim();
+  const aliases = {
+    'new york city': 'new york', 'nyc': 'new york', 'manhattan': 'new york', 'brooklyn': 'new york',
+    'san francisco': 'san francisco', 'sf': 'san francisco',
+    'denver': 'denver',
+    'phoenix': 'phoenix', 'scottsdale': 'phoenix', 'carefree': 'phoenix',
+    'salt lake city': 'salt lake city', 'slc': 'salt lake city'
+  };
+  for (const [alias, key] of Object.entries(aliases)) {
+    if (lower.includes(alias)) return key;
+  }
+  return null;
+}
+
+function seedCityResearch(offsite) {
+  if (!offsite || !offsite.city || offsite.city === 'TBD') return;
+  const cityKey = getCityKey(offsite.city);
+  if (!cityKey || !CITY_RESEARCH[cityKey]) return;
+  const research = CITY_RESEARCH[cityKey];
+  if (!offsite.logistics) offsite.logistics = {};
+
+  // Only seed if arrays are empty — never overwrite existing research
+  if ((!offsite.logistics.meals || !offsite.logistics.meals.lunchResearch || offsite.logistics.meals.lunchResearch.length === 0) && research.lunchResearch) {
+    if (!offsite.logistics.meals) offsite.logistics.meals = { day1Lunch: { link: '', notes: '' }, day2Lunch: { link: '', notes: '' } };
+    offsite.logistics.meals.lunchResearch = JSON.parse(JSON.stringify(research.lunchResearch));
+  }
+  if ((!offsite.logistics.dinnerResearch || offsite.logistics.dinnerResearch.length === 0) && research.dinnerResearch && research.dinnerResearch.length > 0) {
+    offsite.logistics.dinnerResearch = JSON.parse(JSON.stringify(research.dinnerResearch));
+  }
+  if ((!offsite.logistics.activityResearch || offsite.logistics.activityResearch.length === 0) && research.activityResearch && research.activityResearch.length > 0) {
+    offsite.logistics.activityResearch = JSON.parse(JSON.stringify(research.activityResearch));
+  }
+  if ((!offsite.logistics.weworkResearch || offsite.logistics.weworkResearch.length === 0) && research.weworkResearch && research.weworkResearch.length > 0) {
+    offsite.logistics.weworkResearch = JSON.parse(JSON.stringify(research.weworkResearch));
+  }
+  console.log('[Research] Seeded research for', offsite.city, '(' + cityKey + ')');
+}
+
 app.post('/api/offsite/create', async (req, res) => {
   const authHeader = req.headers.authorization || '';
   const token = authHeader.replace('Bearer ', '');
@@ -982,6 +1106,7 @@ app.post('/api/offsite/create', async (req, res) => {
 
     computeTravelNeeds(newOffsite);
     computeBudgetEstimates(newOffsite);
+    seedCityResearch(newOffsite);
 
     if (existing) {
       const idx = data.offsites[year].findIndex(o => o.id === id);
