@@ -3464,14 +3464,25 @@ function renderOffsite() {
   const totalTasks = o.phases.reduce((s,p) => s + p.tasks.length, 0);
   const doneTasks = o.phases.reduce((s,p) => s + p.tasks.filter(t=>t.done).length, 0);
   const pct = totalTasks ? Math.round((doneTasks/totalTasks)*100) : 0;
-  const daysUntil = Math.ceil((new Date('2026-04-20') - new Date()) / 86400000);
-  // Pull from multi-offsite structure: find the active planning offsite
+  // Pull from multi-offsite structure: find the next upcoming offsite
   const api = _offsiteApiData || {};
   var _activeQ2 = null;
   if (api.offsites) {
-    Object.values(api.offsites).forEach(function(yr) { yr.forEach(function(q) { if (q.status === 'Planning' && !_activeQ2) _activeQ2 = q; }); });
+    var allOffsites = [];
+    Object.values(api.offsites).forEach(function(yr) { yr.forEach(function(q) { if (q.status === 'Planning') allOffsites.push(q); }); });
+    allOffsites.sort(function(a,b) { return (a.dates||'').localeCompare(b.dates||''); });
+    _activeQ2 = allOffsites[0] || null;
   }
   const activeOffsite = _activeQ2 || {};
+  // Compute days until from the active offsite's dates
+  var daysUntil = 0;
+  var activeDates = activeOffsite.dates || '';
+  if (activeDates && activeDates !== 'TBD') {
+    try {
+      var ds = activeDates.includes('202') ? activeDates : (activeOffsite.year || '') + ' ' + activeDates;
+      daysUntil = Math.ceil((new Date(ds) - new Date()) / 86400000);
+    } catch(e) {}
+  }
   const attendees = activeOffsite.attendees || [];
   const logistics = activeOffsite.logistics || {};
   const themes = activeOffsite.themes || [];
