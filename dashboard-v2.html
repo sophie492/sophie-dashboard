@@ -2168,12 +2168,9 @@ function renderConflictsCard() {
         // Skip: no time (all-day), skip pattern, optional, declined
         if (!events[i].time || events[i].time === '') continue;
         if (CAL_SKIP.test(events[i].title) || CAL_OPT.test(events[i].title) || events[i].rsvp === 'declined') continue;
-        // Skip events that already ended today
-        if (isToday2 && calToMin(events[i].end) <= nowMin) continue;
         for (let j = i + 1; j < events.length; j++) {
           if (!events[j].time || events[j].time === '') continue;
           if (CAL_SKIP.test(events[j].title) || CAL_OPT.test(events[j].title) || events[j].rsvp === 'declined') continue;
-          if (isToday2 && calToMin(events[j].end) <= nowMin) continue;
 
           // Check time overlap
           const iStart = calToMin(events[i].time);
