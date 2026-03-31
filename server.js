@@ -844,28 +844,6 @@ app.post('/api/offsite/:id/budget/sheet-sync', async (req, res) => {
     let spreadsheetId = offsite.budgetSheetId;
 
     if (!spreadsheetId) {
-      // Get or create shared "Leadership Offsites" folder
-      let folderId = process.env.OFFSITE_BUDGET_FOLDER_ID || null;
-      if (!folderId) {
-        try {
-          const folderSearch = await drive.files.list({
-            q: "name='Leadership Offsites' and mimeType='application/vnd.google-apps.folder' and trashed=false",
-            fields: 'files(id)'
-          });
-          if (folderSearch.data.files.length > 0) {
-            folderId = folderSearch.data.files[0].id;
-          } else {
-            const folder = await drive.files.create({
-              requestBody: { name: 'Leadership Offsites', mimeType: 'application/vnd.google-apps.folder' }
-            });
-            folderId = folder.data.id;
-            try { await drive.permissions.create({ fileId: folderId, requestBody: { type: 'anyone', role: 'writer' } }); } catch(e) {}
-            try { await drive.permissions.create({ fileId: folderId, sendNotificationEmail: false, requestBody: { type: 'user', role: 'writer', emailAddress: 'evelyn@fermatcommerce.com' } }); } catch(e) {}
-            try { await drive.permissions.create({ fileId: folderId, sendNotificationEmail: false, requestBody: { type: 'user', role: 'writer', emailAddress: 'sophie@fermatcommerce.com' } }); } catch(e) {}
-          }
-        } catch (e) { console.log('[Sheets] Folder setup skipped:', e.message); }
-      }
-
       // Create the budget spreadsheet
       const spreadsheet = await sheets.spreadsheets.create({
         requestBody: {
@@ -876,40 +854,14 @@ app.post('/api/offsite/:id/budget/sheet-sync', async (req, res) => {
       spreadsheetId = spreadsheet.data.spreadsheetId;
       offsite.budgetSheetId = spreadsheetId;
 
-      // Move into folder
-      if (folderId) {
-        try {
-          await drive.files.update({ fileId: spreadsheetId, addParents: folderId, fields: 'id, parents' });
-        } catch (e) { console.log('[Sheets] Move to folder skipped:', e.message); }
-      }
-
-      // Save sheet ID before sharing (so it persists even if sharing fails)
+      // Save sheet ID immediately so it persists even if sharing fails
       const dir2 = path.dirname(OFFSITE_PATH);
       if (!fs.existsSync(dir2)) fs.mkdirSync(dir2, { recursive: true });
       fs.writeFileSync(OFFSITE_PATH, JSON.stringify({ ...data, lastSynced: new Date().toISOString() }, null, 2));
+      console.log('[Sheets] Created spreadsheet:', spreadsheetId);
 
-      // Share with Evelyn and Sophie (non-blocking — sharing may fail without domain-wide delegation)
-      try {
-        await drive.permissions.create({
-          fileId: spreadsheetId,
-          sendNotificationEmail: false,
-          requestBody: { type: 'user', role: 'writer', emailAddress: 'evelyn@fermatcommerce.com' }
-        });
-      } catch (e) { console.log('[Sheets] Share with Evelyn failed:', e.message); }
-      try {
-        await drive.permissions.create({
-          fileId: spreadsheetId,
-          sendNotificationEmail: false,
-          requestBody: { type: 'user', role: 'writer', emailAddress: 'sophie@fermatcommerce.com' }
-        });
-      } catch (e) { console.log('[Sheets] Share with Sophie failed:', e.message); }
-      // Make it accessible via link as fallback
-      try {
-        await drive.permissions.create({
-          fileId: spreadsheetId,
-          requestBody: { type: 'anyone', role: 'writer' }
-        });
-      } catch (e) { console.log('[Sheets] Public link share failed:', e.message); }
+      // Try to make accessible via link (may fail on Workspace domains)
+      try { await drive.permissions.create({ fileId: spreadsheetId, requestBody: { type: 'anyone', role: 'writer' } }); console.log('[Sheets] Shared via link'); } catch(e) { console.log('[Sheets] Link sharing failed (domain restriction):', e.message); }
     }
 
     const values = [
