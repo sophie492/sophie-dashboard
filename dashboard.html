@@ -3479,8 +3479,10 @@ function renderOffsite() {
   var activeDates = activeOffsite.dates || '';
   if (activeDates && activeDates !== 'TBD') {
     try {
-      var ds = activeDates.includes('202') ? activeDates : (activeOffsite.year || '') + ' ' + activeDates;
-      daysUntil = Math.ceil((new Date(ds) - new Date()) / 86400000);
+      var cleanD = activeDates.replace(/[\u2013\u2014-]\d+/, '').trim();
+      if (!cleanD.match(/\d{4}/)) cleanD = cleanD.replace(/,\s*$/, '') + ', ' + (activeOffsite.year || '');
+      daysUntil = Math.ceil((new Date(cleanD) - new Date()) / 86400000);
+      if (isNaN(daysUntil)) daysUntil = 0;
     } catch(e) {}
   }
   const attendees = activeOffsite.attendees || [];
