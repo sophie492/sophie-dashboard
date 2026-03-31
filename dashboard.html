@@ -4813,14 +4813,15 @@ function updateOffsiteBudget(category, field, value) {
       if (totalCell) { totalCell.textContent = '$' + newTotal.toLocaleString(); totalCell.style.transition = 'color .3s'; totalCell.style.color = 'var(--green)'; setTimeout(function() { totalCell.style.color = 'var(--text)'; }, 1500); }
     }
   }
-  // Use PATCH to update only the budget (not full POST which can overwrite other data)
-  fetch('/api/offsite/' + _activeOffsiteId + '/logistics', {
+  // PATCH single budget category field (not full budget object)
+  var saveVal = field === 'notes' ? value : cat[field];
+  fetch('/api/offsite/' + _activeOffsiteId + '/budget-category', {
     method: 'PATCH',
     headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer sophie-dashboard-secret-change-me'},
-    body: JSON.stringify({ budget: offsite.logistics.budget })
+    body: JSON.stringify({ category: category, field: field, value: saveVal })
   }).then(function(r) { return r.json(); }).then(function(d) {
     if (d.ok) {
-      console.log('[Offsite] Budget saved: ' + category + ' ' + field + ' = ' + value);
+      console.log('[Offsite] Budget saved: ' + category + ' ' + field + ' = ' + saveVal + ' | total: ' + d.total);
       // Auto-sync to Notion and Sheet
       fetch('/api/offsite/' + _activeOffsiteId + '/budget/notion-sync', {
         method: 'POST', headers: { 'Authorization': 'Bearer sophie-dashboard-secret-change-me' }

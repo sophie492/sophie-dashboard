@@ -622,11 +622,9 @@ function computeBudgetEstimates(offsite) {
     }
   });
 
-  // Compute top-level total from categories
+  // Compute top-level total from categories (always recalculate from category sum)
   const total = budget.categories.reduce((sum, c) => sum + (c.estimated || 0), 0);
-  if (budget.estimated === null || budget.estimated === 0) {
-    budget.estimated = total;
-  }
+  budget.estimated = total;
 }
 
 app.get('/api/offsite', (req, res) => {
@@ -738,6 +736,46 @@ app.patch('/api/offsite/:id/attendee', (req, res) => {
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
     fs.writeFileSync(OFFSITE_PATH, JSON.stringify({ ...data, lastSynced: new Date().toISOString() }, null, 2));
     res.json({ ok: true, attendee: name, field, value });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// PATCH a single budget category field
+app.patch('/api/offsite/:id/budget-category', (req, res) => {
+  const authHeader = req.headers.authorization || '';
+  const token = authHeader.replace('Bearer ', '');
+  if (token !== (process.env.DASHBOARD_API_KEY || 'sophie-dashboard-secret-change-me')) {
+    return res.status(401).json({ error: 'Invalid API key' });
+  }
+  try {
+    const data = loadOffsiteData();
+    let found = null;
+    for (const year of Object.values(data.offsites)) {
+      found = year.find(o => o.id === req.params.id);
+      if (found) break;
+    }
+    if (!found) return res.status(404).json({ error: 'Offsite not found' });
+
+    const { category, field, value } = req.body;
+    if (!category || !field) return res.status(400).json({ error: 'category and field required' });
+
+    const budget = found.logistics && found.logistics.budget;
+    if (!budget || !budget.categories) return res.status(400).json({ error: 'No budget data' });
+
+    const cat = budget.categories.find(c => c.category === category);
+    if (!cat) return res.status(404).json({ error: 'Category not found: ' + category });
+
+    cat[field] = value;
+    if (field === 'estimated') cat.autoEstimated = null;
+
+    // Recalculate total
+    budget.estimated = budget.categories.reduce((sum, c) => sum + (parseFloat(c.estimated) || 0), 0);
+
+    console.log('[Offsite] Budget category updated:', category, field, '->', value, '| total:', budget.estimated);
+
+    const dir = path.dirname(OFFSITE_PATH);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(OFFSITE_PATH, JSON.stringify({ ...data, lastSynced: new Date().toISOString() }, null, 2));
+    res.json({ ok: true, category, field, value, total: budget.estimated });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
