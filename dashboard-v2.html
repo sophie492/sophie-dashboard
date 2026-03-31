@@ -727,14 +727,8 @@ const DATA = {
 
   calendarDays: [],
 
-  reminders: [
-    {text: "CEO Brief \u2192 Rishabh", time: "6:36 AM M-F", done: false},
-    {text: "EOD Task Check-in", time: "3:45 PM M-F", done: false},
-    {text: "Snack Order for the week", time: "9:05 AM Mon", done: false},
-    {text: "Reach out to Bharat before Dev Meeting", time: "9:10 AM Fri", done: false},
-    {text: "Reach out to Bharat before Town Hall", time: "9:25 AM Fri", done: false},
-    {text: "Weekly Review recap", time: "3:08 PM Fri", done: false}
-  ],
+  reminders: [],
+  skillStatus: [],
 
   weeklyPulse: {
     weekNumber: 12,
@@ -1882,6 +1876,7 @@ function renderOverview(){
   }
   html+=renderMyWorkSection();
   html+=renderDeliveriesStrip();
+  html+=renderSkillStatusCard();
   html+=renderCompanyPills();
 
   el.innerHTML=html;
@@ -2174,6 +2169,33 @@ function renderDeliveriesStrip(){
       <span class="section-line"></span>
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;padding:4px 0">${pills}</div>
+  `;
+}
+
+function renderSkillStatusCard(){
+  const skills = DATA.skillStatus || [];
+  if (!skills.length) return '';
+  const ranCount = skills.filter(s => s.ran).length;
+  const total = skills.length;
+  const rows = skills.map(s => {
+    const color = s.weekend ? 'var(--text-muted)' : (s.ran ? 'var(--green)' : 'var(--red, #e74c3c)');
+    const label = s.weekend ? 'Weekend' : (s.ran ? 'Ran' : 'Not run');
+    return `<div class="ai-row">
+      <span class="task-priority-dot" style="background:${color}"></span>
+      <span style="flex:1;color:var(--text-dim)">${s.name}</span>
+      <span style="font-size:9px;color:var(--text-muted)">${s.schedule}</span>
+    </div>`;
+  }).join('');
+  const badgeColor = ranCount === total ? 'tag-green' : 'tag-red';
+  return `
+    <div class="section-divider" style="margin-top:8px">
+      <span class="section-label projects">\u26A1 Skill Status</span>
+      <span class="${badgeColor}" style="font-size:9px;padding:2px 6px;border-radius:4px;margin-left:8px">${ranCount}/${total} ran</span>
+      <span class="section-line"></span>
+    </div>
+    <div class="card" style="margin-top:4px">
+      <div class="card-body compact">${rows}</div>
+    </div>
   `;
 }
 
@@ -6031,6 +6053,17 @@ function resolveActionItem(btn,notionId){
   }
 }
 
+async function fetchSkillStatus() {
+  try {
+    const res = await fetch('/api/skill-status');
+    if (!res.ok) return;
+    const data = await res.json();
+    DATA.skillStatus = data.skills || [];
+    renderSidebar();
+    renderOverview();
+  } catch (e) {}
+}
+
 // ── CEO Brief data for person pages ──
 let CEO_BRIEF = { flagged: [], priorities: [], actionItems: [], meetingPrep: [], lastUpdated: null };
 
@@ -6112,6 +6145,7 @@ function startAutoRefresh(){
     fetchLiveTasks();
     fetchLiveEvents();
     fetchLiveBrief();
+    fetchSkillStatus();
   },180000);
   setInterval(updateFreshness,60000);
   setInterval(reconcileTasks, 300000); // 5 minutes
@@ -6125,6 +6159,7 @@ async function init(){
     // Load calendar + brief before first render so pages aren't empty
     await fetchLiveCalendar().catch(()=>{});
     await fetchLiveBrief().catch(()=>{});
+    await fetchSkillStatus().catch(()=>{});
     // Don't block on checkbox states — load them in background
     loadServerCheckboxStates().catch(e=>console.warn('[Init] Checkbox load failed:',e.message));
     renderSidebar();

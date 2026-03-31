@@ -3578,6 +3578,61 @@ app.post('/api/events/generate-todos', (req, res) => {
   res.json({ todos, source: 'generated' });
 });
 
+app.get('/api/skill-status', (req, res) => {
+  const ptToday = new Intl.DateTimeFormat('en-CA', {timeZone: 'America/Los_Angeles', year: 'numeric', month: '2-digit', day: '2-digit'}).format(new Date());
+  const ptHour = parseInt(new Intl.DateTimeFormat('en-US', {timeZone: 'America/Los_Angeles', hour: 'numeric', hour12: false}).format(new Date()));
+
+  function ranToday(filePath, dateField) {
+    try {
+      if (!fs.existsSync(filePath)) return { ran: false, lastRun: null };
+      const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+      const lastRun = data[dateField];
+      if (!lastRun) return { ran: false, lastRun: null };
+      const runDate = lastRun.slice(0, 10);
+      // Consider it "ran today" if the date matches today, or yesterday after 5pm PT (timezone crossover)
+      const ptYesterday = (function(){ const d = new Date(); d.setDate(d.getDate()-1); return new Intl.DateTimeFormat('en-CA', {timeZone: 'America/Los_Angeles', year: 'numeric', month: '2-digit', day: '2-digit'}).format(d); })();
+      const ran = runDate === ptToday || (runDate === ptYesterday && ptHour < 7);
+      return { ran, lastRun };
+    } catch (e) { return { ran: false, lastRun: null }; }
+  }
+
+  function ranTodayByDate(filePath, dateField) {
+    try {
+      if (!fs.existsSync(filePath)) return { ran: false, lastRun: null };
+      const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+      const briefDate = data[dateField];
+      if (!briefDate) return { ran: false, lastRun: null };
+      const ptYesterday = (function(){ const d = new Date(); d.setDate(d.getDate()-1); return new Intl.DateTimeFormat('en-CA', {timeZone: 'America/Los_Angeles', year: 'numeric', month: '2-digit', day: '2-digit'}).format(d); })();
+      const ran = briefDate === ptToday || (briefDate === ptYesterday && ptHour < 7);
+      return { ran, lastRun: data.lastUpdated || briefDate };
+    } catch (e) { return { ran: false, lastRun: null }; }
+  }
+
+  const briefPath = path.join(__dirname, 'data', 'ceo-brief.json');
+  const calPath = path.join(__dirname, 'data', 'calendar.json');
+  const tasksPath = path.join(__dirname, 'data', 'tasks.json');
+  const offsitePath = path.join(__dirname, 'data', 'offsite-data.json');
+
+  const skills = [
+    { id: 'ceo-brief', name: 'CEO Brief \u2192 Rishabh', schedule: '7:00 AM M-F', ...ranTodayByDate(briefPath, 'briefDate') },
+    { id: 'cto-brief', name: 'CTO Brief \u2192 Shreyas', schedule: '7:00 AM M-F', ran: (function(){ try { const d = JSON.parse(fs.readFileSync(briefPath, 'utf8')); return !!(d.shreyasPriorities && d.shreyasPriorities.length > 0 && (d.briefDate === ptToday || (d.briefDate === (function(){ const dd = new Date(); dd.setDate(dd.getDate()-1); return new Intl.DateTimeFormat('en-CA', {timeZone: 'America/Los_Angeles', year: 'numeric', month: '2-digit', day: '2-digit'}).format(dd); })() && ptHour < 7))); } catch(e) { return false; } })(), lastRun: (function(){ try { return JSON.parse(fs.readFileSync(briefPath, 'utf8')).lastUpdated; } catch(e) { return null; } })() },
+    { id: 'calendar-cron', name: 'Calendar Refresh', schedule: 'Every 30 min', ...ranToday(calPath, 'lastUpdated') },
+    { id: 'task-cron', name: 'Task Refresh (Notion)', schedule: 'Every 15 min', ...ranToday(tasksPath, 'lastUpdated') },
+    { id: 'offsite-monitor', name: 'Offsite Monitor', schedule: '8 AM + 2 PM M-F', ...ranToday(offsitePath, 'lastSynced') }
+  ];
+
+  // Check if today is a weekday
+  const dayOfWeek = new Date().getDay();
+  const isWeekday = dayOfWeek >= 1 && dayOfWeek <= 5;
+
+  // Briefs only expected on weekdays
+  if (!isWeekday) {
+    skills.filter(s => s.schedule.includes('M-F')).forEach(s => { s.ran = true; s.weekend = true; });
+  }
+
+  res.json({ skills, date: ptToday, isWeekday });
+});
+
 // Calendar auto-refresh cron
 async function refreshCalendarCache() {
   try {
