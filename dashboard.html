@@ -2033,12 +2033,12 @@ function renderPersonSection(person){
   const overviewPrios = key === 'rishabh' ? CEO_BRIEF.priorities : CEO_BRIEF.shreyasPriorities;
   let prioHtml = '';
   // Check if brief is stale — compare briefDate to today
-  const nowPT = new Date(new Date().toLocaleString('en-US',{timeZone:'America/Los_Angeles'}));
-  const todayPT = nowPT.toISOString().slice(0,10);
-  const yesterdayPT = new Date(nowPT); yesterdayPT.setDate(yesterdayPT.getDate()-1);
-  const yesterdayStr = yesterdayPT.toISOString().slice(0,10);
+  // Get today's date in PT reliably
+  const ptParts = new Intl.DateTimeFormat('en-CA',{timeZone:'America/Los_Angeles',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+  const ptHour = parseInt(new Intl.DateTimeFormat('en-US',{timeZone:'America/Los_Angeles',hour:'numeric',hour12:false}).format(new Date()));
+  const ptYesterday = (function(){const d=new Date();d.setDate(d.getDate()-1);return new Intl.DateTimeFormat('en-CA',{timeZone:'America/Los_Angeles',year:'numeric',month:'2-digit',day:'2-digit'}).format(d)})();
   const bd = CEO_BRIEF.briefDate || '';
-  const briefIsCurrent = bd === todayPT || (bd === yesterdayStr && nowPT.getHours() < 7);
+  const briefIsCurrent = bd === ptParts || (bd === ptYesterday && ptHour < 7);
   if (!briefIsCurrent && CEO_BRIEF.lastUpdated) {
     prioHtml += '<div style="background:var(--red-soft);border:1px solid var(--red);border-radius:6px;padding:6px 10px;margin-bottom:8px;font-size:10px;color:var(--red);display:flex;align-items:center;gap:6px"><span style="font-size:14px">&#9888;</span> Brief is from ' + (CEO_BRIEF.briefDate || 'unknown date') + ' — waiting for today\'s run.</div>';
   }
@@ -2359,11 +2359,8 @@ function renderPersonPage(person){
 
   // Today's Priorities (from CEO brief) — prioData already defined above
   {
-    const nowPT2 = new Date(new Date().toLocaleString('en-US',{timeZone:'America/Los_Angeles'}));
-    const todayPT2 = nowPT2.toISOString().slice(0,10);
-    const yestPT2 = new Date(nowPT2); yestPT2.setDate(yestPT2.getDate()-1);
     const bd2 = CEO_BRIEF.briefDate || '';
-    const briefIsCurrent2 = bd2 === todayPT2 || (bd2 === yestPT2.toISOString().slice(0,10) && nowPT2.getHours() < 7);
+    const briefIsCurrent2 = bd2 === ptParts || (bd2 === ptYesterday && ptHour < 7);
     let staleWarning = '';
     if (!briefIsCurrent2 && CEO_BRIEF.lastUpdated) {
       staleWarning = '<div style="background:var(--red-soft);border:1px solid var(--red);border-radius:6px;padding:6px 10px;margin-bottom:8px;font-size:10px;color:var(--red)">&#9888; Brief is from ' + (CEO_BRIEF.briefDate || 'unknown date') + '</div>';
@@ -6156,11 +6153,11 @@ async function fetchLiveBrief() {
       const activePage=loadActivePage();
       if(activePage&&activePage!=='overview')navigateTo(activePage);
       // If brief is not from today, start retrying every 5 min
-      var nowCheck = new Date(new Date().toLocaleString('en-US',{timeZone:'America/Los_Angeles'}));
-      var todayCheck = nowCheck.toISOString().slice(0,10);
-      var yestCheck = new Date(nowCheck); yestCheck.setDate(yestCheck.getDate()-1);
+      var ptToday3 = new Intl.DateTimeFormat('en-CA',{timeZone:'America/Los_Angeles',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+      var ptHour3 = parseInt(new Intl.DateTimeFormat('en-US',{timeZone:'America/Los_Angeles',hour:'numeric',hour12:false}).format(new Date()));
+      var ptYest3 = (function(){var d=new Date();d.setDate(d.getDate()-1);return new Intl.DateTimeFormat('en-CA',{timeZone:'America/Los_Angeles',year:'numeric',month:'2-digit',day:'2-digit'}).format(d)})();
       var bdCheck = data.briefDate || '';
-      var isCurrent = bdCheck === todayCheck || (bdCheck === yestCheck.toISOString().slice(0,10) && nowCheck.getHours() < 7);
+      var isCurrent = bdCheck === ptToday3 || (bdCheck === ptYest3 && ptHour3 < 7);
       if (!isCurrent) startBriefRetry();
     }
   } catch (e) { console.warn('[Live] CEO brief fetch failed:', e.message); }
