@@ -2150,25 +2150,29 @@ function renderConflictsCard() {
 
   const allConflicts = [];
 
-  const nowMin = (function() {
-    const now = new Date(new Date().toLocaleString('en-US', {timeZone: 'America/Los_Angeles'}));
-    return now.getHours() * 60 + now.getMinutes();
-  })();
-  const todayISO2 = new Date(new Date().toLocaleString('en-US', {timeZone: 'America/Los_Angeles'})).toISOString().slice(0, 10);
+  // Use Intl for reliable PT time
+  const ptDateNow = new Intl.DateTimeFormat('en-CA',{timeZone:'America/Los_Angeles',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+  const ptHourNow = parseInt(new Intl.DateTimeFormat('en-US',{timeZone:'America/Los_Angeles',hour:'numeric',hour12:false}).format(new Date()));
+  const ptMinNow = parseInt(new Intl.DateTimeFormat('en-US',{timeZone:'America/Los_Angeles',minute:'numeric'}).format(new Date()));
+  const nowMin = ptHourNow * 60 + ptMinNow;
 
   days.forEach(day => {
+    // Skip weekends
+    if (day.isWeekend) return;
+
     ['rishabh', 'shreyas'].forEach(person => {
       const events = day[person] || [];
-      const skipPattern = CAL_SKIP;
-      const optPattern = /\[optional\]/i;
-      const isToday2 = day.date === todayISO2;
+      const isToday2 = day.date === ptDateNow;
 
       for (let i = 0; i < events.length; i++) {
-        if (skipPattern.test(events[i].title) || optPattern.test(events[i].title) || events[i].rsvp === 'declined') continue;
+        // Skip: no time (all-day), skip pattern, optional, declined
+        if (!events[i].time || events[i].time === '') continue;
+        if (CAL_SKIP.test(events[i].title) || CAL_OPT.test(events[i].title) || events[i].rsvp === 'declined') continue;
         // Skip events that already ended today
         if (isToday2 && calToMin(events[i].end) <= nowMin) continue;
         for (let j = i + 1; j < events.length; j++) {
-          if (skipPattern.test(events[j].title) || optPattern.test(events[j].title) || events[j].rsvp === 'declined') continue;
+          if (!events[j].time || events[j].time === '') continue;
+          if (CAL_SKIP.test(events[j].title) || CAL_OPT.test(events[j].title) || events[j].rsvp === 'declined') continue;
           if (isToday2 && calToMin(events[j].end) <= nowMin) continue;
 
           // Check time overlap
