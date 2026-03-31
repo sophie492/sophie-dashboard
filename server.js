@@ -34,6 +34,15 @@ const BASE_URL = process.env.RAILWAY_PUBLIC_DOMAIN
 
 const ALLOWED_DOMAIN = 'fermatcommerce.com';
 const TOKEN_PATH = path.join(__dirname, 'data', '.google-refresh-token');
+// Seed token file from env var on startup (survives deploys)
+if (process.env.GOOGLE_REFRESH_TOKEN && !fs.existsSync(TOKEN_PATH)) {
+  try {
+    const dir = path.dirname(TOKEN_PATH);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(TOKEN_PATH, process.env.GOOGLE_REFRESH_TOKEN);
+    console.log('[Auth] Refresh token restored from env var');
+  } catch (e) {}
+}
 
 // ââ Session ââ
 app.set('trust proxy', 1);
@@ -72,6 +81,8 @@ if (GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET) {
         if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
         fs.writeFileSync(TOKEN_PATH, refreshToken);
         console.log('[Auth] Refresh token stored for cron use');
+        console.log('[Auth] SET THIS ENV VAR ON RAILWAY TO PERSIST ACROSS DEPLOYS:');
+        console.log('[Auth] GOOGLE_REFRESH_TOKEN=' + refreshToken.substring(0, 20) + '...');
       } catch (e) { console.error('[Auth] Failed to store refresh token:', e.message); }
     }
     return done(null, {
@@ -331,6 +342,23 @@ app.post('/api/action-items/create', async (req, res) => {
 });
 
 // ── Checkbox State Persistence (all task lists) ──
+// Get refresh token for setting as Railway env var
+app.get('/api/admin/refresh-token', (req, res) => {
+  const authHeader = req.headers.authorization || '';
+  const token = authHeader.replace('Bearer ', '');
+  if (token !== (process.env.DASHBOARD_API_KEY || 'sophie-dashboard-secret-change-me')) {
+    return res.status(401).json({ error: 'Invalid API key' });
+  }
+  try {
+    if (fs.existsSync(TOKEN_PATH)) {
+      const rt = fs.readFileSync(TOKEN_PATH, 'utf8').trim();
+      res.json({ token: rt, instruction: 'Set as GOOGLE_REFRESH_TOKEN env var on Railway' });
+    } else {
+      res.json({ token: null, instruction: 'No token stored. Login to the dashboard first.' });
+    }
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 const CHECKBOX_PATH = path.join(__dirname, 'data', 'checkbox-states.json');
 
 function loadCheckboxStates() {
