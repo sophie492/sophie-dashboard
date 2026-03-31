@@ -401,7 +401,7 @@ app.get('/api/debug/sheets-auth', async (req, res) => {
       // Try newline fix
       try {
         key.private_key = key.private_key.replace(/\\n/g, '\n');
-        const auth2 = new google.auth.JWT(key.client_email, null, key.private_key, ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive']);
+        const auth2 = new google.auth.JWT({ email: key.client_email, key: key.private_key, scopes: ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive'] });
         await auth2.authorize();
         result.authWithFix = 'SUCCESS';
       } catch (e2) { result.authWithFix = 'FAILED: ' + e2.message; }
