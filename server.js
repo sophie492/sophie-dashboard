@@ -395,6 +395,36 @@ function saveCheckboxStates(states) {
   fs.writeFileSync(CHECKBOX_PATH, JSON.stringify(states, null, 2));
 }
 
+// Temporary debug endpoint for sheets auth
+app.get('/api/debug/sheets-auth', async (req, res) => {
+  const authHeader = req.headers.authorization || '';
+  const token = authHeader.replace('Bearer ', '');
+  if (token !== (process.env.DASHBOARD_API_KEY || 'sophie-dashboard-secret-change-me')) {
+    return res.status(401).json({ error: 'Invalid API key' });
+  }
+  const rawKey = process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
+  if (!rawKey) return res.json({ error: 'No GOOGLE_SERVICE_ACCOUNT_KEY env var', hasKey: false });
+  try {
+    const key = JSON.parse(rawKey);
+    const result = { hasKey: true, keyLength: rawKey.length, clientEmail: key.client_email, hasPrivateKey: !!key.private_key, privateKeyStart: key.private_key?.substring(0, 40) };
+    try {
+      const auth = new google.auth.JWT(key.client_email, null, key.private_key, ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive']);
+      await auth.authorize();
+      result.auth = 'SUCCESS';
+    } catch (e) {
+      result.auth = 'FAILED: ' + e.message;
+      // Try newline fix
+      try {
+        key.private_key = key.private_key.replace(/\\n/g, '\n');
+        const auth2 = new google.auth.JWT(key.client_email, null, key.private_key, ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive']);
+        await auth2.authorize();
+        result.authWithFix = 'SUCCESS';
+      } catch (e2) { result.authWithFix = 'FAILED: ' + e2.message; }
+    }
+    res.json(result);
+  } catch (e) { res.json({ error: 'JSON parse failed: ' + e.message, hasKey: true, keyLength: rawKey.length }); }
+});
+
 app.get('/api/checkbox-states', (req, res) => {
   res.json(loadCheckboxStates());
 });
