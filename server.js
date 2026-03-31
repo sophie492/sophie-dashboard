@@ -43,7 +43,29 @@ const BASE_URL = process.env.RAILWAY_PUBLIC_DOMAIN
   : process.env.BASE_URL || `http://localhost:${PORT}`;
 
 const ALLOWED_DOMAIN = 'fermatcommerce.com';
-const TOKEN_PATH = path.join(__dirname, 'data', '.google-refresh-token');
+// Persistent data directory — uses Railway volume if available, otherwise git data dir
+const DATA_DIR = process.env.RAILWAY_VOLUME_MOUNT_PATH || path.join(__dirname, 'data');
+if (process.env.RAILWAY_VOLUME_MOUNT_PATH && !fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+
+// On startup with volume: seed any missing files from git
+if (process.env.RAILWAY_VOLUME_MOUNT_PATH) {
+  const gitDataDir = path.join(__dirname, 'data');
+  if (fs.existsSync(gitDataDir)) {
+    fs.readdirSync(gitDataDir).forEach(file => {
+      const volPath = path.join(DATA_DIR, file);
+      const gitPath = path.join(gitDataDir, file);
+      if (!fs.existsSync(volPath) && fs.statSync(gitPath).isFile()) {
+        fs.copyFileSync(gitPath, volPath);
+        console.log('[Data] Seeded from git:', file);
+      }
+    });
+  }
+  console.log('[Data] Using persistent volume at', DATA_DIR);
+} else {
+  console.log('[Data] Using git data dir (ephemeral — edits lost on deploy)');
+}
+
+const TOKEN_PATH = path.join(DATA_DIR, '.google-refresh-token');
 // Seed token file from env var on startup (survives deploys)
 if (process.env.GOOGLE_REFRESH_TOKEN && !fs.existsSync(TOKEN_PATH)) {
   try {
@@ -182,8 +204,8 @@ app.get('/health', (req, res) => res.json({
   notion: !!NOTION_TOKEN,
   notionClient: !!notion,
   notionDbId: NOTION_DB_ID ? NOTION_DB_ID.slice(0,8)+'...' : null,
-  tasksJsonExists: fs.existsSync(path.join(__dirname, 'data', 'tasks.json')),
-  manualTasksJsonExists: fs.existsSync(path.join(__dirname, 'data', 'manual-tasks.json'))
+  tasksJsonExists: fs.existsSync(path.join(DATA_DIR, 'tasks.json')),
+  manualTasksJsonExists: fs.existsSync(path.join(DATA_DIR, 'manual-tasks.json'))
 }));
 
 // ── Direct Notion task toggle — no session auth required, uses API key ──
@@ -369,7 +391,7 @@ app.get('/api/admin/refresh-token', (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-const CHECKBOX_PATH = path.join(__dirname, 'data', 'checkbox-states.json');
+const CHECKBOX_PATH = path.join(DATA_DIR, 'checkbox-states.json');
 
 function loadCheckboxStates() {
   try { return fs.existsSync(CHECKBOX_PATH) ? JSON.parse(fs.readFileSync(CHECKBOX_PATH, 'utf8')) : {}; } catch(e) { return {}; }
@@ -476,7 +498,7 @@ app.post('/api/notion/toggle-todo', async (req, res) => {
 });
 
 // ── Leadership Offsite API (Multi-Quarter) ──
-const OFFSITE_PATH = path.join(__dirname, 'data', 'offsite-data.json');
+const OFFSITE_PATH = path.join(DATA_DIR, 'offsite-data.json');
 
 function loadOffsiteData() {
   try { return fs.existsSync(OFFSITE_PATH) ? JSON.parse(fs.readFileSync(OFFSITE_PATH, 'utf8')) : { offsites: {} }; }
@@ -1330,7 +1352,7 @@ app.post('/api/offsite/:id', (req, res) => {
 });
 
 // ── BD Ownership API ──
-const BD_PATH = path.join(__dirname, 'data', 'bd-data.json');
+const BD_PATH = path.join(DATA_DIR, 'bd-data.json');
 
 app.get('/api/bd', (req, res) => {
   try {
@@ -1381,7 +1403,7 @@ app.patch('/api/bd/relationships/:id', async (req, res) => {
 });
 
 // ── Marketing Reporting API ──
-const MARKETING_PATH = path.join(__dirname, 'data', 'marketing-data.json');
+const MARKETING_PATH = path.join(DATA_DIR, 'marketing-data.json');
 
 app.get('/api/marketing', (req, res) => {
   try {
@@ -1408,7 +1430,7 @@ app.post('/api/marketing', (req, res) => {
 });
 
 // ── Hack Week API ──
-const HACKWEEK_PATH = path.join(__dirname, 'data', 'hackweek-data.json');
+const HACKWEEK_PATH = path.join(DATA_DIR, 'hackweek-data.json');
 
 app.get('/api/hackweek', (req, res) => {
   try {
@@ -1649,7 +1671,7 @@ app.post('/api/events/sync', async (req, res) => {
 });
 
 // ── Event Field Overrides ──
-const EVENTS_OVERRIDES_PATH = path.join(__dirname, 'data', 'event-overrides.json');
+const EVENTS_OVERRIDES_PATH = path.join(DATA_DIR, 'event-overrides.json');
 
 app.post('/api/events/update', async (req, res) => {
   const authHeader = req.headers.authorization || '';
@@ -1691,7 +1713,7 @@ app.get('/api/events/overrides', (req, res) => {
 });
 
 // ── CEO Brief Data Storage ──
-const BRIEF_PATH = path.join(__dirname, 'data', 'ceo-brief.json');
+const BRIEF_PATH = path.join(DATA_DIR, 'ceo-brief.json');
 
 app.get('/api/ceo-brief', (req, res) => {
   // No auth required — read-only summary data
@@ -1851,7 +1873,7 @@ async function findNotionTaskByTitle(title) {
 }
 
 // ââ Tasks API (Notion-synced via Cowork) ââ
-const TASKS_PATH = path.join(__dirname, 'data', 'tasks.json');
+const TASKS_PATH = path.join(DATA_DIR, 'tasks.json');
 
 app.get('/api/tasks', ensureAuth, (req, res) => {
   try {
@@ -1868,7 +1890,7 @@ app.get('/api/tasks', ensureAuth, (req, res) => {
 });
 
 // ââ Manual Task file path ââ
-const MANUAL_TASKS_PATH = path.join(__dirname, 'data', 'manual-tasks.json');
+const MANUAL_TASKS_PATH = path.join(DATA_DIR, 'manual-tasks.json');
 
 app.post('/api/tasks', (req, res) => {
   const authHeader = req.headers.authorization;
@@ -2148,7 +2170,7 @@ app.post('/api/tasks/sync', ensureAuth, (req, res) => {
 });
 
 // ââ Action Items API ââ
-const ACTION_ITEMS_PATH = path.join(__dirname, 'data', 'action-items.json');
+const ACTION_ITEMS_PATH = path.join(DATA_DIR, 'action-items.json');
 
 app.get('/api/action-items', ensureAuth, (req, res) => {
   try {
@@ -2181,7 +2203,7 @@ app.post('/api/action-items', (req, res) => {
 });
 
 // ââ Open Loops API ââ
-const OPEN_LOOPS_PATH = path.join(__dirname, 'data', 'open-loops.json');
+const OPEN_LOOPS_PATH = path.join(DATA_DIR, 'open-loops.json');
 
 app.get('/api/open-loops', ensureAuth, (req, res) => {
   try {
@@ -2214,7 +2236,7 @@ app.post('/api/open-loops', (req, res) => {
 });
 
 // ââ Candidates API ââ
-const CANDIDATES_PATH = path.join(__dirname, 'data', 'candidates.json');
+const CANDIDATES_PATH = path.join(DATA_DIR, 'candidates.json');
 
 app.get('/api/candidates', ensureAuth, (req, res) => {
   try {
@@ -2267,7 +2289,7 @@ app.patch('/api/candidates/:id', ensureAuth, (req, res) => {
 });
 
 // ââ Calendar API ââ
-const CALENDAR_PATH = path.join(__dirname, 'data', 'calendar.json');
+const CALENDAR_PATH = path.join(DATA_DIR, 'calendar.json');
 
 // ââ Live Google Calendar helpers ââ
 const CAL_IDS = ['rishabh@fermatcommerce.com', 'shreyas@fermatcommerce.com'];
@@ -2494,7 +2516,7 @@ app.post('/api/calendar', (req, res) => {
 });
 
 // ââ Marketing Events API (live from FermÃ t Events calendar) ââ
-const EVENTS_PATH = path.join(__dirname, 'data', 'events.json');
+const EVENTS_PATH = path.join(DATA_DIR, 'events.json');
 const FERMAT_EVENTS_CAL = 'c_e611ed498cde340f125c26be2ef1b329409ea41fe820481f13eacc332e7c0446@group.calendar.google.com';
 
 function slugify(str) {
@@ -2856,7 +2878,7 @@ app.post('/api/events', (req, res) => {
 });
 
 // ââ Utilities API ââ
-const UTILITIES_PATH = path.join(__dirname, 'data', 'utilities.json');
+const UTILITIES_PATH = path.join(DATA_DIR, 'utilities.json');
 
 app.get('/api/utilities', ensureAuth, (req, res) => {
   try {
@@ -2888,7 +2910,7 @@ app.post('/api/utilities', (req, res) => {
 });
 
 // ââ Weekly Pulse API ââ
-const WEEKLY_PULSE_PATH = path.join(__dirname, 'data', 'weekly-pulse.json');
+const WEEKLY_PULSE_PATH = path.join(DATA_DIR, 'weekly-pulse.json');
 
 app.get('/api/weekly-pulse', ensureAuth, (req, res) => {
   try {
@@ -2920,7 +2942,7 @@ app.post('/api/weekly-pulse', (req, res) => {
 });
 
 // ââ FPPC Events API ââ
-const FPPC_PATH = path.join(__dirname, 'data', 'fppc.json');
+const FPPC_PATH = path.join(DATA_DIR, 'fppc.json');
 
 app.get('/api/fppc', ensureAuth, (req, res) => {
   try {
@@ -2953,7 +2975,7 @@ app.post('/api/fppc', (req, res) => {
 
 
 // ── News Feed API (Daily Brief tab) ──
-const NEWS_PATH = path.join(__dirname, 'data', 'news.json');
+const NEWS_PATH = path.join(DATA_DIR, 'news.json');
 
 app.get('/api/news', ensureAuth, (req, res) => {
   try {
@@ -2987,7 +3009,7 @@ app.post('/api/news', (req, res) => {
 });
 
 // ── Weekly Pulse API ──
-const PULSE_PATH = path.join(__dirname, 'data', 'pulse.json');
+const PULSE_PATH = path.join(DATA_DIR, 'pulse.json');
 
 app.get('/api/pulse', ensureAuth, (req, res) => {
   try {
@@ -3629,7 +3651,7 @@ function autoCheckEventTodos(todos, event) {
   if (!todos || todos.length === 0) return todos;
 
   let calendarData = null;
-  const calPath = path.join(__dirname, 'data', 'calendar.json');
+  const calPath = path.join(DATA_DIR, 'calendar.json');
   try {
     if (fs.existsSync(calPath)) {
       calendarData = JSON.parse(fs.readFileSync(calPath, 'utf8'));
@@ -3686,7 +3708,7 @@ function autoCheckEventTodos(todos, event) {
   return todos;
 }
 
-const EVENT_TODOS_PATH = path.join(__dirname, 'data', 'event-todos.json');
+const EVENT_TODOS_PATH = path.join(DATA_DIR, 'event-todos.json');
 function loadEventTodos() {
   try { return fs.existsSync(EVENT_TODOS_PATH) ? JSON.parse(fs.readFileSync(EVENT_TODOS_PATH, 'utf8')) : {}; } catch(e) { return {}; }
 }
@@ -3755,10 +3777,10 @@ app.get('/api/skill-status', (req, res) => {
     } catch (e) { return { ran: false, lastRun: null }; }
   }
 
-  const briefPath = path.join(__dirname, 'data', 'ceo-brief.json');
-  const calPath = path.join(__dirname, 'data', 'calendar.json');
-  const tasksPath = path.join(__dirname, 'data', 'tasks.json');
-  const offsitePath = path.join(__dirname, 'data', 'offsite-data.json');
+  const briefPath = path.join(DATA_DIR, 'ceo-brief.json');
+  const calPath = path.join(DATA_DIR, 'calendar.json');
+  const tasksPath = path.join(DATA_DIR, 'tasks.json');
+  const offsitePath = OFFSITE_PATH;
 
   const skills = [
     { id: 'ceo-brief', name: 'CEO Brief \u2192 Rishabh', schedule: '7:00 AM M-F', ...ranTodayByDate(briefPath, 'briefDate') },
