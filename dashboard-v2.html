@@ -4767,11 +4767,11 @@ function toggleAttendeeStatus(name, field) {
     }
   }
 
-  // Save to server (fire and forget — no re-render)
-  fetch('/api/offsite', {
-    method: 'POST',
+  // Save single attendee field via dedicated endpoint
+  fetch('/api/offsite/' + _activeOffsiteId + '/attendee', {
+    method: 'PATCH',
     headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer sophie-dashboard-secret-change-me'},
-    body: JSON.stringify(_offsiteApiData)
+    body: JSON.stringify({ name: name, field: field, value: val })
   }).then(function(r) { return r.json(); }).then(function(d) {
     if (d.ok) {
       console.log('[Offsite] ' + name + ' ' + field + ' \u2192 ' + val);

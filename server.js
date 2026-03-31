@@ -709,6 +709,38 @@ app.patch('/api/offsite/:id/logistics', (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// PATCH a single attendee field for an offsite
+app.patch('/api/offsite/:id/attendee', (req, res) => {
+  const authHeader = req.headers.authorization || '';
+  const token = authHeader.replace('Bearer ', '');
+  if (token !== (process.env.DASHBOARD_API_KEY || 'sophie-dashboard-secret-change-me')) {
+    return res.status(401).json({ error: 'Invalid API key' });
+  }
+  try {
+    const data = loadOffsiteData();
+    let found = null;
+    for (const year of Object.values(data.offsites)) {
+      found = year.find(o => o.id === req.params.id);
+      if (found) break;
+    }
+    if (!found) return res.status(404).json({ error: 'Offsite not found' });
+
+    const { name, field, value } = req.body;
+    if (!name || !field) return res.status(400).json({ error: 'name and field required' });
+
+    const attendee = (found.attendees || []).find(a => a.name === name);
+    if (!attendee) return res.status(404).json({ error: 'Attendee not found: ' + name });
+
+    attendee[field] = value;
+    console.log('[Offsite] Attendee updated:', name, field, '->', value);
+
+    const dir = path.dirname(OFFSITE_PATH);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(OFFSITE_PATH, JSON.stringify({ ...data, lastSynced: new Date().toISOString() }, null, 2));
+    res.json({ ok: true, attendee: name, field, value });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 // Push budget to Notion
 app.post('/api/offsite/:id/budget/notion-sync', async (req, res) => {
   const authHeader = req.headers.authorization || '';
