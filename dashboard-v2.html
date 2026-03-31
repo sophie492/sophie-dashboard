@@ -1666,7 +1666,7 @@ function renderSidebar(){
     <div class="sidebar-group">My Work</div>
     <div class="sidebar-item" data-page="tasks"><span class="si-icon">&#128142;</span><span class="si-label">Tasks</span><span class="si-badge gold">${openTasks}</span></div>
     <div class="sidebar-item" data-page="podcast"><span class="si-icon">&#127908;</span><span class="si-label">Podcast</span></div>
-    <div class="sidebar-item" data-page="offsite"><span class="si-icon">&#9992;&#65039;</span><span class="si-label">Leadership Offsite</span><span class="si-badge gold" id="offsite-sidebar-badge">${Math.ceil((new Date('2026-04-20') - new Date()) / 86400000)}d</span></div>
+    <div class="sidebar-item" data-page="offsite"><span class="si-icon">&#9992;&#65039;</span><span class="si-label">Leadership Offsite</span><span class="si-badge gold" id="offsite-sidebar-badge">${(function(){ var nu = getNextUpcomingOffsite(); if(nu && nu.dates && nu.dates !== 'TBD'){ var cd = nu.dates.replace(/[\u2013\u2014-]\d+/, '').trim(); return Math.ceil((new Date(cd) - new Date()) / 86400000) + 'd'; } return ''; })()}</span></div>
     <div class="sidebar-item" data-page="bd"><span class="si-icon">&#129309;</span><span class="si-label">BD Tracker</span></div>
     <div class="sidebar-item" data-page="marketing-hub"><span class="si-icon">&#128202;</span><span class="si-label">Marketing</span></div>
     <div class="sidebar-item" data-page="project-hackweek"><span class="si-icon">🧪</span><span class="si-label">Hack Week</span><span style="font-size:8px;color:var(--text-muted);margin-left:auto">${hwPct}%</span></div>
@@ -3833,7 +3833,8 @@ async function renderOffsitePage() {
   var nextUp = getNextUpcomingOffsite();
   var sidebarBadge = document.getElementById('offsite-sidebar-badge');
   if (sidebarBadge && nextUp && nextUp.dates && nextUp.dates !== 'TBD') {
-    var dUntil = Math.ceil((new Date('2026-04-20') - new Date()) / 86400000);
+    var cleanDt = nextUp.dates.replace(/[\u2013\u2014-]\d+/, '').trim();
+    var dUntil = Math.ceil((new Date(cleanDt) - new Date()) / 86400000);
     sidebarBadge.textContent = dUntil + 'd';
   }
 
@@ -3886,7 +3887,8 @@ function renderOffsiteGridView(el, ALLDATA) {
           (q.attendees ? '<div style="font-size:9px;color:var(--text-muted);margin-top:4px">' + (Array.isArray(q.attendees) ? q.attendees.length : 0) + ' attendees</div>' : '');
         actionHtml = '<div class="offsite-q-action">View Details &#8594;</div>';
       } else if (q.status === 'Planning') {
-        var dLeft = Math.ceil((new Date('2026-04-20') - new Date()) / 86400000);
+        var cleanQd = q.dates.replace(/[\u2013\u2014-]\d+/, '').trim();
+        var dLeft = Math.ceil((new Date(cleanQd) - new Date()) / 86400000);
         badgeHtml = '<span class="offsite-q-badge tag-yellow">' + dLeft + 'd away</span>';
         infoHtml = '<div class="offsite-q-city">' + (q.city || '') + '</div>' +
           '<div class="offsite-q-dates">' + (q.dates || '') + '</div>';
