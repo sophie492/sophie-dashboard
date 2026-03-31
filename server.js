@@ -844,31 +844,36 @@ app.post('/api/offsite/:id/budget/sheet-sync', async (req, res) => {
     let spreadsheetId = offsite.budgetSheetId;
 
     if (!spreadsheetId) {
-      // Create the budget spreadsheet
-      const spreadsheet = await sheets.spreadsheets.create({
-        requestBody: {
-          properties: { title: offsite.name + ' — Budget Estimates' },
-          sheets: [{ properties: { title: 'Budget' } }]
-        }
-      });
-      spreadsheetId = spreadsheet.data.spreadsheetId;
+      // Step 1: Create the spreadsheet
+      let createResult;
+      try {
+        createResult = await sheets.spreadsheets.create({
+          requestBody: {
+            properties: { title: offsite.name + ' — Budget Estimates' },
+            sheets: [{ properties: { title: 'Budget' } }]
+          }
+        });
+      } catch (e) { return res.status(500).json({ error: 'Sheet create failed: ' + e.message, step: 'create' }); }
+
+      spreadsheetId = createResult.data.spreadsheetId;
       offsite.budgetSheetId = spreadsheetId;
 
-      // Save sheet ID immediately so it persists even if sharing fails
+      // Step 2: Save immediately
       const dir2 = path.dirname(OFFSITE_PATH);
       if (!fs.existsSync(dir2)) fs.mkdirSync(dir2, { recursive: true });
       fs.writeFileSync(OFFSITE_PATH, JSON.stringify({ ...data, lastSynced: new Date().toISOString() }, null, 2));
-      console.log('[Sheets] Created spreadsheet:', spreadsheetId);
+      console.log('[Sheets] Created:', spreadsheetId);
 
-      // Try to make accessible via link (may fail on Workspace domains)
-      try { await drive.permissions.create({ fileId: spreadsheetId, requestBody: { type: 'anyone', role: 'writer' } }); console.log('[Sheets] Shared via link'); } catch(e) { console.log('[Sheets] Link sharing failed (domain restriction):', e.message); }
+      // Step 3: Try sharing (non-blocking)
+      try { await drive.permissions.create({ fileId: spreadsheetId, requestBody: { type: 'anyone', role: 'writer' } }); } catch(e) { console.log('[Sheets] Sharing failed:', e.message); }
     }
 
+    // Step 4: Write data
     const values = [
       ['Category', 'Estimated Cost', 'Notes', 'Source'],
       ...budget.categories.map(c => [
         c.category,
-        c.estimated || 0,
+        c.estimated !== null && c.estimated !== undefined ? c.estimated : 0,
         c.notes || '',
         c.autoEstimated ? 'Auto-computed from research' : 'Manual'
       ]),
@@ -878,43 +883,45 @@ app.post('/api/offsite/:id/budget/sheet-sync', async (req, res) => {
       ['Offsite', offsite.name, '', ''],
       ['Dates', offsite.dates, '', ''],
       ['City', offsite.city, '', ''],
-      ['Attending', offsite.attendingCount || (offsite.attendees || []).filter(a => a.attending !== false).length, '', ''],
-      ['Hotel Rooms', (offsite.logistics.hotel && offsite.logistics.hotel.rooms) || '—', '', ''],
       ['Approver', budget.approver || 'Evelyn', '', ''],
       ['Status', budget.approved ? 'Approved' : 'Pending Approval', '', ''],
       [],
       ['Last synced', new Date().toISOString(), '', '']
     ];
 
-    await sheets.spreadsheets.values.update({
-      spreadsheetId,
-      range: 'Budget!A1',
-      valueInputOption: 'USER_ENTERED',
-      requestBody: { values }
-    });
+    try {
+      await sheets.spreadsheets.values.update({
+        spreadsheetId,
+        range: 'Budget!A1',
+        valueInputOption: 'USER_ENTERED',
+        requestBody: { values }
+      });
+    } catch (e) { return res.status(500).json({ error: 'Sheet write failed: ' + e.message, step: 'write', spreadsheetId }); }
 
-    // Format header and currency
-    await sheets.spreadsheets.batchUpdate({
-      spreadsheetId,
-      requestBody: {
-        requests: [
-          { repeatCell: {
-            range: { sheetId: 0, startRowIndex: 0, endRowIndex: 1 },
-            cell: { userEnteredFormat: { textFormat: { bold: true }, backgroundColor: { red: 0.9, green: 0.9, blue: 0.9 } } },
-            fields: 'userEnteredFormat(textFormat,backgroundColor)'
-          }},
-          { repeatCell: {
-            range: { sheetId: 0, startColumnIndex: 1, endColumnIndex: 2, startRowIndex: 1, endRowIndex: budget.categories.length + 2 },
-            cell: { userEnteredFormat: { numberFormat: { type: 'CURRENCY', pattern: '$#,##0' } } },
-            fields: 'userEnteredFormat.numberFormat'
-          }}
-        ]
-      }
-    });
+    // Step 5: Format (non-blocking)
+    try {
+      await sheets.spreadsheets.batchUpdate({
+        spreadsheetId,
+        requestBody: {
+          requests: [
+            { repeatCell: {
+              range: { sheetId: 0, startRowIndex: 0, endRowIndex: 1 },
+              cell: { userEnteredFormat: { textFormat: { bold: true }, backgroundColor: { red: 0.9, green: 0.9, blue: 0.9 } } },
+              fields: 'userEnteredFormat(textFormat,backgroundColor)'
+            }},
+            { repeatCell: {
+              range: { sheetId: 0, startColumnIndex: 1, endColumnIndex: 2, startRowIndex: 1, endRowIndex: budget.categories.length + 2 },
+              cell: { userEnteredFormat: { numberFormat: { type: 'CURRENCY', pattern: '$#,##0' } } },
+              fields: 'userEnteredFormat.numberFormat'
+            }}
+          ]
+        }
+      });
+    } catch (e) { console.log('[Sheets] Format failed:', e.message); }
 
     fs.writeFileSync(OFFSITE_PATH, JSON.stringify({ ...data, lastSynced: new Date().toISOString() }, null, 2));
     res.json({ ok: true, spreadsheetId, url: 'https://docs.google.com/spreadsheets/d/' + spreadsheetId });
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) { res.status(500).json({ error: e.message, step: 'unknown' }); }
 });
 
 // City research lookup — seeds research arrays when offsite is created
