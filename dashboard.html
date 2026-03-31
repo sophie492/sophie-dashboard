@@ -1875,7 +1875,7 @@ function renderOverview(){
     html += '<div style="margin-top:16px">' + conflictsHtml + '</div>';
   }
   html+=renderMyWorkSection();
-  html+=renderSkillStatusCard();
+  // Skill status moved to System Health page
   html+=renderCompanyPills();
 
   el.innerHTML=html;
@@ -5613,6 +5613,7 @@ function renderSystemPage(){
   const el=document.getElementById('page-system');
   el.innerHTML=`
     <div class="page-header"><div class="page-title">System Health</div></div>
+    ${renderSkillStatusCard()}
     ${DATA.weeklyPulse?`${renderWeeklyPulse()}`:''}
     <div class="grid-2" style="margin-top:16px">${renderTaskHealth()}${renderEventHealth()}</div>
     <div class="grid-2" style="margin-top:16px">${renderDeliveries()}${renderSpam()}</div>
