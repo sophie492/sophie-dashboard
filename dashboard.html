@@ -4545,6 +4545,31 @@ function renderOffsiteDetailView(el, OFFSITE, ALLDATA) {
     }
 
     // Meal planning card
+    var lunchResearch = meals.lunchResearch || [];
+    var lunchResearchHtml = '';
+    if (lunchResearch.length > 0) {
+      lunchResearchHtml = '<div style="margin-top:12px;border-top:1px solid var(--border);padding-top:10px">' +
+        '<div style="font-size:9px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.7px;margin-bottom:8px">DoorDash Options (near WeWork)</div>';
+      lunchResearch.forEach(function(r, ri) {
+        var ddLink = r.doordashUrl ? '<a href="' + r.doordashUrl + '" target="_blank" style="font-size:10px;color:var(--gold);text-decoration:none;margin-left:6px">DoorDash &#8599;</a>' : '';
+        lunchResearchHtml += '<div style="border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:8px">' +
+          '<div style="display:flex;justify-content:space-between;align-items:center">' +
+            '<div style="font-size:12px;font-weight:700;color:var(--text)">' + r.name + ddLink + '</div>' +
+            '<span style="font-size:10px;color:var(--green);font-weight:600">' + (r.priceRange || '') + '</span>' +
+          '</div>' +
+          '<div style="font-size:10px;color:var(--text-muted);margin-top:3px;line-height:1.4">' +
+            r.cuisine + ' &middot; ' + r.location +
+          '</div>' +
+          '<div style="font-size:10px;color:var(--text-dim);margin-top:3px;line-height:1.4">' +
+            '<span style="color:var(--green)">Veggie:</span> ' + (r.vegOptions || '') +
+          '</div>' +
+          (r.highlights ? '<div style="font-size:10px;color:var(--text-dim);margin-top:3px;line-height:1.4">' + r.highlights + '</div>' : '') +
+          '<input class="offsite-budget-input" style="width:100%;margin-top:6px" value="' + (r.notes || '').replace(/"/g, '&quot;') + '" placeholder="Add a note..." onblur="updateLunchNote(' + ri + ',this.value)">' +
+        '</div>';
+      });
+      lunchResearchHtml += '</div>';
+    }
+
     var mealCard = '<div class="card offsite-logistics-card" style="margin-bottom:14px">' +
       '<div class="card-head"><div class="card-title">&#127869; Meal Planning</div></div>' +
       '<div class="card-body" style="padding:12px 14px">' +
@@ -4552,10 +4577,11 @@ function renderOffsiteDetailView(el, OFFSITE, ALLDATA) {
           '<div style="font-size:11px;font-weight:600;color:var(--text);margin-bottom:4px">' + day1Label + ' Lunch:</div>' +
           '<input class="offsite-budget-input" style="width:100%" value="' + ((meals.day1Lunch && meals.day1Lunch.link) || '').replace(/"/g, '&quot;') + '" placeholder="DoorDash group order link..." onblur="updateMealLink(\'day1Lunch\',this.value)">' +
         '</div>' +
-        '<div>' +
+        '<div style="margin-bottom:10px">' +
           '<div style="font-size:11px;font-weight:600;color:var(--text);margin-bottom:4px">' + day2Label + ' Lunch:</div>' +
           '<input class="offsite-budget-input" style="width:100%" value="' + ((meals.day2Lunch && meals.day2Lunch.link) || '').replace(/"/g, '&quot;') + '" placeholder="DoorDash group order link..." onblur="updateMealLink(\'day2Lunch\',this.value)">' +
         '</div>' +
+        lunchResearchHtml +
       '</div>' +
     '</div>';
 
@@ -4964,6 +4990,22 @@ function updateMealLink(day, value) {
   }).then(function(r) { return r.json(); }).then(function(d) {
     if (d.ok) console.log('[Offsite] Meal link updated: ' + day + ' = ' + value);
   }).catch(function(e) { console.error('[Offsite] Meal link update failed:', e); });
+}
+
+function updateLunchNote(idx, value) {
+  if (!_offsiteApiData || !_activeOffsiteId) return;
+  var offsite = getOffsiteById(_activeOffsiteId);
+  if (!offsite || !offsite.logistics || !offsite.logistics.meals) return;
+  var research = offsite.logistics.meals.lunchResearch;
+  if (!research || !research[idx]) return;
+  research[idx].notes = value;
+  fetch('/api/offsite', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer sophie-dashboard-secret-change-me'},
+    body: JSON.stringify(_offsiteApiData)
+  }).then(function(r) { return r.json(); }).then(function(d) {
+    if (d.ok) console.log('[Offsite] Lunch note updated: ' + research[idx].name + ' = ' + value);
+  }).catch(function(e) { console.error('[Offsite] Lunch note update failed:', e); });
 }
 
 function renderHackWeek() {
