@@ -4124,8 +4124,11 @@ function renderOffsiteDetailView(el, OFFSITE, ALLDATA) {
   var daysUntil = 0;
   if (offsiteDates && offsiteDates !== 'TBD') {
     try {
-      var dateStr = offsiteDates.includes('202') ? offsiteDates : OFFSITE.year + ' ' + offsiteDates;
-      daysUntil = Math.ceil((new Date(dateStr) - new Date()) / 86400000);
+      // Parse first date from range like "April 20-21, 2026" or "April 20–21, 2026"
+      var cleanDate = offsiteDates.replace(/[\u2013\u2014-]\d+/, '').trim(); // Remove "-21" or "–21" part
+      if (!cleanDate.match(/\d{4}/)) cleanDate = cleanDate.replace(/,\s*$/, '') + ', ' + OFFSITE.year;
+      daysUntil = Math.ceil((new Date(cleanDate) - new Date()) / 86400000);
+      if (isNaN(daysUntil)) daysUntil = 0;
     } catch(e) {}
   }
 
