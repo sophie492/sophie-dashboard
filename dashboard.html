@@ -4782,6 +4782,7 @@ function updateOffsiteBudget(category, field, value) {
   if (field === 'notes') {
     cat.notes = value;
   } else {
+
     var cleanVal = String(value).replace(/[$,]/g, '');
     var numVal = parseFloat(cleanVal);
     cat[field] = isNaN(numVal) ? null : numVal;
@@ -4800,7 +4801,7 @@ function updateOffsiteBudget(category, field, value) {
     body: JSON.stringify(_offsiteApiData)
   }).then(function(r) { return r.json(); }).then(function(d) {
     if (d.ok) {
-      console.log('[Offsite] Budget updated: ' + category + ' ' + field + ' = ' + cleanVal);
+      console.log('[Offsite] Budget updated: ' + category + ' ' + field + ' = ' + value);
       // Auto-sync to Notion and Sheet
       fetch('/api/offsite/' + _activeOffsiteId + '/budget/notion-sync', {
         method: 'POST', headers: { 'Authorization': 'Bearer sophie-dashboard-secret-change-me' }
