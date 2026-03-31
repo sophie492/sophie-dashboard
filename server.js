@@ -9,22 +9,41 @@ const { Client } = require('@notionhq/client');
 const { google } = require('googleapis');
 
 async function getGoogleSheetsAuth() {
-  if (process.env.GOOGLE_SERVICE_ACCOUNT_KEY) {
+  const rawKey = process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
+  if (!rawKey) { console.log('[Sheets] No GOOGLE_SERVICE_ACCOUNT_KEY env var'); return null; }
+  try {
+    // Railway may escape newlines in the private key — fix them
+    const fixedKey = rawKey.replace(/\\n/g, '\n');
+    const key = JSON.parse(fixedKey);
+    if (!key.client_email || !key.private_key) {
+      console.error('[Sheets] Key missing client_email or private_key');
+      return null;
+    }
+    const auth = new google.auth.JWT(key.client_email, null, key.private_key, [
+      'https://www.googleapis.com/auth/spreadsheets',
+      'https://www.googleapis.com/auth/drive'
+    ]);
+    await auth.authorize();
+    console.log('[Sheets] Service account authorized:', key.client_email);
+    return auth;
+  } catch (e) {
+    console.error('[Sheets] Auth failed:', e.message);
+    // Try with newline fix on private_key directly
     try {
-      const key = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_KEY);
+      const key = JSON.parse(rawKey);
+      key.private_key = key.private_key.replace(/\\n/g, '\n');
       const auth = new google.auth.JWT(key.client_email, null, key.private_key, [
         'https://www.googleapis.com/auth/spreadsheets',
         'https://www.googleapis.com/auth/drive'
       ]);
       await auth.authorize();
-      console.log('[Sheets] Service account authorized:', key.client_email);
+      console.log('[Sheets] Service account authorized (fixed newlines):', key.client_email);
       return auth;
-    } catch (e) {
-      console.error('[Sheets] Auth failed:', e.message);
+    } catch (e2) {
+      console.error('[Sheets] Auth failed even with newline fix:', e2.message);
       return null;
     }
   }
-  return null;
 }
 
 const app = express();
