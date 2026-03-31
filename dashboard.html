@@ -4041,6 +4041,18 @@ function setupOffsite(id) {
   }).catch(function(e) { alert('Error: ' + e.message); });
 }
 
+function updateOffsiteField(id, field, value) {
+  var offsite = getOffsiteById(id);
+  if (offsite) offsite[field] = value;
+  fetch('/api/offsite/' + id + '/field', {
+    method: 'PATCH',
+    headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer sophie-dashboard-secret-change-me'},
+    body: JSON.stringify({ field: field, value: value })
+  }).then(function(r) { return r.json(); }).then(function(d) {
+    if (d.ok) console.log('[Offsite] ' + field + ' updated to: ' + value);
+  }).catch(function(e) { console.error('[Offsite] Field update failed:', e); });
+}
+
 function createNewOffsite() {
   var year = document.getElementById('offsite-add-year').value;
   var quarter = document.getElementById('offsite-add-quarter').value;
@@ -4687,6 +4699,14 @@ function renderOffsiteDetailView(el, OFFSITE, ALLDATA) {
       '<div class="page-kpis">' +
         '<a href="' + (OFFSITE.notionHub || (OFFSITE.notionPageId ? 'https://www.notion.so/' + OFFSITE.notionPageId : '#')) + '" target="_blank" style="font-size:11px;color:var(--gold)">Notion Hub &#8599;</a>' +
       '</div>' +
+    '</div>' +
+
+    // Editable city + dates
+    '<div style="display:flex;gap:12px;margin-bottom:16px;align-items:center">' +
+      '<div style="font-size:11px;color:var(--text-muted);flex-shrink:0">City:</div>' +
+      '<input class="offsite-budget-input" style="width:160px;text-align:left" value="' + (OFFSITE.city || '').replace(/"/g, '&quot;') + '" onblur="updateOffsiteField(\'' + OFFSITE.id + '\',\'city\',this.value)" placeholder="City...">' +
+      '<div style="font-size:11px;color:var(--text-muted);flex-shrink:0;margin-left:8px">Dates:</div>' +
+      '<input class="offsite-budget-input" style="width:200px;text-align:left" value="' + (OFFSITE.dates || '').replace(/"/g, '&quot;') + '" onblur="updateOffsiteField(\'' + OFFSITE.id + '\',\'dates\',this.value)" placeholder="e.g. Jul 15-16, 2026">' +
     '</div>' +
 
     // Summary stat cards
