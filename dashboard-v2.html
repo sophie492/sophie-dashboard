@@ -4502,10 +4502,11 @@ function renderOffsiteDetailView(el, OFFSITE, ALLDATA) {
     // Budget rows
     var budgetRows = budgetCategories.map(function(c) {
       var autoTag = c.autoEstimated && c.estimated === c.autoEstimated ? ' <span style="font-size:9px;color:var(--text-muted);font-style:italic">(auto)</span>' : '';
+      var estDisplay = (c.estimated !== null && c.estimated !== undefined) ? '$' + Number(c.estimated).toLocaleString() : '';
       return '<tr style="border-bottom:1px solid var(--border)">' +
         '<td style="padding:8px 10px;font-weight:600;color:var(--text);font-size:11px">' + c.category + '</td>' +
-        '<td style="padding:8px 10px;text-align:right"><input class="offsite-budget-input" value="' + (c.estimated ? '$' + Number(c.estimated).toLocaleString() : '') + '" onchange="updateOffsiteBudget(\'' + c.category.replace(/'/g, "\\'") + '\',\'estimated\',this.value.replace(/[$,]/g,\'\'))" placeholder="$0"></td>' +
-        '<td style="padding:8px 10px;font-size:10px;color:var(--text-muted);line-height:1.4">' + (c.notes || '') + autoTag + '</td>' +
+        '<td style="padding:8px 10px;text-align:right"><input class="offsite-budget-input" value="' + estDisplay + '" onchange="updateOffsiteBudget(\'' + c.category.replace(/'/g, "\\'") + '\',\'estimated\',this.value.replace(/[$,]/g,\'\'))" placeholder="$0"></td>' +
+        '<td style="padding:8px 10px"><input class="offsite-budget-input" style="width:100%;text-align:left" value="' + (c.notes || '').replace(/"/g, '&quot;') + '" onchange="updateOffsiteBudget(\'' + c.category.replace(/'/g, "\\'") + '\',\'notes\',this.value)" placeholder="Add notes...">' + autoTag + '</td>' +
       '</tr>';
     }).join('');
 
@@ -4782,9 +4783,14 @@ function updateOffsiteBudget(category, field, value) {
   if (!offsite || !offsite.logistics || !offsite.logistics.budget) return;
   var cat = offsite.logistics.budget.categories.find(function(c) { return c.category === category; });
   if (!cat) return;
-  var cleanVal = String(value).replace(/[$,]/g, '');
-  cat[field] = parseFloat(cleanVal) || null;
-  if (field === 'estimated') { cat.autoEstimated = null; }
+  if (field === 'notes') {
+    cat.notes = value;
+  } else {
+    var cleanVal = String(value).replace(/[$,]/g, '');
+    var numVal = parseFloat(cleanVal);
+    cat[field] = isNaN(numVal) ? null : numVal;
+    if (field === 'estimated') { cat.autoEstimated = null; }
+  }
   fetch('/api/offsite', {
     method: 'POST',
     headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer sophie-dashboard-secret-change-me'},
