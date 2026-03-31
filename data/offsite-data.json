@@ -1735,7 +1735,60 @@
             "day2Lunch": {
               "link": "",
               "notes": ""
-            }
+            },
+            "lunchResearch": [
+              {
+                "name": "DIG",
+                "cuisine": "Seasonal bowls — chicken, salmon, steak, roasted veggies",
+                "vegOptions": "Strong — charred broccoli, sweet potato bowls + protein options",
+                "priceRange": "$14-19/person",
+                "doordashUrl": "https://www.doordash.com/store/dig-new-york-76938/",
+                "highlights": "Farm-to-table quality, seasonal menu. Great for groups.",
+                "notes": ""
+              },
+              {
+                "name": "CAVA",
+                "cuisine": "Mediterranean bowls, pitas — grilled chicken, lamb, falafel",
+                "vegOptions": "Excellent — falafel, hummus bowls alongside protein",
+                "priceRange": "$12-16/person",
+                "doordashUrl": "https://www.doordash.com/store/cava-new-york-1752302/",
+                "highlights": "Build-your-own = everyone gets what they want. Best value.",
+                "notes": ""
+              },
+              {
+                "name": "Sweetgreen",
+                "cuisine": "Seasonal salads, warm bowls — chicken, salmon, plant protein",
+                "vegOptions": "Good — plant protein + seasonal veggie alongside chicken/salmon",
+                "priceRange": "$15-18/person",
+                "doordashUrl": "https://www.doordash.com/store/sweetgreen-new-york-30166/",
+                "highlights": "Reliable, everyone knows the menu. Easy group order.",
+                "notes": ""
+              },
+              {
+                "name": "Chopt",
+                "cuisine": "Build-your-own salads — chicken, steak, shrimp, tofu",
+                "vegOptions": "Good — tofu, grain bowls alongside protein options",
+                "priceRange": "$14-18/person",
+                "highlights": "Most customizable. Catering trays available.",
+                "notes": ""
+              },
+              {
+                "name": "Poke Bowl NYC",
+                "cuisine": "Build-your-own poke — tuna, salmon, shrimp, tofu, chicken",
+                "vegOptions": "Good — tofu poke, veggie bowls alongside raw fish and chicken",
+                "priceRange": "$15-20/person",
+                "highlights": "Closest to WeWork (286 Madison Ave). Fresh, light, good variety.",
+                "notes": ""
+              },
+              {
+                "name": "Carrot Express",
+                "cuisine": "Power bowls, wraps, salads — chicken, steak, salmon, veggie",
+                "vegOptions": "Strong — acai bowls, veggie wraps, quinoa bowls alongside protein",
+                "priceRange": "$14-20/person",
+                "highlights": "Fitness-focused but not boring. Good protein AND veggie variety.",
+                "notes": ""
+              }
+            ]
           },
           "budget": {
             "estimated": 5655,
@@ -1987,17 +2040,19 @@
               },
               {
                 "category": "Lunch / Snacks",
-                "estimated": null,
+                "estimated": 450,
                 "committed": 0,
                 "actual": 0,
-                "notes": ""
+                "notes": "",
+                "autoEstimated": 450
               },
               {
                 "category": "Misc",
-                "estimated": null,
+                "estimated": 500,
                 "committed": 0,
                 "actual": 0,
-                "notes": ""
+                "notes": "",
+                "autoEstimated": 500
               }
             ]
           },
@@ -2117,17 +2172,19 @@
               },
               {
                 "category": "Lunch / Snacks",
-                "estimated": null,
+                "estimated": 450,
                 "committed": 0,
                 "actual": 0,
-                "notes": ""
+                "notes": "",
+                "autoEstimated": 450
               },
               {
                 "category": "Misc",
-                "estimated": null,
+                "estimated": 500,
                 "committed": 0,
                 "actual": 0,
-                "notes": ""
+                "notes": "",
+                "autoEstimated": 500
               }
             ]
           },
@@ -2153,5 +2210,5 @@
       }
     ]
   },
-  "lastSynced": "2026-03-30T16:01:09.834Z"
+  "lastSynced": "2026-03-31T05:10:48.568Z"
 }
