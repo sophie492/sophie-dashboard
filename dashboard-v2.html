@@ -4673,9 +4673,9 @@ function renderOffsiteDetailView(el, OFFSITE, ALLDATA) {
 
     // Summary stat cards
     '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px">' +
-      '<div class="card" style="padding:10px 14px;border-left:3px solid var(--gold)">' +
-        '<div style="font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);font-weight:700">Days Until</div>' +
-        '<div style="font-size:18px;font-weight:800;color:var(--gold);margin-top:2px">' + daysUntil + ' <span style="font-size:11px;font-weight:500;color:var(--text-dim)">days to offsite</span></div>' +
+      '<div class="card" style="padding:10px 14px;border-left:3px solid ' + (daysUntil < 0 ? 'var(--text-muted)' : daysUntil <= 7 ? 'var(--red)' : 'var(--gold)') + '">' +
+        '<div style="font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);font-weight:700">' + (daysUntil < 0 ? 'Completed' : 'Days Until') + '</div>' +
+        '<div style="font-size:18px;font-weight:800;color:' + (daysUntil < 0 ? 'var(--text-muted)' : daysUntil <= 7 ? 'var(--red)' : 'var(--gold)') + ';margin-top:2px">' + (daysUntil < 0 ? Math.abs(daysUntil) + ' <span style="font-size:11px;font-weight:500;color:var(--text-dim)">days ago</span>' : daysUntil === 0 ? 'Today!' : daysUntil + ' <span style="font-size:11px;font-weight:500;color:var(--text-dim)">days to offsite</span>') + '</div>' +
       '</div>' +
       '<div class="card" style="padding:10px 14px;border-left:3px solid var(--green)">' +
         '<div style="font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);font-weight:700">Tasks Done</div>' +
