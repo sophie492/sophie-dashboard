@@ -106,7 +106,7 @@ if (GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET) {
 
 // ââ Auth routes ââ
 app.get('/auth/google', passport.authenticate('google', {
-  scope: ['profile', 'email', 'https://www.googleapis.com/auth/calendar.readonly'],
+  scope: ['profile', 'email', 'https://www.googleapis.com/auth/calendar.readonly', 'https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive.file'],
   hd: ALLOWED_DOMAIN,
   accessType: 'offline',
   prompt: 'consent'
@@ -825,8 +825,22 @@ app.post('/api/offsite/:id/budget/sheet-sync', async (req, res) => {
     return res.status(401).json({ error: 'Invalid API key' });
   }
   try {
-    const auth = await getGoogleSheetsAuth();
-    if (!auth) return res.status(400).json({ error: 'Google Sheets not configured or auth failed — set GOOGLE_SERVICE_ACCOUNT_KEY env var' });
+    // Try OAuth refresh token first (Sophie's permissions), fall back to service account
+    let auth = null;
+    if (fs.existsSync(TOKEN_PATH)) {
+      try {
+        const refreshToken = fs.readFileSync(TOKEN_PATH, 'utf8').trim();
+        if (refreshToken && GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET) {
+          const oauth2 = new google.auth.OAuth2(GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET);
+          oauth2.setCredentials({ refresh_token: refreshToken });
+          await oauth2.getAccessToken();
+          auth = oauth2;
+          console.log('[Sheets] Using OAuth token');
+        }
+      } catch (e) { console.log('[Sheets] OAuth failed:', e.message); }
+    }
+    if (!auth) auth = await getGoogleSheetsAuth();
+    if (!auth) return res.status(400).json({ error: 'No auth available — login to dashboard or set GOOGLE_SERVICE_ACCOUNT_KEY' });
 
     const data = loadOffsiteData();
     let offsite = null;
