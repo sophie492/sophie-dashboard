@@ -4795,13 +4795,14 @@ function updateOffsiteBudget(category, field, value) {
       if (totalCell) { totalCell.textContent = '$' + newTotal.toLocaleString(); totalCell.style.transition = 'color .3s'; totalCell.style.color = 'var(--green)'; setTimeout(function() { totalCell.style.color = 'var(--text)'; }, 1500); }
     }
   }
-  fetch('/api/offsite', {
-    method: 'POST',
+  // Use PATCH to update only the budget (not full POST which can overwrite other data)
+  fetch('/api/offsite/' + _activeOffsiteId + '/logistics', {
+    method: 'PATCH',
     headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer sophie-dashboard-secret-change-me'},
-    body: JSON.stringify(_offsiteApiData)
+    body: JSON.stringify({ budget: offsite.logistics.budget })
   }).then(function(r) { return r.json(); }).then(function(d) {
     if (d.ok) {
-      console.log('[Offsite] Budget updated: ' + category + ' ' + field + ' = ' + value);
+      console.log('[Offsite] Budget saved: ' + category + ' ' + field + ' = ' + value);
       // Auto-sync to Notion and Sheet
       fetch('/api/offsite/' + _activeOffsiteId + '/budget/notion-sync', {
         method: 'POST', headers: { 'Authorization': 'Bearer sophie-dashboard-secret-change-me' }
@@ -4810,7 +4811,7 @@ function updateOffsiteBudget(category, field, value) {
         method: 'POST', headers: { 'Authorization': 'Bearer sophie-dashboard-secret-change-me' }
       }).catch(function() {});
     }
-  }).catch(function(e) { console.error('[Offsite] Budget update failed:', e); });
+  }).catch(function(e) { console.error('[Offsite] Budget save failed:', e); });
 }
 
 function syncBudgetToNotion() {
