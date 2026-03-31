@@ -4526,7 +4526,7 @@ function renderOffsiteDetailView(el, OFFSITE, ALLDATA) {
           '<tbody>' + budgetRows +
             '<tr style="border-top:2px solid var(--border);font-weight:700">' +
               '<td style="padding:8px 10px;color:var(--text)">TOTAL</td>' +
-              '<td style="padding:8px 10px;text-align:right;color:var(--text);font-size:13px">$' + totalEst.toLocaleString() + '</td>' +
+              '<td id="budget-total-cell" style="padding:8px 10px;text-align:right;color:var(--text);font-size:13px">$' + totalEst.toLocaleString() + '</td>' +
               '<td style="padding:8px 10px"></td>' +
             '</tr>' +
           '</tbody>' +
@@ -4785,7 +4785,14 @@ function updateOffsiteBudget(category, field, value) {
     var cleanVal = String(value).replace(/[$,]/g, '');
     var numVal = parseFloat(cleanVal);
     cat[field] = isNaN(numVal) ? null : numVal;
-    if (field === 'estimated') { cat.autoEstimated = null; }
+    if (field === 'estimated') {
+      cat.autoEstimated = null;
+      // Recalculate and update total in-place
+      var newTotal = offsite.logistics.budget.categories.reduce(function(s,c) { return s + (parseFloat(c.estimated) || 0); }, 0);
+      offsite.logistics.budget.estimated = newTotal;
+      var totalCell = document.getElementById('budget-total-cell');
+      if (totalCell) { totalCell.textContent = '$' + newTotal.toLocaleString(); totalCell.style.transition = 'color .3s'; totalCell.style.color = 'var(--green)'; setTimeout(function() { totalCell.style.color = 'var(--text)'; }, 1500); }
+    }
   }
   fetch('/api/offsite', {
     method: 'POST',
