@@ -8,15 +8,21 @@ const fs = require('fs');
 const { Client } = require('@notionhq/client');
 const { google } = require('googleapis');
 
-function getGoogleSheetsAuth() {
+async function getGoogleSheetsAuth() {
   if (process.env.GOOGLE_SERVICE_ACCOUNT_KEY) {
     try {
       const key = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_KEY);
-      return new google.auth.JWT(key.client_email, null, key.private_key, [
+      const auth = new google.auth.JWT(key.client_email, null, key.private_key, [
         'https://www.googleapis.com/auth/spreadsheets',
-        'https://www.googleapis.com/auth/drive.file'
+        'https://www.googleapis.com/auth/drive'
       ]);
-    } catch (e) { return null; }
+      await auth.authorize();
+      console.log('[Sheets] Service account authorized:', key.client_email);
+      return auth;
+    } catch (e) {
+      console.error('[Sheets] Auth failed:', e.message);
+      return null;
+    }
   }
   return null;
 }
@@ -785,8 +791,8 @@ app.post('/api/offsite/:id/budget/sheet-sync', async (req, res) => {
     return res.status(401).json({ error: 'Invalid API key' });
   }
   try {
-    const auth = getGoogleSheetsAuth();
-    if (!auth) return res.status(400).json({ error: 'Google Sheets not configured — set GOOGLE_SERVICE_ACCOUNT_KEY env var' });
+    const auth = await getGoogleSheetsAuth();
+    if (!auth) return res.status(400).json({ error: 'Google Sheets not configured or auth failed — set GOOGLE_SERVICE_ACCOUNT_KEY env var' });
 
     const data = loadOffsiteData();
     let offsite = null;
