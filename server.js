@@ -1670,6 +1670,55 @@ app.patch('/api/hackweek/:id/logistics', (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// ── Hack Week Field Update ──
+app.patch('/api/hackweek/:id/field', (req, res) => {
+  const authHeader = req.headers.authorization || '';
+  const token = authHeader.replace('Bearer ', '');
+  if (token !== (process.env.DASHBOARD_API_KEY || 'sophie-dashboard-secret-change-me')) {
+    return res.status(401).json({ error: 'Invalid API key' });
+  }
+  try {
+    const data = loadHackweekData();
+    const hw = findHackweekById(data, req.params.id);
+    if (!hw) return res.status(404).json({ error: 'Hack week not found' });
+    const allowed = ['name','targetDate','slackChannel','signupSheet','sheetTabMatch','status'];
+    Object.keys(req.body).forEach(key => {
+      if (allowed.includes(key)) hw[key] = req.body[key];
+    });
+    fs.writeFileSync(HACKWEEK_PATH, JSON.stringify(data, null, 2));
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ── Hack Week Budget Category ──
+app.patch('/api/hackweek/:id/budget-category', (req, res) => {
+  const authHeader = req.headers.authorization || '';
+  const token = authHeader.replace('Bearer ', '');
+  if (token !== (process.env.DASHBOARD_API_KEY || 'sophie-dashboard-secret-change-me')) {
+    return res.status(401).json({ error: 'Invalid API key' });
+  }
+  try {
+    const { category, field, value } = req.body;
+    if (!category || !field) return res.status(400).json({ error: 'category and field required' });
+    const data = loadHackweekData();
+    const hw = findHackweekById(data, req.params.id);
+    if (!hw) return res.status(404).json({ error: 'Hack week not found' });
+    if (!hw.logistics) hw.logistics = {};
+    if (!hw.logistics.budget) hw.logistics.budget = {};
+    hw.logistics.budget[category] = hw.logistics.budget[category] || 0;
+    if (field === 'estimated') {
+      hw.logistics.budget[category] = parseFloat(value) || 0;
+    } else if (field === 'notes') {
+      hw.logistics.budget[category + 'Note'] = value;
+    }
+    // Recompute total
+    var b = hw.logistics.budget;
+    b.total = (b.prizes||0) + (b.travel||0) + (b.food||0) + (b.social||0);
+    fs.writeFileSync(HACKWEEK_PATH, JSON.stringify(data, null, 2));
+    res.json({ ok: true, budget: hw.logistics.budget });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 // ── Hack Week Winner Selection ──
 app.patch('/api/hackweek/:id/winner', (req, res) => {
   const authHeader = req.headers.authorization || '';
@@ -1742,6 +1791,30 @@ app.patch('/api/hackweek/:id/attendee', (req, res) => {
       hw.attendees.push(attendee);
     }
     attendee[field] = value;
+
+    // Auto-compute office assignment and travel needs
+    if (field === 'location' || field === 'attending') {
+      const loc = (attendee.location || '').toLowerCase();
+      const blrAliases = ['bangalore','bengaluru','blr','india','mumbai','hyderabad','pune','chennai','delhi','noida','gurgaon','gurugram'];
+      const sfAliases = ['san francisco','sf','soma','south of market'];
+      const isBLR = blrAliases.some(a => loc.includes(a));
+      const isSF = sfAliases.some(a => loc.includes(a));
+      attendee.office = isBLR ? 'BLR' : 'SF';
+      attendee.needsFlight = !isBLR && !isSF;
+      attendee.needsHotel = !isBLR && !isSF;
+      if (isBLR || isSF) {
+        attendee.flightBooked = true;
+        attendee.hotelConfirmed = true;
+        attendee.travelNotes = (isBLR ? 'BLR' : 'SF') + ' local — no travel needed';
+      } else if (loc) {
+        // Compute travel route
+        const airports = {'denver':'DEN','new york':'JFK','nyc':'JFK','salt lake':'SLC','slc':'SLC','los angeles':'LAX','la':'LAX','seattle':'SEA','chicago':'ORD','boston':'BOS','austin':'AUS'};
+        var homeAirport = '';
+        Object.keys(airports).forEach(function(k) { if (loc.includes(k)) homeAirport = airports[k]; });
+        if (homeAirport) attendee.travelNotes = homeAirport + ' → SFO';
+        else attendee.travelNotes = loc + ' → SFO';
+      }
+    }
 
     fs.writeFileSync(HACKWEEK_PATH, JSON.stringify(data, null, 2));
     res.json({ ok: true, attendee: attendee });

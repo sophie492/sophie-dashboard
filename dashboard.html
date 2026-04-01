@@ -4990,7 +4990,13 @@ function renderHackWeek() {
 
   // Schedule HTML (5-day cards)
   var dayNames = ['day1','day2','day3','day4','day5'];
-  var dayLabels = ['Day 1 (Mon)','Day 2 (Tue)','Day 3 (Wed)','Day 4 (Thu)','Day 5 (Fri)'];
+  var dayLabels = dayNames.map(function(d,i) {
+    var dayDate = new Date(hwApi.targetDate || '2026-06-08');
+    dayDate.setDate(dayDate.getDate() + i);
+    var dayName = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][dayDate.getDay()];
+    var monthDay = dayDate.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+    return 'Day ' + (i+1) + ' (' + dayName + ' ' + monthDay + ')';
+  });
   var scheduleHtml = dayNames.map(function(d,i) {
     var day = hwSchedule[d] || {theme:'TBD',events:[]};
     var dayDate = new Date(hwApi.targetDate || '2026-06-08');
@@ -5065,35 +5071,46 @@ function renderHackWeek() {
 
   function renderTravelTracker() {
     if (hwAttendees.length === 0) return '<div class="card" style="margin-bottom:12px"><div class="card-head"><span class="card-title">&#9992;&#65039; Travel Tracker</span></div><div class="card-body" style="padding:20px;text-align:center;color:var(--text-muted)"><div style="font-size:20px;margin-bottom:6px">&#9992;&#65039;</div><div>No attendees added yet.</div><div style="font-size:11px;margin-top:4px">Add attendees via API: PATCH /api/hackweek/:id/attendee</div></div></div>';
-    var attending = hwAttendees.filter(function(a) { return a.attending !== false; });
-    var travelers = attending.filter(function(a) { return a.needsFlight !== false; });
+    var sfTeam = hwAttendees.filter(function(a) { return a.attending !== false && a.office === 'SF'; });
+    var blrTeam = hwAttendees.filter(function(a) { return a.attending !== false && a.office === 'BLR'; });
+    var travelers = hwAttendees.filter(function(a) { return a.attending !== false && a.needsFlight; });
     var confirmed = travelers.filter(function(a) { return a.hotelConfirmed && a.flightBooked; }).length;
-    var locals = attending.filter(function(a) { return a.needsFlight === false; }).length;
+    var notAttending = hwAttendees.filter(function(a) { return a.attending === false; }).length;
 
     var rows = hwAttendees.map(function(a) {
       var isLocal = a.needsFlight === false;
       var rowOpacity = a.attending === false ? 'opacity:0.4;' : '';
       function toggle(field) {
-        if (isLocal && (field === 'hotelConfirmed' || field === 'flightBooked')) {
+        if (isLocal && (field === 'hotelConfirmed' || field === 'flightBooked' || field === 'travelCardIssued')) {
           return '<span style="font-size:10px;color:var(--text-muted);font-style:italic">N/A</span>';
         }
         var val = a[field];
         return '<button onclick="toggleHWAttendee(\'' + a.name.replace(/'/g, "\\'") + '\',\'' + field + '\')" style="background:' + (val ? 'var(--green-soft)' : 'var(--surface)') + ';color:' + (val ? 'var(--green)' : 'var(--text-muted)') + ';border:1px solid ' + (val ? 'var(--green)' : 'var(--border)') + ';padding:2px 8px;border-radius:4px;font-size:10px;cursor:pointer;font-family:inherit">' + (val ? '\u2713' : '\u2014') + '</button>';
       }
+      var attendingToggle = '<button onclick="toggleHWAttendee(\'' + a.name.replace(/'/g, "\\'") + '\',\'attending\')" style="background:' + (a.attending !== false ? 'var(--green-soft)' : 'var(--red-soft)') + ';color:' + (a.attending !== false ? 'var(--green)' : 'var(--red)') + ';border:1px solid ' + (a.attending !== false ? 'var(--green)' : 'var(--red)') + ';padding:2px 8px;border-radius:4px;font-size:10px;cursor:pointer;font-family:inherit">' + (a.attending !== false ? '\u2713' : '\u2717') + '</button>';
+      var officeTag = a.office ? '<span style="font-size:8px;padding:1px 4px;border-radius:3px;background:' + (a.office === 'BLR' ? 'var(--blue-soft)' : 'var(--green-soft)') + ';color:' + (a.office === 'BLR' ? 'var(--blue)' : 'var(--green)') + ';font-weight:700">' + a.office + '</span>' : '';
       return '<tr style="border-bottom:1px solid var(--border);font-size:11px;' + rowOpacity + '">' +
-        '<td style="padding:6px 8px;font-weight:600;color:var(--text)">' + a.name + (a.location ? '<div style="font-size:9px;color:var(--text-muted)">' + a.location + '</div>' : '') + '</td>' +
+        '<td style="padding:6px 8px;text-align:center">' + attendingToggle + '</td>' +
+        '<td style="padding:6px 8px;font-weight:600;color:var(--text)">' + a.name + (a.title ? '<div style="font-size:9px;color:var(--text-dim)">' + a.title + '</div>' : '') + '</td>' +
+        '<td style="padding:6px 8px;text-align:center">' + officeTag + '</td>' +
         '<td style="padding:6px 8px;text-align:center">' + toggle('flightBooked') + '</td>' +
         '<td style="padding:6px 8px;text-align:center">' + toggle('hotelConfirmed') + '</td>' +
+        '<td style="padding:6px 8px;text-align:center">' + toggle('travelCardIssued') + '</td>' +
+        '<td style="padding:6px 8px;color:var(--text-muted);font-size:9px">' + (a.travelNotes || '') + '</td>' +
       '</tr>';
     }).join('');
 
     return '<div class="card" style="margin-bottom:12px">' +
-      '<div class="card-head"><span class="card-title">&#9992;&#65039; Travel Tracker</span><span style="font-size:10px;color:var(--text-muted)">' + confirmed + '/' + travelers.length + ' confirmed' + (locals > 0 ? ' (' + locals + ' local)' : '') + '</span></div>' +
+      '<div class="card-head"><span class="card-title">&#9992;&#65039; Travel Tracker</span><span style="font-size:10px;color:var(--text-muted)">' + sfTeam.length + ' SF &middot; ' + blrTeam.length + ' BLR &middot; ' + travelers.length + ' travelers (' + confirmed + ' confirmed)' + (notAttending > 0 ? ' &middot; ' + notAttending + ' not attending' : '') + '</span></div>' +
       '<div class="card-body" style="padding:0;overflow-x:auto">' +
         '<table style="width:100%;border-collapse:collapse"><thead><tr style="border-bottom:2px solid var(--border);font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px">' +
+        '<th style="padding:8px;text-align:center">Att.</th>' +
         '<th style="padding:8px;text-align:left">Name</th>' +
+        '<th style="padding:8px;text-align:center">Office</th>' +
         '<th style="padding:8px;text-align:center">Flight</th>' +
         '<th style="padding:8px;text-align:center">Hotel</th>' +
+        '<th style="padding:8px;text-align:center">Ramp</th>' +
+        '<th style="padding:8px;text-align:left">Route</th>' +
         '</tr></thead><tbody>' + rows + '</tbody></table>' +
       '</div></div>';
   }
@@ -5134,8 +5151,8 @@ function renderHackWeek() {
       </div>
       <div class="card-body" style="padding:10px 14px">
         <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:12px">
-          <div style="font-size:11px;color:var(--text-muted)"><strong style="color:var(--text)">Dates:</strong> ${hwApi.targetDate ? new Date(hwApi.targetDate + 'T12:00:00').toLocaleDateString('en-US', {month:'long', day:'numeric', year:'numeric'}) : 'TBD'}</div>
-          <div style="font-size:11px;color:var(--text-muted)"><strong style="color:var(--text)">Slack:</strong> ${hwApi.slackChannel || ''}</div>
+          <div style="font-size:11px;color:var(--text-muted)"><strong style="color:var(--text)">Dates:</strong> ${!isComplete ? '<input type="date" value="' + (hwApi.targetDate || '') + '" onchange="updateHWField(\'targetDate\',this.value)" style="background:none;border:none;border-bottom:1px solid var(--border);color:var(--text);font-size:11px;font-family:inherit;padding:0 2px;cursor:pointer" />' : (hwApi.targetDate ? new Date(hwApi.targetDate + 'T12:00:00').toLocaleDateString('en-US', {month:'long', day:'numeric', year:'numeric'}) : 'TBD')}</div>
+          <div style="font-size:11px;color:var(--text-muted)"><strong style="color:var(--text)">Slack:</strong> ${!isComplete ? '<input type="text" value="' + (hwApi.slackChannel || '') + '" onblur="updateHWField(\'slackChannel\',this.value)" style="background:none;border:none;border-bottom:1px solid var(--border);color:var(--text);font-size:11px;font-family:inherit;padding:0 2px;width:140px" />' : (hwApi.slackChannel || '')}</div>
           <div style="font-size:11px;color:var(--text-muted)"><strong style="color:var(--text)">Teams:</strong> ${hwTeams.length} signed up</div>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
@@ -5197,10 +5214,21 @@ function renderHackWeek() {
       <div class="card" style="padding:14px;border-left:3px solid var(--gold)">
         <div style="font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);font-weight:700">Budget</div>
         <div style="font-size:18px;font-weight:800;color:var(--gold);margin-top:4px">$${budgetTotal.toLocaleString()}</div>
-        <div style="font-size:11px;color:var(--text-dim);margin-top:4px">
-          Prizes: $${(hwBudget.prizes||0).toLocaleString()} | Travel: $${(hwBudget.travel||hwBudget.autoTravel||0).toLocaleString()}${hwBudget.autoTravel && !hwBudget.travel ? ' <span style="font-size:9px;color:var(--yellow)">(est)</span>' : ''} | Food: $${(hwBudget.food||hwBudget.autoFood||0).toLocaleString()}${hwBudget.autoFood && !hwBudget.food ? ' <span style="font-size:9px;color:var(--yellow)">(est)</span>' : ''} | Social: $${(hwBudget.social||hwBudget.autoSocial||0).toLocaleString()}${hwBudget.autoSocial && !hwBudget.social ? ' <span style="font-size:9px;color:var(--yellow)">(est)</span>' : ''}
-        </div>
-        <div style="font-size:10px;margin-top:4px;color:${hwBudget.approved?'var(--green)':'var(--yellow)'}">
+        <table style="width:100%;border-collapse:collapse;margin-top:8px;font-size:10px">
+          ${['prizes','travel','food','social'].map(function(cat) {
+            var val = hwBudget[cat] || 0;
+            var autoVal = hwBudget['auto' + cat.charAt(0).toUpperCase() + cat.slice(1)] || 0;
+            var isAuto = !val && autoVal > 0;
+            var displayVal = val || autoVal || 0;
+            var note = hwBudget[cat + 'Note'] || '';
+            return '<tr style="border-bottom:1px solid var(--border)">' +
+              '<td style="padding:3px 0;color:var(--text-muted);text-transform:capitalize">' + cat + (isAuto ? ' <span style="color:var(--yellow)">(est)</span>' : '') + '</td>' +
+              '<td style="padding:3px 4px;text-align:right">' + (!isComplete ? '<input type="number" value="' + (val || '') + '" placeholder="' + (autoVal || 0) + '" onblur="updateHWBudget(\'' + cat + '\',\'estimated\',this.value)" style="width:70px;background:var(--surface);border:1px solid var(--border);border-radius:3px;color:var(--text);font-size:10px;padding:2px 4px;text-align:right;font-family:inherit" />' : '$' + displayVal.toLocaleString()) + '</td>' +
+              '<td style="padding:3px 4px">' + (!isComplete ? '<input type="text" value="' + note + '" placeholder="Notes" onblur="updateHWBudget(\'' + cat + '\',\'notes\',this.value)" style="width:100%;background:none;border:none;border-bottom:1px solid var(--border);color:var(--text-dim);font-size:9px;padding:1px 2px;font-family:inherit" />' : (note || '')) + '</td>' +
+            '</tr>';
+          }).join('')}
+        </table>
+        <div style="font-size:10px;margin-top:6px;color:${hwBudget.approved?'var(--green)':'var(--yellow)'}">
           ${hwBudget.approved ? '&#10003; Approved' : '&#9679; Pending approval from ' + (hwBudget.approver || 'Finance')}
         </div>
       </div>
@@ -5677,6 +5705,36 @@ function searchHWVenues() {
   // Also open happy hour search
   var query2 = encodeURIComponent('happy hour bar near SoMa San Francisco group event 20-30 people');
   window.open('https://www.google.com/search?q=' + query2, '_blank');
+}
+
+function updateHWField(field, value) {
+  var hwSel = getSelectedHackweek();
+  if (!hwSel.id) return;
+  hwSel[field] = value;
+  var body = {};
+  body[field] = value;
+  fetch('/api/hackweek/' + hwSel.id + '/field', {
+    method: 'PATCH',
+    headers: {'Content-Type':'application/json','Authorization':'Bearer sophie-dashboard-secret-change-me'},
+    body: JSON.stringify(body)
+  }).then(function() { renderProjectsPage(); })
+  .catch(function(e) { console.warn('[HW Field] Update failed:', e.message); });
+}
+
+function updateHWBudget(category, field, value) {
+  var hwSel = getSelectedHackweek();
+  if (!hwSel.id) return;
+  fetch('/api/hackweek/' + hwSel.id + '/budget-category', {
+    method: 'PATCH',
+    headers: {'Content-Type':'application/json','Authorization':'Bearer sophie-dashboard-secret-change-me'},
+    body: JSON.stringify({ category: category, field: field, value: value })
+  }).then(function(r) { return r.json(); }).then(function(d) {
+    if (d.ok && d.budget) {
+      if (!hwSel.logistics) hwSel.logistics = {};
+      hwSel.logistics.budget = d.budget;
+      renderProjectsPage();
+    }
+  }).catch(function(e) { console.warn('[HW Budget] Update failed:', e.message); });
 }
 
 function updateHWTeamStatus(teamName, status) {
