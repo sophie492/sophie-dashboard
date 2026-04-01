@@ -421,7 +421,44 @@
               "done": false
             }
           ]
-        }
+        },
+        "commsTemplates": [
+          {
+            "id": "kickoff",
+            "name": "Kick-off Announcement",
+            "phase": "pre",
+            "channel": "#dev + #general",
+            "template": ":rocket: *Hack Week is happening!*\nHack Week is officially on the calendar :tada:\nA full week to build, demo, and ship something bold.\n\n*Dates:* {{dates}}\n*Slack:* {{slackChannel}}\n\n*Structure (5 days total):*\n:hammer_and_wrench: *Build:* 2 days\n:microphone: *Demo:* 1 day\n:ship: *Optimize & Ship:* 2 days\n\n*Prize categories:*\n:robot_face: *Best Use of AI*\n:boom: *Highest Customer Impact*\n:toolbox: *Best Internal Tool*\n\n:busts_in_silhouette: *How it works:*\n• Teams only (no solo projects)\n• PMs + Designers highly encouraged\n• Slack-first communication in {{slackChannel}}\n\nSign up here: {{signupLink}}\nMore details coming soon — start thinking about what you want to build :eyes:"
+          },
+          {
+            "id": "reminder",
+            "name": "Team Formation Reminder",
+            "phase": "pre",
+            "channel": "#dev + #general",
+            "template": ":wave: *Hack Week team formation reminder*\n\nOnly *{{daysUntilDeadline}} days left* to form your team and submit your idea!\n\n:clipboard: Sign up: {{signupLink}}\n:busts_in_silhouette: Teams of 2-4, cross-functional required\n:bulb: Ideas can be anything — dev tools, customer features, experiments\n\nDon't have a team yet? Drop a message in {{slackChannel}} — plenty of people looking for teammates."
+          },
+          {
+            "id": "opening",
+            "name": "Opening Day Message",
+            "phase": "during",
+            "channel": "{{slackChannel}}",
+            "template": ":alert: Welcome to {{name}}! A couple of reminders as we get started:\n\n1. If you end up working in the office past 6pm this week, you can order and expense dinner on Fermat\n2. Standups & demos on the calendar are all canceled for this week — no need to join them!\n\nHack away! :frog-wow-scroll:"
+          },
+          {
+            "id": "shipping",
+            "name": "Shipping Guidance (Day 4)",
+            "phase": "during",
+            "channel": "{{slackChannel}}",
+            "template": "Hey everyone! As we wrap up the building phase, here's guidance for the rest of the week:\n\n1. *Productionize* — get architecture reviews, code reviews, and ship what you've built. If too complex, ship a smaller MVP.\n2. *Support* — spare moments to help peers with PR reviews and feedback\n3. *Record a Loom!* Once done, record a Loom of it working in production. Add the link to the {{signupLink|spreadsheet}}\n\nDeadline for Looms: {{loomDeadline}}"
+          },
+          {
+            "id": "recap",
+            "name": "Recap & Winners",
+            "phase": "post",
+            "channel": "#general",
+            "template": ":trophy: *{{name}} Results!*\n\nWhat an incredible week. Here are your winners:\n\n:robot_face: *Best Use of AI:* {{winnerAI}}\n:boom: *Highest Customer Impact:* {{winnerImpact}}\n:toolbox: *Best Internal Tool:* {{winnerTool}}\n\nAll teams shipped real products within a week — not prototypes. Huge props to everyone.\n\nFull demos and Loom links: {{signupLink}}\n\nCongrats to all teams! :tada:"
+          }
+        ]
       }
     ],
     "2027": [

@@ -5171,6 +5171,33 @@ function renderHackWeek() {
   <!-- TAB: Comms -->
   <div class="hw-hub-tab-pane" data-hw-pane="hw-comms">
     ${renderTabTasks('comms', 'Communications Tasks')}
+    ${(function() {
+      var templates = hwApi.commsTemplates || [];
+      if (templates.length === 0) return '';
+      var phases = {pre:'Pre-Event',during:'During',post:'Post-Event'};
+      var html = '<div class="card" style="margin-bottom:12px"><div class="card-head"><span class="card-title">Message Templates</span><span style="font-size:10px;color:var(--text-muted)">' + templates.length + ' templates</span></div><div class="card-body" style="padding:10px 14px">';
+      ['pre','during','post'].forEach(function(phase) {
+        var phaseTemplates = templates.filter(function(t) { return t.phase === phase; });
+        if (phaseTemplates.length === 0) return;
+        html += '<div style="font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);font-weight:700;margin:10px 0 6px 0">' + phases[phase] + '</div>';
+        phaseTemplates.forEach(function(tmpl) {
+          var rendered = tmpl.template
+            .replace(/\{\{dates\}\}/g, hwApi.targetDate ? new Date(hwApi.targetDate + 'T12:00:00').toLocaleDateString('en-US', {month:'long', day:'numeric', year:'numeric'}) : 'TBD')
+            .replace(/\{\{slackChannel\}\}/g, hwApi.slackChannel || '#hack-week')
+            .replace(/\{\{name\}\}/g, hwApi.name || 'Hack Week')
+            .replace(/\{\{signupLink\}\}/g, hwApi.signupSheet || '[signup link]')
+            .replace(/\{\{signupLink\|spreadsheet\}\}/g, hwApi.signupSheet || '[spreadsheet]')
+            .replace(/\{\{daysUntilDeadline\}\}/g, Math.max(0, daysUntil - 7))
+            .replace(/\{\{loomDeadline\}\}/g, 'Tuesday 7am PST')
+            .replace(/\{\{winnerAI\}\}/g, '[TBD]')
+            .replace(/\{\{winnerImpact\}\}/g, '[TBD]')
+            .replace(/\{\{winnerTool\}\}/g, '[TBD]');
+          html += '<details style="margin-bottom:6px;border:1px solid var(--border);border-radius:6px;overflow:hidden"><summary style="padding:8px 12px;cursor:pointer;font-size:12px;font-weight:600;color:var(--text);background:var(--surface);display:flex;align-items:center;gap:8px"><span style="flex:1">' + tmpl.name + '</span><span style="font-size:9px;color:var(--text-muted)">' + (tmpl.channel||'') + '</span></summary><div style="padding:10px 12px;font-size:11px;color:var(--text-dim);white-space:pre-wrap;line-height:1.6;background:var(--bg)">' + rendered.replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>') + '</div><div style="padding:6px 12px;border-top:1px solid var(--border);text-align:right"><button onclick="copyHWTemplate(\'' + tmpl.id + '\')" style="padding:4px 12px;border-radius:4px;background:var(--gold);color:#000;font-size:10px;font-weight:700;border:none;cursor:pointer;font-family:inherit">Copy</button></div></details>';
+        });
+      });
+      html += '</div></div>';
+      return html;
+    })()}
   </div>
 
   <!-- TAB: Judging -->
@@ -5200,7 +5227,8 @@ function renderHackWeek() {
           });
           tableHtml += '</tbody></table>';
           return tableHtml;
-        })() : '<div style="font-size:24px;margin-bottom:8px">&#128202;</div><div>No scores submitted yet.</div><div style="font-size:11px;margin-top:4px">Judges submit scores via API after demo day.</div>'}
+        })() : '<div style="font-size:24px;margin-bottom:8px">&#128202;</div><div>No scores submitted yet.</div>'}
+        ${!isComplete ? '<div style="border-top:1px solid var(--border);padding-top:10px;margin-top:10px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);font-weight:700;margin-bottom:8px">Submit Score</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><select id="hw-score-judge" style="padding:6px 8px;border-radius:4px;background:var(--surface);border:1px solid var(--border);color:var(--text);font-size:11px;font-family:inherit"><option value="">Judge...</option>' + hwJudges.map(function(j){return '<option value="'+j+'">'+j+'</option>';}).join('') + '</select><select id="hw-score-team" style="padding:6px 8px;border-radius:4px;background:var(--surface);border:1px solid var(--border);color:var(--text);font-size:11px;font-family:inherit"><option value="">Team...</option>' + hwTeams.map(function(t){return '<option value="'+t.name+'">'+t.name+'</option>';}).join('') + '</select></div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:8px"><div style="text-align:center"><div style="font-size:9px;color:var(--text-muted);margin-bottom:2px">Idea</div><input id="hw-score-idea" type="number" min="1" max="10" placeholder="1-10" style="width:100%;padding:6px;border-radius:4px;background:var(--surface);border:1px solid var(--border);color:var(--text);font-size:12px;text-align:center;font-family:inherit" /></div><div style="text-align:center"><div style="font-size:9px;color:var(--text-muted);margin-bottom:2px">Code</div><input id="hw-score-code" type="number" min="1" max="10" placeholder="1-10" style="width:100%;padding:6px;border-radius:4px;background:var(--surface);border:1px solid var(--border);color:var(--text);font-size:12px;text-align:center;font-family:inherit" /></div><div style="text-align:center"><div style="font-size:9px;color:var(--text-muted);margin-bottom:2px">Demo</div><input id="hw-score-demo" type="number" min="1" max="10" placeholder="1-10" style="width:100%;padding:6px;border-radius:4px;background:var(--surface);border:1px solid var(--border);color:var(--text);font-size:12px;text-align:center;font-family:inherit" /></div></div><button onclick="submitHWScore()" style="margin-top:8px;width:100%;padding:8px;border-radius:6px;background:var(--gold);color:#000;font-size:11px;font-weight:700;border:none;cursor:pointer;font-family:inherit">Submit Score</button></div>' : ''}
       </div>
     </div>
     <div class="card">
@@ -5380,6 +5408,65 @@ function deleteHWTask(tabKey, idx) {
       renderProjectsPage();
     }
   }).catch(function(e) { console.warn('[HW Task] Delete failed:', e.message); });
+}
+
+function submitHWScore() {
+  var hwSel = getSelectedHackweek();
+  if (!hwSel.id) return;
+  var judge = document.getElementById('hw-score-judge').value;
+  var team = document.getElementById('hw-score-team').value;
+  var idea = parseInt(document.getElementById('hw-score-idea').value);
+  var code = parseInt(document.getElementById('hw-score-code').value);
+  var demo = parseInt(document.getElementById('hw-score-demo').value);
+  if (!judge || !team) { alert('Select a judge and team'); return; }
+  if (!idea && !code && !demo) { alert('Enter at least one score (1-10)'); return; }
+
+  var body = { team: team, judge: judge };
+  if (idea) body.idea = idea;
+  if (code) body.code = code;
+  if (demo) body.demo = demo;
+
+  fetch('/api/hackweek/' + hwSel.id + '/scores', {
+    method: 'PATCH',
+    headers: {'Content-Type':'application/json','Authorization':'Bearer sophie-dashboard-secret-change-me'},
+    body: JSON.stringify(body)
+  }).then(function(r) { return r.json(); }).then(function(d) {
+    if (d.ok) {
+      if (!hwSel.scores) hwSel.scores = [];
+      var existing = hwSel.scores.findIndex(function(s) { return s.judge === judge && s.team === team; });
+      if (existing >= 0) {
+        if (idea) hwSel.scores[existing].idea = idea;
+        if (code) hwSel.scores[existing].code = code;
+        if (demo) hwSel.scores[existing].demo = demo;
+      } else {
+        hwSel.scores.push({ team: team, judge: judge, idea: idea||null, code: code||null, demo: demo||null });
+      }
+      renderProjectsPage();
+    } else { alert(d.error || 'Failed to submit score'); }
+  }).catch(function(e) { alert('Score submission failed: ' + e.message); });
+}
+
+function copyHWTemplate(templateId) {
+  var hwSel = getSelectedHackweek();
+  var templates = hwSel.commsTemplates || [];
+  var tmpl = templates.find(function(t) { return t.id === templateId; });
+  if (!tmpl) return;
+  var rendered = tmpl.template
+    .replace(/\{\{dates\}\}/g, hwSel.targetDate ? new Date(hwSel.targetDate + 'T12:00:00').toLocaleDateString('en-US', {month:'long', day:'numeric', year:'numeric'}) : 'TBD')
+    .replace(/\{\{slackChannel\}\}/g, hwSel.slackChannel || '#hack-week')
+    .replace(/\{\{name\}\}/g, hwSel.name || 'Hack Week')
+    .replace(/\{\{signupLink\}\}/g, hwSel.signupSheet || '[signup link]')
+    .replace(/\{\{signupLink\|spreadsheet\}\}/g, hwSel.signupSheet || '[spreadsheet]')
+    .replace(/\{\{daysUntilDeadline\}\}/g, '')
+    .replace(/\{\{loomDeadline\}\}/g, 'Tuesday 7am PST')
+    .replace(/\{\{winnerAI\}\}/g, '[TBD]')
+    .replace(/\{\{winnerImpact\}\}/g, '[TBD]')
+    .replace(/\{\{winnerTool\}\}/g, '[TBD]');
+  navigator.clipboard.writeText(rendered).then(function() {
+    var btn = event.target;
+    btn.textContent = 'Copied!';
+    setTimeout(function() { btn.textContent = 'Copy'; }, 1500);
+  });
 }
 
 function renderFPPCProject(){
