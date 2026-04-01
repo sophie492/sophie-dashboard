@@ -531,6 +531,7 @@ a.loop-row:hover .loop-source{color:var(--gold)}
 .hw-hub-nav-btn:hover{color:var(--text)}
 .hw-hub-tab-pane{display:none}
 .hw-hub-tab-pane.active{display:block}
+.hw-task:hover .hw-task-edit,.hw-task:hover .hw-task-del{opacity:1}
 #page-bd .card{height:auto}
 </style>
 </head>
@@ -4938,17 +4939,25 @@ function renderHackWeek() {
   // Helper: render task checklist for a tab
   function renderTabTasks(tabKey, label) {
     var tasks = hwTasks[tabKey] || [];
-    if (tasks.length === 0) return '';
     var tabDone = tasks.filter(function(t){return t.done;}).length;
     var html = '<div class="card" style="margin-bottom:12px">';
     html += '<div class="card-head"><span class="card-title">' + label + '</span><span class="hw-tab-task-counter" style="font-size:10px;color:var(--text-muted)">' + tabDone + '/' + tasks.length + '</span></div>';
     html += '<div class="card-body" style="padding:8px 14px">';
     tasks.forEach(function(t, ti) {
-      html += '<div class="hw-task' + (t.done?' checked':'') + '" data-hwtab="' + tabKey + '" data-hwtask="' + ti + '" onclick="toggleHWTabTask(this)" style="display:flex;align-items:flex-start;gap:8px;padding:5px 4px;border-radius:5px;cursor:pointer;transition:background .15s;font-size:11px">' +
+      html += '<div class="hw-task' + (t.done?' checked':'') + '" data-hwtab="' + tabKey + '" data-hwtask="' + ti + '" style="display:flex;align-items:flex-start;gap:8px;padding:5px 4px;border-radius:5px;cursor:pointer;transition:background .15s;font-size:11px;position:relative" onclick="toggleHWTabTask(this)">' +
         '<div class="task-checkbox' + (t.done?' checked':'') + '"></div>' +
-        '<span style="color:' + (t.done?'var(--text-muted)':'var(--text-dim)') + ';' + (t.done?'text-decoration:line-through;opacity:.5':'') + ';line-height:1.3">' + t.text + '</span>' +
+        '<span class="hw-task-text" style="color:' + (t.done?'var(--text-muted)':'var(--text-dim)') + ';' + (t.done?'text-decoration:line-through;opacity:.5':'') + ';line-height:1.3;flex:1">' + t.text + '</span>' +
+        '<span class="hw-task-edit" onclick="event.stopPropagation();editHWTask(\'' + tabKey + '\',' + ti + ')" style="font-size:9px;color:var(--text-muted);cursor:pointer;opacity:0;transition:opacity .15s;padding:2px 4px" onmouseover="this.style.color=\'var(--gold)\'" onmouseout="this.style.color=\'var(--text-muted)\'">&#9998;</span>' +
+        '<span class="hw-task-del" onclick="event.stopPropagation();deleteHWTask(\'' + tabKey + '\',' + ti + ')" style="font-size:9px;color:var(--text-muted);cursor:pointer;opacity:0;transition:opacity .15s;padding:2px 4px" onmouseover="this.style.color=\'var(--red)\'" onmouseout="this.style.color=\'var(--text-muted)\'">&#10005;</span>' +
       '</div>';
     });
+    // Add task input
+    if (!isComplete) {
+      html += '<div style="display:flex;align-items:center;gap:8px;padding:6px 4px;margin-top:4px">';
+      html += '<span style="font-size:12px;color:var(--gold);cursor:pointer" onclick="addHWTask(\'' + tabKey + '\')">+</span>';
+      html += '<input type="text" class="hw-add-input" data-hwtab="' + tabKey + '" placeholder="Add a task..." onkeydown="if(event.key===\'Enter\')addHWTask(\'' + tabKey + '\')" style="flex:1;background:none;border:none;border-bottom:1px solid var(--border);color:var(--text);font-size:11px;padding:4px 0;outline:none;font-family:inherit" />';
+      html += '</div>';
+    }
     html += '</div></div>';
     return html;
   }
@@ -5315,6 +5324,63 @@ function updateHWLogisticsConfirmation(category, value) {
   }).catch(function(e) { console.warn('[HW Logistics] Confirmation update failed:', e.message); });
 }
 
+function addHWTask(tabKey) {
+  var input = document.querySelector('.hw-add-input[data-hwtab="' + tabKey + '"]');
+  if (!input) return;
+  var text = input.value.trim();
+  if (!text) return;
+  var hwSel = getSelectedHackweek();
+  if (!hwSel.id) return;
+
+  fetch('/api/hackweek/' + hwSel.id + '/task', {
+    method: 'PATCH',
+    headers: {'Content-Type':'application/json','Authorization':'Bearer sophie-dashboard-secret-change-me'},
+    body: JSON.stringify({ tab: tabKey, action: 'add', text: text })
+  }).then(function(r) { return r.json(); }).then(function(d) {
+    if (d.ok) {
+      if (!hwSel.tasks) hwSel.tasks = {};
+      if (!hwSel.tasks[tabKey]) hwSel.tasks[tabKey] = [];
+      hwSel.tasks[tabKey].push({ text: text, done: false });
+      renderProjectsPage();
+    }
+  }).catch(function(e) { console.warn('[HW Task] Add failed:', e.message); });
+}
+
+function editHWTask(tabKey, idx) {
+  var hwSel = getSelectedHackweek();
+  if (!hwSel.tasks || !hwSel.tasks[tabKey] || !hwSel.tasks[tabKey][idx]) return;
+  var task = hwSel.tasks[tabKey][idx];
+  var newText = prompt('Edit task:', task.text);
+  if (newText === null || newText.trim() === '' || newText.trim() === task.text) return;
+
+  fetch('/api/hackweek/' + hwSel.id + '/task', {
+    method: 'PATCH',
+    headers: {'Content-Type':'application/json','Authorization':'Bearer sophie-dashboard-secret-change-me'},
+    body: JSON.stringify({ tab: tabKey, index: idx, action: 'edit', text: newText.trim() })
+  }).then(function(r) { return r.json(); }).then(function(d) {
+    if (d.ok) {
+      task.text = newText.trim();
+      renderProjectsPage();
+    }
+  }).catch(function(e) { console.warn('[HW Task] Edit failed:', e.message); });
+}
+
+function deleteHWTask(tabKey, idx) {
+  var hwSel = getSelectedHackweek();
+  if (!hwSel.tasks || !hwSel.tasks[tabKey] || !hwSel.tasks[tabKey][idx]) return;
+  if (!confirm('Delete task: "' + hwSel.tasks[tabKey][idx].text.slice(0, 50) + '..."?')) return;
+
+  fetch('/api/hackweek/' + hwSel.id + '/task', {
+    method: 'PATCH',
+    headers: {'Content-Type':'application/json','Authorization':'Bearer sophie-dashboard-secret-change-me'},
+    body: JSON.stringify({ tab: tabKey, index: idx, action: 'delete' })
+  }).then(function(r) { return r.json(); }).then(function(d) {
+    if (d.ok) {
+      hwSel.tasks[tabKey].splice(idx, 1);
+      renderProjectsPage();
+    }
+  }).catch(function(e) { console.warn('[HW Task] Delete failed:', e.message); });
+}
 
 function renderFPPCProject(){
   const fppc=DATA.fppcEvents||{};

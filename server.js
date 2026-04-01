@@ -1670,7 +1670,7 @@ app.patch('/api/hackweek/:id/logistics', (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// ── Hack Week Task Toggle ──
+// ── Hack Week Task CRUD ──
 app.patch('/api/hackweek/:id/task', (req, res) => {
   const authHeader = req.headers.authorization || '';
   const token = authHeader.replace('Bearer ', '');
@@ -1678,16 +1678,43 @@ app.patch('/api/hackweek/:id/task', (req, res) => {
     return res.status(401).json({ error: 'Invalid API key' });
   }
   try {
-    const { tab, index, done } = req.body;
-    if (!tab || index === undefined) return res.status(400).json({ error: 'tab and index required' });
+    const { tab, index, done, action, text } = req.body;
+    if (!tab) return res.status(400).json({ error: 'tab required' });
 
     const data = loadHackweekData();
     const hw = findHackweekById(data, req.params.id);
     if (!hw) return res.status(404).json({ error: 'Hack week not found' });
-    if (!hw.tasks || !hw.tasks[tab]) return res.status(400).json({ error: 'Invalid tab: ' + tab });
-    if (!hw.tasks[tab][index]) return res.status(400).json({ error: 'Invalid index: ' + index });
+    if (!hw.tasks) hw.tasks = {};
+    if (!hw.tasks[tab]) hw.tasks[tab] = [];
 
-    hw.tasks[tab][index].done = !!done;
+    if (action === 'add') {
+      if (!text) return res.status(400).json({ error: 'text required for add' });
+      hw.tasks[tab].push({ text: text, done: false });
+      fs.writeFileSync(HACKWEEK_PATH, JSON.stringify(data, null, 2));
+      return res.json({ ok: true, task: hw.tasks[tab][hw.tasks[tab].length - 1], index: hw.tasks[tab].length - 1 });
+    }
+
+    if (action === 'edit') {
+      if (index === undefined) return res.status(400).json({ error: 'index required for edit' });
+      if (!hw.tasks[tab][index]) return res.status(400).json({ error: 'Invalid index' });
+      if (text !== undefined) hw.tasks[tab][index].text = text;
+      if (done !== undefined) hw.tasks[tab][index].done = !!done;
+      fs.writeFileSync(HACKWEEK_PATH, JSON.stringify(data, null, 2));
+      return res.json({ ok: true, task: hw.tasks[tab][index] });
+    }
+
+    if (action === 'delete') {
+      if (index === undefined) return res.status(400).json({ error: 'index required for delete' });
+      if (!hw.tasks[tab][index]) return res.status(400).json({ error: 'Invalid index' });
+      hw.tasks[tab].splice(index, 1);
+      fs.writeFileSync(HACKWEEK_PATH, JSON.stringify(data, null, 2));
+      return res.json({ ok: true, remaining: hw.tasks[tab].length });
+    }
+
+    // Default: toggle done (backward compatible)
+    if (index === undefined) return res.status(400).json({ error: 'index required' });
+    if (!hw.tasks[tab][index]) return res.status(400).json({ error: 'Invalid index' });
+    hw.tasks[tab][index].done = done !== undefined ? !!done : !hw.tasks[tab][index].done;
     fs.writeFileSync(HACKWEEK_PATH, JSON.stringify(data, null, 2));
     res.json({ ok: true, task: hw.tasks[tab][index] });
   } catch (e) { res.status(500).json({ error: e.message }); }
