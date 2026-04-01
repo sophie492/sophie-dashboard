@@ -4184,7 +4184,9 @@ function renderOffsiteDetailView(el, OFFSITE, ALLDATA) {
     walk(obj);
     return { total: total, done: done };
   }
-  var taskCounts = countChecklist(checklist);
+  // Count from phases (single source of truth), not legacy checklist
+  var taskCounts = { total: 0, done: 0 };
+  phases.forEach(function(p) { (p.tasks||[]).forEach(function(t) { taskCounts.total++; if (t.done) taskCounts.done++; }); });
   var taskPct = taskCounts.total ? Math.round((taskCounts.done / taskCounts.total) * 100) : 0;
 
   // Budget estimate
