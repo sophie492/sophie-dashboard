@@ -4800,72 +4800,93 @@ async function refreshNewsFeed() {
       return;
     }
 
-    // Fetch Rishabh's shared links from Slack
+    // Fetch Rishabh's shared links from Slack channels
     let rishabhPicks = [];
     const slackToken = process.env.SLACK_BOT_TOKEN;
     if (slackToken) {
-      try {
-        const slackQuery = 'from:<@U01SR5CPVTK> has:link';
-        const slackUrl = 'https://slack.com/api/search.messages?query=' + encodeURIComponent(slackQuery) + '&count=20&sort=timestamp&sort_dir=desc';
-        const slackRes = await fetchUrl(slackUrl.replace('https://slack.com', 'https://slack.com'), {
-          headers: { 'Authorization': 'Bearer ' + slackToken, 'Content-Type': 'application/json' }
-        }).catch(() => null);
+      const RISHABH_USER_ID = 'U01SR5CPVTK';
+      // Channels to scan for Rishabh's links
+      const SLACK_CHANNELS = [
+        { id: 'C01S9E7TVSR', name: 'general' },
+        { id: 'C02680F9LSX', name: 'dev' },
+        { id: 'C059S16MCBT', name: 'wins' },
+        { id: 'C0365LLGD7Z', name: 'state-of-the-business' },
+        { id: 'C03ATS1A031', name: 'product-ideas-and-feedback' }
+      ];
 
-        // fetchUrl doesn't support custom headers, use https directly
-        const slackData = await new Promise((resolve, reject) => {
+      function slackAPI(endpoint) {
+        return new Promise((resolve, reject) => {
           const https = require('https');
-          const url = new URL('https://slack.com/api/search.messages?query=' + encodeURIComponent(slackQuery) + '&count=20&sort=timestamp&sort_dir=desc');
-          https.get(url, {
-            headers: { 'Authorization': 'Bearer ' + slackToken },
-            timeout: 10000
-          }, (res) => {
+          const url = new URL('https://slack.com/api/' + endpoint);
+          https.get(url, { headers: { 'Authorization': 'Bearer ' + slackToken }, timeout: 10000 }, (res) => {
             let data = '';
             res.on('data', chunk => data += chunk);
             res.on('end', () => { try { resolve(JSON.parse(data)); } catch(e) { reject(e); } });
-          }).on('error', reject);
+          }).on('error', reject).on('timeout', function() { this.destroy(); reject(new Error('timeout')); });
         });
+      }
 
-        if (slackData.ok && slackData.messages && slackData.messages.matches) {
-          const oneDayAgo = new Date();
-          oneDayAgo.setHours(oneDayAgo.getHours() - 28);
-          const recentMessages = slackData.messages.matches.filter(m => {
-            return new Date(parseFloat(m.ts) * 1000) > oneDayAgo;
-          });
+      const oldest = Math.floor(Date.now() / 1000) - 86400; // last 24 hours
+      try {
+        const channelResults = await Promise.allSettled(
+          SLACK_CHANNELS.map(ch =>
+            slackAPI('conversations.history?channel=' + ch.id + '&oldest=' + oldest + '&limit=100')
+              .then(data => ({ channel: ch, messages: data.ok ? data.messages || [] : [] }))
+          )
+        );
 
-          recentMessages.forEach(msg => {
-            // Extract URLs from message text
+        channelResults.forEach(result => {
+          if (result.status !== 'fulfilled') return;
+          const { channel, messages } = result.value;
+          messages.forEach(msg => {
+            if (msg.user !== RISHABH_USER_ID) return;
+            if (!msg.text || !msg.text.includes('http')) return;
+
             const urlRegex = /<(https?:\/\/[^>|]+)(?:\|[^>]*)?>/g;
             let urlMatch;
             while ((urlMatch = urlRegex.exec(msg.text)) !== null) {
-              const url = urlMatch[1];
-              // Skip Slack internal links, Google Docs, Notion, etc.
-              if (url.includes('slack.com') || url.includes('docs.google.com') || url.includes('notion.so') || url.includes('fermatcommerce')) continue;
+              const linkUrl = urlMatch[1];
+              // Skip internal links
+              if (linkUrl.includes('slack.com') || linkUrl.includes('docs.google.com') || linkUrl.includes('notion.so') || linkUrl.includes('fermatcommerce') || linkUrl.includes('google.com/calendar')) continue;
 
-              // Extract comment — the message text without the URL
-              let comment = msg.text.replace(/<https?:\/\/[^>]+>/g, '').replace(/\n/g, ' ').trim();
+              let comment = msg.text.replace(/<https?:\/\/[^>]+>/g, '').replace(/<@[^>]+>/g, '').replace(/\n/g, ' ').trim();
               if (comment.length > 150) comment = comment.slice(0, 147) + '...';
 
-              const channel = msg.channel && msg.channel.name ? '#' + msg.channel.name : '';
+              // Try to get a better headline from the URL path
+              let headline = '';
+              try {
+                const urlPath = new URL(linkUrl).pathname;
+                headline = urlPath.split('/').filter(Boolean).pop().replace(/-/g, ' ').replace(/\.\w+$/, '');
+                headline = headline.charAt(0).toUpperCase() + headline.slice(1);
+                if (headline.length < 5) headline = '';
+              } catch(e) {}
+
+              // Use Slack attachment title if available
+              if (msg.attachments && msg.attachments.length > 0) {
+                const att = msg.attachments.find(a => a.original_url === linkUrl || a.from_url === linkUrl);
+                if (att && att.title) headline = att.title;
+              }
 
               rishabhPicks.push({
-                headline: url.split('/').filter(Boolean).pop().replace(/-/g, ' ').replace(/\.\w+$/, '').slice(0, 80),
-                url: url,
+                headline: headline || new URL(linkUrl).hostname.replace('www.', ''),
+                url: linkUrl,
                 comment: comment || 'Shared by Rishabh',
-                source: new URL(url).hostname.replace('www.', ''),
-                channel: channel,
-                slackLink: msg.permalink || ''
+                source: new URL(linkUrl).hostname.replace('www.', ''),
+                channel: '#' + channel.name
               });
             }
           });
+        });
 
-          // Deduplicate by URL
-          const seenUrls = new Set();
-          rishabhPicks = rishabhPicks.filter(p => {
-            if (seenUrls.has(p.url)) return false;
-            seenUrls.add(p.url);
-            return true;
-          }).slice(0, 5);
+        // Deduplicate by URL
+        const seenUrls = new Set();
+        rishabhPicks = rishabhPicks.filter(p => {
+          if (seenUrls.has(p.url)) return false;
+          seenUrls.add(p.url);
+          return true;
+        }).slice(0, 5);
 
+        if (rishabhPicks.length > 0) {
           console.log('[News Cron] Found', rishabhPicks.length, 'Rishabh picks from Slack');
         }
       } catch (e) {
