@@ -27,7 +27,8 @@
         "prizeCategories": [],
         "teamFormationRules": [],
         "logistics": {},
-        "reviews": []
+        "reviews": [],
+        "notionPageId": "2071ad76fd2a80068a91c8b89c261580"
       }
     ],
     "2026": [
@@ -63,7 +64,8 @@
         "prizeCategories": [],
         "teamFormationRules": [],
         "logistics": {},
-        "reviews": []
+        "reviews": [],
+        "notionPageId": "2b01ad76fd2a81a39933d57ffed44277"
       },
       {
         "id": "hw-2026-jun",
@@ -123,236 +125,235 @@
           }
         },
         "checklist": {
-          "phase1_earlyPlanning": {
-            "deadline": "6-8 weeks before (Late April 2026)",
-            "items": [
-              {
-                "item": "Pick the dates — Avoid US and India holidays. Check holiday calendar, OOO schedules, BLR office holidays.",
-                "done": false,
-                "lesson": "Jan 2026: Holiday conflicts with MLK Day and BLR holiday caused last-minute schedule changes."
-              },
-              {
-                "item": "Decide on cross-office schedule — If BLR and SF need different start days, plan async but parallel schedule",
-                "done": false
-              },
-              {
-                "item": "Confirm the daily structure — Recommended: Build (2 days), Demo (mid-week), Optimize/Ship (2 days)",
-                "done": false
-              },
-              {
-                "item": "Get budget approved — Talk to Evelyn about prizes, travel, team dinners/happy hours, daily lunches, Ramp card limits",
-                "done": false
-              },
-              {
-                "item": "Decide on prizes and categories — Past categories: Best Use of AI, Highest Customer Impact, Best Internal Tool / Most Useful DevTool. ~$1,000 per winning team.",
-                "done": false
-              },
-              {
-                "item": "Confirm judges — Typically Shreyas, Rishabh, Bharat + leadership. Ensure available for demo day AND deliberation.",
-                "done": false,
-                "lesson": "Jan 2026: Both Bharat and Shreyas were absent for scheduled Town Hall announcement."
-              },
-              {
-                "item": "Assign a BLR logistics lead — Kunal or Sriram for coordination, Shiksha for logistics support",
-                "done": false
-              }
-            ]
-          },
-          "phase2_preEventSetup": {
-            "deadline": "4-5 weeks before (Mid May 2026)",
-            "items": {
-              "communications": [
+          "phases": [
+            {
+              "name": "Phase 1: Early Planning",
+              "deadline": "6-8 weeks before (Late April 2026)",
+              "tasks": [
                 {
-                  "item": "Create the #hack-week-[month-year] Slack channel",
+                  "text": "Pick the dates — Avoid US and India holidays. Check holiday calendar, OOO schedules, BLR office holidays.",
+                  "done": false,
+                  "lesson": "Jan 2026: Holiday conflicts with MLK Day and BLR holiday caused last-minute schedule changes."
+                },
+                {
+                  "text": "Decide on cross-office schedule — If BLR and SF need different start days, plan async but parallel schedule",
                   "done": false
                 },
                 {
-                  "item": "Draft and send kick-off announcement in #dev and #general. Have Bharat post.",
+                  "text": "Confirm the daily structure — Recommended: Build (2 days), Demo (mid-week), Optimize/Ship (2 days)",
                   "done": false
                 },
                 {
-                  "item": "Create team sign-up spreadsheet (Google Sheet)",
+                  "text": "Get budget approved — Talk to Evelyn about prizes, travel, team dinners/happy hours, daily lunches, Ramp card limits",
                   "done": false
                 },
                 {
-                  "item": "Send reminder nudges",
+                  "text": "Decide on prizes and categories — Past categories: Best Use of AI, Highest Customer Impact, Best Internal Tool / Most Useful DevTool. ~$1,000 per winning team.",
                   "done": false
                 },
                 {
-                  "item": "Draft Slack announcement templates",
+                  "text": "Confirm judges — Typically Shreyas, Rishabh, Bharat + leadership. Ensure available for demo day AND deliberation.",
+                  "done": false,
+                  "lesson": "Jan 2026: Both Bharat and Shreyas were absent for scheduled Town Hall announcement."
+                },
+                {
+                  "text": "Assign a BLR logistics lead — Kunal or Sriram for coordination, Shiksha for logistics support",
                   "done": false
                 }
-              ],
-              "teamFormation": [
+              ]
+            },
+            {
+              "name": "Phase 2: Pre-Event Setup",
+              "deadline": "4-5 weeks before (Mid May 2026)",
+              "tasks": [
                 {
-                  "item": "Set team formation rules — Teams of 2-4, no solo projects, cross-functional (>50% cannot be from same eng team), PMs/Designers encouraged",
+                  "text": "Create the #hack-week-[month-year] Slack channel",
                   "done": false
                 },
                 {
-                  "item": "Set deadline for team/idea submission (~1 week before)",
+                  "text": "Draft and send kick-off announcement in #dev and #general. Have Bharat post.",
                   "done": false
                 },
                 {
-                  "item": "Have Bharat/Shreyas review and approve all ideas (2-3 days between submission and lock date)",
+                  "text": "Create team sign-up spreadsheet (Google Sheet)",
                   "done": false
                 },
                 {
-                  "item": "Lock all teams and ideas (2-3 days before hack week)",
+                  "text": "Send reminder nudges",
                   "done": false
-                }
-              ],
-              "logistics": [
+                },
                 {
-                  "item": "Arrange travel for remote employees",
+                  "text": "Draft Slack announcement templates",
+                  "done": false
+                },
+                {
+                  "text": "Set team formation rules — Teams of 2-4, no solo projects, cross-functional (>50% cannot be from same eng team), PMs/Designers encouraged",
+                  "done": false
+                },
+                {
+                  "text": "Set deadline for team/idea submission (~1 week before)",
+                  "done": false
+                },
+                {
+                  "text": "Have Bharat/Shreyas review and approve all ideas (2-3 days between submission and lock date)",
+                  "done": false
+                },
+                {
+                  "text": "Lock all teams and ideas (2-3 days before hack week)",
+                  "done": false
+                },
+                {
+                  "text": "Arrange travel for remote employees",
                   "done": false,
                   "lesson": "Jan 2026: $400 flight budget and $1,400 hotel budget were too tight. Budget $550-600 for flights, $350/night for hotels in SF."
                 },
                 {
-                  "item": "Coordinate BLR travel with Kunal/Sriram",
+                  "text": "Coordinate BLR travel with Kunal/Sriram",
                   "done": false
                 },
                 {
-                  "item": "Arrange daily lunches for SF and BLR offices",
+                  "text": "Arrange daily lunches for SF and BLR offices",
                   "done": false
                 },
                 {
-                  "item": "Plan social events — team dinner (mid-week after demos) and happy hour (end of week). Both offices.",
+                  "text": "Plan social events — team dinner (mid-week after demos) and happy hour (end of week). Both offices.",
                   "done": false
                 },
                 {
-                  "item": "Set up late-night dinner policy — teams working past 6pm can expense dinner on Fermat",
+                  "text": "Set up late-night dinner policy — teams working past 6pm can expense dinner on Fermat",
+                  "done": false
+                },
+                {
+                  "text": "Cancel all internal meetings for hack week",
+                  "done": false
+                },
+                {
+                  "text": "Set up on-call schedule for customer-facing coverage",
+                  "done": false
+                },
+                {
+                  "text": "Block calendars with hack week events",
+                  "done": false
+                },
+                {
+                  "text": "Set up Loom recording workflow",
                   "done": false
                 }
-              ],
-              "calendar": [
+              ]
+            },
+            {
+              "name": "Phase 3: Week-Of",
+              "deadline": "",
+              "tasks": [
                 {
-                  "item": "Cancel all internal meetings for hack week",
+                  "text": "Host kick-off session",
                   "done": false
                 },
                 {
-                  "item": "Set up on-call schedule for customer-facing coverage",
+                  "text": "Post opening message in #hack-week channel",
                   "done": false
                 },
                 {
-                  "item": "Block calendars with hack week events",
+                  "text": "Confirm attendance",
                   "done": false
                 },
                 {
-                  "item": "Set up Loom recording workflow",
+                  "text": "Encourage daily updates",
+                  "done": false
+                },
+                {
+                  "text": "Offer office hours (Bharat/Shreyas)",
+                  "done": false
+                },
+                {
+                  "text": "Set up Spotify Jam playlist",
+                  "done": false
+                },
+                {
+                  "text": "Run demo sessions per office",
+                  "done": false
+                },
+                {
+                  "text": "Record all demos",
+                  "done": false
+                },
+                {
+                  "text": "Host team dinner after demos",
+                  "done": false
+                },
+                {
+                  "text": "Post shipping guidance",
+                  "done": false
+                },
+                {
+                  "text": "Check in on productionization",
+                  "done": false
+                },
+                {
+                  "text": "Ensure Loom links in spreadsheet",
+                  "done": false
+                },
+                {
+                  "text": "Host end-of-week happy hour",
+                  "done": false
+                }
+              ]
+            },
+            {
+              "name": "Phase 4: Post-Event",
+              "deadline": "1-2 weeks after",
+              "tasks": [
+                {
+                  "text": "Judges review all demos and Looms (2-3 days)",
+                  "done": false
+                },
+                {
+                  "text": "Pick winners across all categories",
+                  "done": false
+                },
+                {
+                  "text": "Announce winners at Town Hall — lock date in advance, ensure judges available",
+                  "done": false
+                },
+                {
+                  "text": "Have winning teams re-present (polished) to whole company",
+                  "done": false
+                },
+                {
+                  "text": "Distribute prizes — $1,000 per winning team, split among members",
+                  "done": false
+                },
+                {
+                  "text": "Post hack week recap in #general with all team names, Loom links, winners",
+                  "done": false
+                },
+                {
+                  "text": "Create LinkedIn content — coordinate timing with marketing",
+                  "done": false
+                },
+                {
+                  "text": "Feature hack week at offsite/company events if applicable",
+                  "done": false
+                },
+                {
+                  "text": "Send feedback survey (Google Form)",
+                  "done": false
+                },
+                {
+                  "text": "Hold planning retro — Sophie + Bharat + BLR leads",
+                  "done": false
+                },
+                {
+                  "text": "Update this checklist with new lessons learned",
+                  "done": false
+                },
+                {
+                  "text": "Track which projects made it to production (2-4 weeks later)",
                   "done": false
                 }
               ]
             }
-          },
-          "phase3_weekOf": {
-            "items": [
-              {
-                "item": "Host kick-off session",
-                "done": false
-              },
-              {
-                "item": "Post opening message in #hack-week channel",
-                "done": false
-              },
-              {
-                "item": "Confirm attendance",
-                "done": false
-              },
-              {
-                "item": "Encourage daily updates",
-                "done": false
-              },
-              {
-                "item": "Offer office hours (Bharat/Shreyas)",
-                "done": false
-              },
-              {
-                "item": "Set up Spotify Jam playlist",
-                "done": false
-              },
-              {
-                "item": "Run demo sessions per office",
-                "done": false
-              },
-              {
-                "item": "Record all demos",
-                "done": false
-              },
-              {
-                "item": "Host team dinner after demos",
-                "done": false
-              },
-              {
-                "item": "Post shipping guidance",
-                "done": false
-              },
-              {
-                "item": "Check in on productionization",
-                "done": false
-              },
-              {
-                "item": "Ensure Loom links in spreadsheet",
-                "done": false
-              },
-              {
-                "item": "Host end-of-week happy hour",
-                "done": false
-              }
-            ]
-          },
-          "phase4_postEvent": {
-            "deadline": "1-2 weeks after",
-            "items": [
-              {
-                "item": "Judges review all demos and Looms (2-3 days)",
-                "done": false
-              },
-              {
-                "item": "Pick winners across all categories",
-                "done": false
-              },
-              {
-                "item": "Announce winners at Town Hall — lock date in advance, ensure judges available",
-                "done": false
-              },
-              {
-                "item": "Have winning teams re-present (polished) to whole company",
-                "done": false
-              },
-              {
-                "item": "Distribute prizes — $1,000 per winning team, split among members",
-                "done": false
-              },
-              {
-                "item": "Post hack week recap in #general with all team names, Loom links, winners",
-                "done": false
-              },
-              {
-                "item": "Create LinkedIn content — coordinate timing with marketing",
-                "done": false
-              },
-              {
-                "item": "Feature hack week at offsite/company events if applicable",
-                "done": false
-              },
-              {
-                "item": "Send feedback survey (Google Form)",
-                "done": false
-              },
-              {
-                "item": "Hold planning retro — Sophie + Bharat + BLR leads",
-                "done": false
-              },
-              {
-                "item": "Update this checklist with new lessons learned",
-                "done": false
-              },
-              {
-                "item": "Track which projects made it to production (2-4 weeks later)",
-                "done": false
-              }
-            ]
-          }
+          ]
         },
         "rubric": [
           {
@@ -460,7 +461,8 @@
           }
         },
         "reviews": [],
-        "lessonsLearned": []
+        "lessonsLearned": [],
+        "notionPageId": "3291ad76fd2a81b8a66ff9d04b4a1bbe"
       }
     ],
     "2027": [
