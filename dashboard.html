@@ -1544,11 +1544,17 @@ function renderSidebar(){
     <div class="sidebar-item" data-page="news"><span class="si-icon">&#128240;</span><span class="si-label">News</span></div>
     <div class="sidebar-item si-parent" onclick="toggleEventsExpand(this)"><span class="si-icon">&#127915;</span><span class="si-label">Events</span><span class="si-chevron" style="margin-left:auto;font-size:8px;color:var(--text-muted);transition:transform .2s">&#9654;</span></div>
     <div class="si-children" id="events-children" style="display:none">
-      ${nearEvents.map(e=>`<div class="sidebar-item si-child" data-page="event-${e.id}"><span class="si-label">${e.shortName}</span><span style="margin-left:auto;display:flex;gap:3px;align-items:center">${e.rishabh?'<span style="width:5px;height:5px;border-radius:50%;background:var(--lavender)" title="Rishabh"></span>':''}${e.shreyas?'<span style="width:5px;height:5px;border-radius:50%;background:var(--gold)" title="Shreyas"></span>':''}</span></div>`).join('')}
+      <div style="display:flex;gap:2px;padding:2px 8px 6px 24px;flex-wrap:wrap">
+        <button onclick="filterEventsSidebar('all')" class="ev-filter-btn active" style="font-size:8px;padding:2px 6px;border-radius:3px;background:var(--gold);color:#000;border:none;cursor:pointer;font-family:inherit;font-weight:700">All</button>
+        <button onclick="filterEventsSidebar('rishabh')" class="ev-filter-btn" style="font-size:8px;padding:2px 6px;border-radius:3px;background:var(--surface);color:var(--lavender);border:1px solid var(--border);cursor:pointer;font-family:inherit;font-weight:700">Rishabh (${eventsForSidebar.filter(e=>e.rishabh).length})</button>
+        <button onclick="filterEventsSidebar('shreyas')" class="ev-filter-btn" style="font-size:8px;padding:2px 6px;border-radius:3px;background:var(--surface);color:var(--gold);border:1px solid var(--border);cursor:pointer;font-family:inherit;font-weight:700">Shreyas (${eventsForSidebar.filter(e=>e.shreyas).length})</button>
+        <button onclick="filterEventsSidebar('other')" class="ev-filter-btn" style="font-size:8px;padding:2px 6px;border-radius:3px;background:var(--surface);color:var(--text-muted);border:1px solid var(--border);cursor:pointer;font-family:inherit;font-weight:700">Other</button>
+      </div>
+      ${nearEvents.map(e=>`<div class="sidebar-item si-child ev-sidebar-item" data-page="event-${e.id}" data-ev-r="${e.rishabh?'1':'0'}" data-ev-s="${e.shreyas?'1':'0'}"><span class="si-label">${e.shortName}</span><span style="margin-left:auto;display:flex;gap:3px;align-items:center">${e.rishabh?'<span style="width:5px;height:5px;border-radius:50%;background:var(--lavender)" title="Rishabh"></span>':''}${e.shreyas?'<span style="width:5px;height:5px;border-radius:50%;background:var(--gold)" title="Shreyas"></span>':''}</span></div>`).join('')}
       ${farEvents.length>0?`
         <div class="sidebar-item si-child si-parent" onclick="toggleFarEventsExpand(this)" style="color:var(--text-muted)"><span class="si-label">Later (${farEvents.length})</span><span class="si-chevron" style="margin-left:auto;font-size:8px;color:var(--text-muted);transition:transform .2s">&#9654;</span></div>
         <div class="si-children" id="far-events-children" style="display:none">
-          ${farEvents.map(e=>`<div class="sidebar-item si-child" data-page="event-${e.id}" style="padding-left:36px"><span class="si-label">${e.shortName}</span><span style="margin-left:auto;display:flex;gap:3px;align-items:center">${e.rishabh?'<span style="width:5px;height:5px;border-radius:50%;background:var(--lavender)" title="Rishabh"></span>':''}${e.shreyas?'<span style="width:5px;height:5px;border-radius:50%;background:var(--gold)" title="Shreyas"></span>':''}</span></div>`).join('')}
+          ${farEvents.map(e=>`<div class="sidebar-item si-child ev-sidebar-item" data-page="event-${e.id}" data-ev-r="${e.rishabh?'1':'0'}" data-ev-s="${e.shreyas?'1':'0'}" style="padding-left:36px"><span class="si-label">${e.shortName}</span><span style="margin-left:auto;display:flex;gap:3px;align-items:center">${e.rishabh?'<span style="width:5px;height:5px;border-radius:50%;background:var(--lavender)" title="Rishabh"></span>':''}${e.shreyas?'<span style="width:5px;height:5px;border-radius:50%;background:var(--gold)" title="Shreyas"></span>':''}</span></div>`).join('')}
         </div>
       `:''}
     </div>
@@ -3066,6 +3072,30 @@ function renderEventPane(ev) {
       </div>
     </div>
   `;
+}
+
+function filterEventsSidebar(value) {
+  // Filter sidebar event items
+  document.querySelectorAll('.ev-sidebar-item').forEach(function(item) {
+    var r = item.dataset.evR === '1';
+    var s = item.dataset.evS === '1';
+    var show = value === 'all' || (value === 'rishabh' && r) || (value === 'shreyas' && s) || (value === 'other' && !r && !s);
+    item.style.display = show ? '' : 'none';
+  });
+  // Update active button
+  document.querySelectorAll('.ev-filter-btn').forEach(function(btn) {
+    btn.style.background = 'var(--surface)';
+    btn.style.color = 'var(--text-muted)';
+    btn.style.border = '1px solid var(--border)';
+    btn.classList.remove('active');
+  });
+  var activeBtn = event.target;
+  activeBtn.style.background = 'var(--gold)';
+  activeBtn.style.color = '#000';
+  activeBtn.style.border = 'none';
+  activeBtn.classList.add('active');
+  // Also filter the main event panes
+  filterEvents(value);
 }
 
 function filterEvents(value) {
