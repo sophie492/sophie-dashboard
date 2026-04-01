@@ -4607,7 +4607,8 @@ app.get('/api/skill-status', (req, res) => {
     { id: 'calendar-cron', name: 'Calendar Refresh', schedule: 'Every 30 min', ...ranToday(calPath, 'lastUpdated') },
     { id: 'task-cron', name: 'Task Refresh (Notion)', schedule: 'Every 15 min', ...ranToday(tasksPath, 'lastUpdated') },
     { id: 'offsite-monitor', name: 'Offsite Monitor', schedule: '8 AM + 2 PM M-F', ...ranToday(offsitePath, 'lastSynced') },
-    { id: 'hackweek-sheet', name: 'Hack Week Sheet Sync', schedule: 'Every 30 min', ...ranToday(HACKWEEK_PATH, 'lastSheetSync') }
+    { id: 'hackweek-sheet', name: 'Hack Week Sheet Sync', schedule: 'Every 30 min', ...ranToday(HACKWEEK_PATH, 'lastSheetSync') },
+    { id: 'news-cron', name: 'News Feed', schedule: 'Every 4 hours', ...ranToday(NEWS_PATH, 'lastUpdated') }
   ];
 
   // Check if today is a weekday
@@ -4708,6 +4709,145 @@ async function refreshTasksFromNotion() {
   } catch (e) { console.error('[Task Cron] Error:', e.message); }
 }
 
+// ── Daily News Feed Aggregation ──
+async function refreshNewsFeed() {
+  const https = require('https');
+  const http = require('http');
+
+  function fetchUrl(url) {
+    return new Promise((resolve, reject) => {
+      const mod = url.startsWith('https') ? https : http;
+      mod.get(url, { headers: { 'User-Agent': 'Sophie-Dashboard/1.0' }, timeout: 10000 }, (res) => {
+        if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+          return fetchUrl(res.headers.location).then(resolve).catch(reject);
+        }
+        let data = '';
+        res.on('data', chunk => data += chunk);
+        res.on('end', () => resolve(data));
+        res.on('error', reject);
+      }).on('error', reject).on('timeout', function() { this.destroy(); reject(new Error('timeout')); });
+    });
+  }
+
+  function parseRSS(xml) {
+    const items = [];
+    const itemRegex = /<item>([\s\S]*?)<\/item>/gi;
+    let match;
+    while ((match = itemRegex.exec(xml)) !== null) {
+      const block = match[1];
+      const title = (block.match(/<title><!\[CDATA\[([\s\S]*?)\]\]><\/title>/) || block.match(/<title>([\s\S]*?)<\/title>/) || [])[1] || '';
+      const link = (block.match(/<link>([\s\S]*?)<\/link>/) || [])[1] || '';
+      const desc = (block.match(/<description><!\[CDATA\[([\s\S]*?)\]\]><\/description>/) || block.match(/<description>([\s\S]*?)<\/description>/) || [])[1] || '';
+      const pubDate = (block.match(/<pubDate>([\s\S]*?)<\/pubDate>/) || [])[1] || '';
+
+      // Clean HTML from description
+      const summary = desc.replace(/<[^>]+>/g, '').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#039;/g, "'").replace(/\n/g, ' ').trim().slice(0, 200);
+      const cleanTitle = title.replace(/<[^>]+>/g, '').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#039;/g, "'").trim();
+
+      if (cleanTitle && link) {
+        items.push({
+          headline: cleanTitle,
+          summary: summary + (summary.length >= 200 ? '...' : ''),
+          url: link.trim(),
+          pubDate: pubDate ? new Date(pubDate).toISOString() : null
+        });
+      }
+    }
+    return items;
+  }
+
+  try {
+    const aiFeedUrls = [
+      'https://techcrunch.com/category/artificial-intelligence/feed/',
+      'https://www.theverge.com/rss/ai-artificial-intelligence/index.xml',
+      'https://feeds.arstechnica.com/arstechnica/technology-lab'
+    ];
+    const bizFeedUrls = [
+      'https://techcrunch.com/category/startups/feed/',
+      'https://www.axios.com/feeds/tag/deals'
+    ];
+
+    const cutoff = new Date();
+    cutoff.setHours(cutoff.getHours() - 28); // Last 28 hours to ensure coverage
+    const cutoffISO = cutoff.toISOString();
+
+    // Fetch all feeds in parallel
+    const aiResults = await Promise.allSettled(aiFeedUrls.map(url => fetchUrl(url).then(parseRSS)));
+    const bizResults = await Promise.allSettled(bizFeedUrls.map(url => fetchUrl(url).then(parseRSS)));
+
+    let aiStories = [];
+    aiResults.forEach(r => { if (r.status === 'fulfilled') aiStories.push(...r.value); });
+    let bizStories = [];
+    bizResults.forEach(r => { if (r.status === 'fulfilled') bizStories.push(...r.value); });
+
+    // Filter to recent stories and deduplicate by headline
+    function filterRecent(stories) {
+      const seen = new Set();
+      return stories.filter(s => {
+        if (!s.pubDate || s.pubDate < cutoffISO) return false;
+        const key = s.headline.toLowerCase().slice(0, 50);
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      }).sort((a, b) => (b.pubDate || '').localeCompare(a.pubDate || ''));
+    }
+
+    aiStories = filterRecent(aiStories).slice(0, 8);
+    bizStories = filterRecent(bizStories).slice(0, 5);
+
+    if (aiStories.length === 0 && bizStories.length === 0) {
+      console.log('[News Cron] No recent stories found — keeping existing data');
+      return;
+    }
+
+    // Build the day's feed entry
+    const dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    const now = new Date();
+    const dateLabel = dayNames[now.getDay()] + ', ' + monthNames[now.getMonth()] + ' ' + now.getDate();
+
+    const todayEntry = {
+      date: dateLabel,
+      aiStories: aiStories,
+      bizStories: bizStories
+    };
+
+    // Load existing data and prepend today (keep last 7 days)
+    let existing = { newsFeed: [] };
+    try {
+      if (fs.existsSync(NEWS_PATH)) {
+        existing = JSON.parse(fs.readFileSync(NEWS_PATH, 'utf8'));
+      }
+    } catch (e) {}
+
+    // Replace today's entry if it exists, otherwise prepend
+    const existingFeed = existing.newsFeed || [];
+    const todayIdx = existingFeed.findIndex(d => d.date === dateLabel);
+    if (todayIdx >= 0) {
+      existingFeed[todayIdx] = todayEntry;
+    } else {
+      existingFeed.unshift(todayEntry);
+    }
+
+    // Keep only last 7 days
+    const newsFeed = existingFeed.slice(0, 7);
+
+    const payload = {
+      newsFeed: newsFeed,
+      newsDigest: existing.newsDigest || null,
+      fermatNewsroom: existing.fermatNewsroom || [],
+      lastUpdated: new Date().toISOString()
+    };
+
+    const dir = path.dirname(NEWS_PATH);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(NEWS_PATH, JSON.stringify(payload, null, 2));
+    console.log('[News Cron] Refreshed:', aiStories.length, 'AI +', bizStories.length, 'biz stories for', dateLabel);
+  } catch (e) {
+    console.error('[News Cron] Error:', e.message);
+  }
+}
+
 app.listen(PORT, () => {
   console.log('Dashboard running on ' + BASE_URL);
   if (!GOOGLE_CLIENT_ID) console.log('GOOGLE_CLIENT_ID not set - auth disabled (dev mode)');
@@ -4723,5 +4863,9 @@ app.listen(PORT, () => {
   syncHackweekTeamsFromSheet();
   setInterval(syncHackweekTeamsFromSheet, 30 * 60 * 1000);
   console.log('[HW Sheet] Auto-refresh every 30 min');
+  // Refresh news feed on startup + every 4 hours
+  refreshNewsFeed();
+  setInterval(refreshNewsFeed, 4 * 60 * 60 * 1000);
+  console.log('[News Cron] Auto-refresh every 4 hours');
 });
 // persistence verified 1774997724
