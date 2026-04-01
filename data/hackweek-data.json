@@ -180,5 +180,17 @@
     {"number": 5, "dates": "Week of June 7, 2027 (tentative)", "planningStart": "Late April 2027"}
   ],
   "reviews": [],
+  "rubric": [
+    { "criterion": "Quality of Idea", "weight": 0.333, "description": "Originality, feasibility, and potential impact of the project concept" },
+    { "criterion": "Code Quality", "weight": 0.333, "description": "Architecture, reliability, test coverage, and production-readiness" },
+    { "criterion": "Demo Quality", "weight": 0.334, "description": "Clarity, engagement, and polish of the demo presentation" }
+  ],
+  "resourceLinks": [
+    { "label": "GitHub Org", "url": "https://github.com/fermatcommerce", "icon": "github" },
+    { "label": "Figma Workspace", "url": "", "icon": "figma" },
+    { "label": "Notion Hub", "url": "https://www.notion.so/3291ad76fd2a81b8a66ff9d04b4a1bbe", "icon": "notion" },
+    { "label": "API Docs", "url": "", "icon": "docs" }
+  ],
+  "scores": [],
   "lastSynced": "2026-03-27T21:00:00.000Z"
 }
