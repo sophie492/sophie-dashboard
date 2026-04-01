@@ -4339,6 +4339,9 @@ app.use(ensureAuth, express.static(__dirname));
 function generateEventTodos(event) {
   if (event.todos && event.todos.length > 0) return event.todos;
 
+  // No EA tasks for events without Rishabh or Shreyas
+  if (!event.rishabh && !event.shreyas) return [];
+
   const todos = [];
   const type = (event.type || '').toLowerCase();
 
