@@ -4193,7 +4193,8 @@ function renderOffsiteDetailView(el, OFFSITE, ALLDATA) {
   var budgetEstimate = budgetCategories.reduce(function(s,c) { return s + (c.estimated || 0); }, 0);
 
   // Attendees ready (both hotel + flight)
-  var attendeesReady = attendees.filter(function(a) { return a.hotelConfirmed && a.flightBooked; }).length;
+  var attendingOnly = attendees.filter(function(a) { return a.attending !== false; });
+  var attendeesReady = attendingOnly.filter(function(a) { return a.hotelConfirmed && a.flightBooked; }).length;
 
   // Phase colors
   function phaseColor(name) {
@@ -4752,8 +4753,8 @@ function renderOffsiteDetailView(el, OFFSITE, ALLDATA) {
         '<div style="font-size:18px;font-weight:800;color:' + (budget.approved ? 'var(--green)' : 'var(--red)') + ';margin-top:2px">~$' + budgetEstimate.toLocaleString() + ' <span style="font-size:11px;font-weight:500;color:var(--text-dim)">' + (budget.approved ? 'approved' : 'pending approval') + '</span></div>' +
       '</div>' +
       '<div class="card" style="padding:10px 14px;border-left:3px solid var(--blue)">' +
-        '<div style="font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);font-weight:700">Attendees Ready</div>' +
-        '<div style="font-size:18px;font-weight:800;color:var(--blue);margin-top:2px">' + attendeesReady + '/' + attendees.length + ' <span style="font-size:11px;font-weight:500;color:var(--text-dim)">hotel+flight</span></div>' +
+        '<div style="font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);font-weight:700">Travel Ready</div>' +
+        '<div style="font-size:18px;font-weight:800;color:' + (attendeesReady === attendingOnly.length ? 'var(--green)' : 'var(--blue)') + ';margin-top:2px">' + attendeesReady + '/' + attendingOnly.length + ' <span style="font-size:11px;font-weight:500;color:var(--text-dim)">ready</span></div>' +
       '</div>' +
     '</div>' +
 
