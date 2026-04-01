@@ -561,7 +561,7 @@ a.loop-row:hover .loop-source{color:var(--gold)}
   <div class="page" id="page-projects"></div>
   <div class="page" id="page-system"></div>
   <div class="page" id="page-podcast"></div>
-  <div class="page" id="page-bd"></div>
+
   <div class="page" id="page-marketing-hub"></div>
 </main>
 
@@ -900,34 +900,6 @@ const DATA = {
         {text:"Hold planning retro (Sophie + Bharat + BLR leads)",done:false},
         {text:"Update master checklist with lessons learned",done:false},
         {text:"Track which projects make it to production (2-4 weeks later)",done:false}
-      ]}
-    ]
-  },
-
-  bdOwnership: {
-    title: "Partnership & BD Follow-Up Ownership",
-    icon: "\ud83e\udd1d",
-    notionUrl: "https://www.notion.so/1f73833b7d9340e29fb781243c18ce42",
-    reviewFeedback: "Taking work directly off leadership\u2019s plate",
-    phases: [
-      {name:"Phase 1: Build the System",deadline:"Apr 4",tasks:[
-        {text:"Create CEO Relationships Tracker in Notion",done:true},
-        {text:"Seed tracker with 10 active relationships from email audit",done:true},
-        {text:"Create filtered views (Needs Attention, Active, Stale)",done:true},
-        {text:"Build Monday Relationship Digest automation (SKILL.md)",done:true},
-        {text:"Build BD Follow-Up Auto-Drafter automation (SKILL.md)",done:true},
-        {text:"Schedule both automations in Cowork",done:false}
-      ]},
-      {name:"Phase 2: Start Owning Follow-Ups",deadline:"Apr 11",tasks:[
-        {text:"Manually draft 2-3 follow-ups in Rishabh\u2019s voice to calibrate",done:false},
-        {text:"Share tracker with Rishabh and pitch the Monday digest",done:false},
-        {text:"Begin flagging stale threads proactively",done:false},
-        {text:"After 2-3 rounds, propose sending routine follow-ups directly",done:false}
-      ]},
-      {name:"Phase 3: Automation Live",deadline:"Apr 25",tasks:[
-        {text:"Test auto-drafter on 3-5 real threads to calibrate voice",done:false},
-        {text:"Turn on daily auto-drafts with Sophie review gate",done:false},
-        {text:"Start Monday morning relationship digest to Rishabh",done:false}
       ]}
     ]
   },
@@ -1613,7 +1585,7 @@ function applyPersistedState() {
   }
 
   // 5. Apply project done-states for BD, Marketing, LinkedIn
-  const gpProjects = {bd:'bdOwnership', marketing:'marketingReporting', linkedin:'linkedinPipeline'};
+  const gpProjects = {marketing:'marketingReporting', linkedin:'linkedinPipeline'};
   Object.entries(gpProjects).forEach(([key, dataKey]) => {
     if (DATA[dataKey]) {
       const done = new Set(loadGPDone(key));
@@ -1650,9 +1622,7 @@ function renderSidebar(){
   const hwTotal=DATA.hackWeek?DATA.hackWeek.phases.reduce((s,p)=>s+p.tasks.length,0):0;
   const hwDone=DATA.hackWeek?DATA.hackWeek.phases.reduce((s,p)=>s+p.tasks.filter(t=>t.done).length,0):0;
   const hwPct=hwTotal?Math.round((hwDone/hwTotal)*100):0;
-  const bdTotal=DATA.bdOwnership?DATA.bdOwnership.phases.reduce((s,p)=>s+p.tasks.length,0):0;
-  const bdDone=DATA.bdOwnership?DATA.bdOwnership.phases.reduce((s,p)=>s+p.tasks.filter(t=>t.done).length,0):0;
-  const bdPct=bdTotal?Math.round((bdDone/bdTotal)*100):0;
+
   const mktTotal=DATA.marketingReporting?DATA.marketingReporting.phases.reduce((s,p)=>s+p.tasks.length,0):0;
   const mktDone=DATA.marketingReporting?DATA.marketingReporting.phases.reduce((s,p)=>s+p.tasks.filter(t=>t.done).length,0):0;
   const mktPct=mktTotal?Math.round((mktDone/mktTotal)*100):0;
@@ -1676,10 +1646,10 @@ function renderSidebar(){
     <div class="sidebar-item" data-page="tasks"><span class="si-icon">&#128142;</span><span class="si-label">Tasks</span><span class="si-badge gold">${openTasks}</span></div>
     <div class="sidebar-item" data-page="podcast"><span class="si-icon">&#127908;</span><span class="si-label">Podcast</span></div>
     <div class="sidebar-item" data-page="offsite"><span class="si-icon">&#9992;&#65039;</span><span class="si-label">Leadership Offsite</span><span class="si-badge gold" id="offsite-sidebar-badge">${(function(){ var nu = getNextUpcomingOffsite(); if(nu && nu.dates && nu.dates !== 'TBD'){ var cd = nu.dates.replace(/[\u2013\u2014-]\d+/, '').trim(); return Math.ceil((new Date(cd) - new Date()) / 86400000) + 'd'; } return ''; })()}</span></div>
-    <div class="sidebar-item" data-page="bd"><span class="si-icon">&#129309;</span><span class="si-label">BD Tracker</span></div>
+
     <div class="sidebar-item" data-page="marketing-hub"><span class="si-icon">&#128202;</span><span class="si-label">Marketing</span></div>
     <div class="sidebar-item" data-page="project-hackweek"><span class="si-icon">🧪</span><span class="si-label">Hack Week</span><span style="font-size:8px;color:var(--text-muted);margin-left:auto">${hwPct}%</span></div>
-    <div class="sidebar-item" data-page="project-bd"><span class="si-icon">🤝</span><span class="si-label">BD Ownership</span><span style="font-size:8px;color:var(--text-muted);margin-left:auto">${bdPct}%</span></div>
+
     <div class="sidebar-item" data-page="project-marketing"><span class="si-icon">📊</span><span class="si-label">Marketing Reporting</span><span style="font-size:8px;color:var(--text-muted);margin-left:auto">${mktPct}%</span></div>
     <div class="sidebar-item" data-page="project-linkedin"><span class="si-icon">💼</span><span class="si-label">LinkedIn Pipeline</span><span style="font-size:8px;color:var(--text-muted);margin-left:auto">${liPct}%</span></div>
     <div class="sidebar-group">Company</div>
@@ -5352,7 +5322,7 @@ function toggleGPTask(el) {
   const key = el.dataset.gpkey;
   const pi = +el.dataset.gpphase;
   const ti = +el.dataset.gptask;
-  const dataMap = {bd:'bdOwnership',marketing:'marketingReporting',linkedin:'linkedinPipeline'};
+  const dataMap = {marketing:'marketingReporting',linkedin:'linkedinPipeline'};
   const proj = DATA[dataMap[key]];
   if(!proj) return;
   const task = proj.phases[pi].tasks[ti];
@@ -5423,10 +5393,7 @@ function renderProjectsPage(){
         <div class="page-header"><div class="page-title">&#127881; FPPC Events</div></div>
         ${renderFPPCProject()}
       </div>
-      <div class="project-pane ${activeProject==='bd'?'active':''}" id="pane-bd">
-        <div class="page-header"><div class="page-title">🤝 BD Follow-Up Ownership</div></div>
-        ${renderGenericProject(DATA.bdOwnership,'bd')}
-      </div>
+
       <div class="project-pane ${activeProject==='marketing'?'active':''}" id="pane-marketing">
         <div class="page-header"><div class="page-title">📊 Marketing Reporting</div></div>
         ${renderGenericProject(DATA.marketingReporting,'marketing')}
@@ -6256,7 +6223,7 @@ async function init(){
   // Async pages — each wrapped independently so one failure doesn't block others
   renderPodcastPage().catch(e=>console.warn('[Init] Podcast failed:',e.message));
   renderOffsitePage().catch(e=>console.warn('[Init] Offsite failed:',e.message));
-  renderBDPage().catch(e=>console.warn('[Init] BD failed:',e.message));
+
   renderMarketingHubPage().catch(e=>console.warn('[Init] Marketing failed:',e.message));
 
   try{
