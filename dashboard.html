@@ -3082,7 +3082,18 @@ function updateTodoProgress(evId) {
     fill.style.background = pct >= 75 ? 'var(--green)' : pct >= 40 ? 'var(--yellow)' : 'var(--red)';
   }
 
-  const progBadge = pane.querySelector('.card-head .badge[class*="tag-"]');
+  // Update the progress badge (percentage)
+  const progCards = pane.querySelectorAll('.card');
+  progCards.forEach(function(card) {
+    var title = card.querySelector('.card-title');
+    if (title && title.textContent.includes('Progress')) {
+      var badge = card.querySelector('.badge');
+      if (badge) {
+        badge.textContent = pct + '%';
+        badge.className = 'badge ' + (pct >= 75 ? 'tag-green' : pct >= 40 ? 'tag-yellow' : 'tag-red');
+      }
+    }
+  });
 
   const counter = pane.querySelector('[style*="font-size:11px"][style*="color:var(--text-muted)"]');
   if(counter && counter.textContent.includes('of')) {
@@ -3095,6 +3106,10 @@ function updateTodoProgress(evId) {
     todoBadge.textContent = done + '/' + total;
     todoBadge.className = 'badge ' + (done === total ? 'tag-green' : 'tag-yellow');
   }
+
+  // Reindex todo items so data-todo-idx stays in sync
+  var allItems = pane.querySelectorAll('.mkt-todo-item');
+  allItems.forEach(function(item, i) { item.dataset.todoIdx = i; });
 }
 
 async function renderEventsPage(){
