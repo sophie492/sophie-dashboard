@@ -7168,6 +7168,7 @@ async function renderPodcastPage(){
     {id:'pod-guests', label:'Guests'},
     {id:'pod-launch', label:'Launch Prep'},
     {id:'pod-topics', label:'Topics'},
+    {id:'pod-past', label:'Past Episodes'},
     {id:'pod-reviews', label:'Reviews'},
     {id:'pod-distribution', label:'Distribution'}
   ];
@@ -7209,6 +7210,7 @@ async function renderPodcastPage(){
     ${renderPodGuests()}
     ${renderPodLaunchPrep()}
     ${renderPodTopics()}
+    ${renderPodPast()}
     ${renderPodReviews()}
     ${renderPodDistribution()}
   `;
@@ -7277,6 +7279,42 @@ async function renderPodcastPage(){
       updatePodLaunchProgress();
     });
   });
+
+  // Switch to a specific episode
+  window.switchPodEpisode = function(epId) {
+    var ep = PODCAST_EPISODES.find(function(e) { return e.id === epId; });
+    if (!ep) return;
+    // Replace the current episode pane content
+    var pane = document.getElementById('pod-current');
+    if (pane) pane.outerHTML = renderPodCurrentEpisode(ep);
+    // Switch to the current episode tab
+    document.querySelectorAll('.pod-nav-btn').forEach(function(b) { b.classList.remove('active'); });
+    document.querySelectorAll('.pod-tab-pane').forEach(function(p) { p.classList.remove('active'); });
+    document.querySelector('.pod-nav-btn[data-pod-tab="pod-current"]').classList.add('active');
+    document.getElementById('pod-current').classList.add('active');
+    // Re-wire todo checkboxes for the new episode
+    document.querySelectorAll('.pod-ep-todo .task-checkbox').forEach(function(cb) {
+      cb.onclick = function(e) {
+        e.stopPropagation();
+        var item = cb.closest('.task-check-item');
+        var isChecked = item.classList.toggle('checked');
+        cb.classList.toggle('checked');
+        if(isChecked) { item.style.opacity='0.45'; } else { item.style.opacity=''; }
+        var todoEpId = item.dataset.epId;
+        var todoIdx = parseInt(item.dataset.todoIdx);
+        var todoEp = PODCAST_EPISODES.find(function(e) { return e.id === todoEpId; });
+        if (todoEp && !isNaN(todoIdx) && todoEp.todos[todoIdx]) {
+          todoEp.todos[todoIdx].done = isChecked;
+          var taskRealId = todoEp.todos[todoIdx].id || ('t' + (todoIdx + 1));
+          fetch('/api/podcast/episodes/' + todoEpId + '/todos/' + taskRealId, {
+            method: 'PATCH', headers: {'Content-Type': 'application/json'}, credentials: 'include',
+            body: JSON.stringify({status: isChecked ? 'Done' : 'To Do'})
+          }).catch(function(err) { console.error('Failed:', err); });
+        }
+        updatePodEpProgress(todoEpId);
+      };
+    });
+  };
 
   // -- Sub-tab render functions --
 
@@ -7393,7 +7431,7 @@ async function renderPodcastPage(){
               const done = e.todos.filter(function(t){return t.done;}).length;
               const total = e.todos.length;
               const p = total ? Math.round(done/total*100) : 0;
-              return '<div class="card" style="padding:12px;margin-bottom:8px">' +
+              return '<div class="card" style="padding:12px;margin-bottom:8px;cursor:pointer" onclick="switchPodEpisode(\''+e.id+'\')">' +
                 '<div style="font-size:12px;font-weight:700;color:var(--text)">Ep '+e.number+'</div>' +
                 '<div style="font-size:11px;color:var(--text-dim);margin-top:2px">'+e.title+'</div>' +
                 (e.guest ? '<div style="font-size:10px;color:var(--text-muted);margin-top:2px">'+e.guest+'</div>' : '') +
@@ -7541,6 +7579,41 @@ async function renderPodcastPage(){
           '</div>' +
         '</div>';
       }).join('') +
+    '</div>';
+  }
+
+  function renderPodPast() {
+    var pastEps = PODCAST_EPISODES.filter(function(e) { return e.phase === 'Done'; });
+    if (pastEps.length === 0) {
+      return '<div class="pod-tab-pane" id="pod-past"><div class="card"><div class="card-body" style="padding:40px;text-align:center;color:var(--text-muted)"><div style="font-size:20px;margin-bottom:8px">&#127908;</div><div>No published episodes yet.</div></div></div></div>';
+    }
+    // Sort by episode number descending (most recent first)
+    pastEps.sort(function(a, b) { return (b.number || 0) - (a.number || 0); });
+
+    return '<div class="pod-tab-pane" id="pod-past">' +
+      '<div class="card" style="margin-bottom:12px"><div class="card-head"><span class="card-title">Published Episodes</span><span style="font-size:10px;color:var(--text-muted)">' + pastEps.length + ' episodes</span></div>' +
+      '<div class="card-body" style="padding:0">' +
+        pastEps.map(function(ep) {
+          var doneTodos = ep.todos ? ep.todos.filter(function(t){return t.done;}).length : 0;
+          var totalTodos = ep.todos ? ep.todos.length : 0;
+          return '<div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;cursor:pointer;transition:background .15s" onclick="switchPodEpisode(\'' + ep.id + '\')" onmouseenter="this.style.background=\'var(--card-hover)\'" onmouseleave="this.style.background=\'none\'">' +
+            '<div style="min-width:40px;text-align:center"><div style="font-size:16px;font-weight:800;color:var(--gold)">'+  (ep.number || '?') + '</div><div style="font-size:8px;color:var(--text-muted)">EP</div></div>' +
+            '<div style="flex:1">' +
+              '<div style="font-size:13px;font-weight:700;color:var(--text)">' + ep.title + '</div>' +
+              (ep.guest ? '<div style="font-size:11px;color:var(--text-dim);margin-top:2px">' + ep.guest + (ep.guestCompany ? ' (' + ep.guestCompany + ')' : '') + '</div>' : '') +
+              '<div style="display:flex;gap:12px;margin-top:4px;font-size:10px;color:var(--text-muted)">' +
+                (ep.recordingDate ? '<span>Recorded: ' + ep.recordingDate + '</span>' : '') +
+                (ep.publishDate ? '<span>Published: ' + ep.publishDate + '</span>' : '') +
+                '<span>' + doneTodos + '/' + totalTodos + ' tasks</span>' +
+              '</div>' +
+            '</div>' +
+            '<div style="display:flex;gap:6px;align-items:center">' +
+              '<span class="pod-phase-badge" style="background:rgba(72,187,120,.15);color:var(--green)">Published</span>' +
+              (ep.notionLink ? '<a href="' + ep.notionLink + '" target="_blank" onclick="event.stopPropagation()" style="font-size:9px;color:var(--gold);text-decoration:none">Notion &#8599;</a>' : '') +
+            '</div>' +
+          '</div>';
+        }).join('') +
+      '</div></div>' +
     '</div>';
   }
 
