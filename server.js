@@ -4819,6 +4819,96 @@ async function refreshPodcastFromNotion() {
       topics = existing.topics || [];
     }
 
+    // Sync templates from Notion
+    let templates = [];
+    try {
+      const PODCAST_TEMPLATES_DB = 'bccf3e9759bd4f78bfb834e718ed5f6d';
+      let hasMore = true, startCursor;
+      while (hasMore) {
+        const resp = await notion.databases.query({
+          database_id: PODCAST_TEMPLATES_DB,
+          start_cursor: startCursor,
+          page_size: 100
+        });
+        resp.results.forEach(page => {
+          const p = page.properties;
+          const getText = (prop) => {
+            if (!prop) return '';
+            if (prop.type === 'title') return (prop.title || []).map(t => t.plain_text).join('');
+            if (prop.type === 'rich_text') return (prop.rich_text || []).map(t => t.plain_text).join('');
+            if (prop.type === 'select') return prop.select ? prop.select.name : '';
+            return '';
+          };
+          const name = getText(p['Template Name']);
+          if (!name) return;
+          templates.push({
+            id: page.id,
+            notionPageId: page.id,
+            name: name,
+            category: getText(p['Category']),
+            template: getText(p['Template Content']),
+            variables: getText(p['Variables']),
+            notionUrl: 'https://www.notion.so/' + page.id.replace(/-/g, '')
+          });
+        });
+        hasMore = resp.has_more;
+        startCursor = resp.next_cursor;
+      }
+      console.log('[Podcast Sync] Fetched', templates.length, 'templates from Notion');
+    } catch(e) {
+      console.warn('[Podcast Sync] Templates query failed:', e.message);
+      templates = existing.templates || [];
+    }
+
+    // Sync launch tasks from Notion Task Dashboard
+    let launchTasks = [];
+    try {
+      const PODCAST_TASKS_DB = '1eaf780a04c1483ca63620ba47946abe';
+      let hasMore = true, startCursor;
+      while (hasMore) {
+        const resp = await notion.databases.query({
+          database_id: PODCAST_TASKS_DB,
+          start_cursor: startCursor,
+          page_size: 100
+        });
+        resp.results.forEach(page => {
+          const p = page.properties;
+          const getText = (prop) => {
+            if (!prop) return '';
+            if (prop.type === 'title') return (prop.title || []).map(t => t.plain_text).join('');
+            if (prop.type === 'rich_text') return (prop.rich_text || []).map(t => t.plain_text).join('');
+            if (prop.type === 'select') return prop.select ? prop.select.name : '';
+            if (prop.type === 'status') return prop.status ? prop.status.name : '';
+            if (prop.type === 'date') return prop.date && prop.date.start ? prop.date.start : '';
+            if (prop.type === 'checkbox') return prop.checkbox;
+            return '';
+          };
+          const text = getText(p['Task'] || p['Name'] || p['Task Name']);
+          if (!text) return;
+          const status = getText(p['Status']) || 'Not Started';
+          launchTasks.push({
+            id: page.id,
+            notionPageId: page.id,
+            text: text,
+            status: status,
+            _done: status === 'Done' || status === 'Complete',
+            owner: getText(p['Owner'] || p['Assignee']),
+            phase: getText(p['Phase'] || p['Category']),
+            dueDate: getText(p['Due Date'] || p['Due']),
+            priority: getText(p['Priority']),
+            notes: getText(p['Notes'] || p['Details']),
+            notionUrl: 'https://www.notion.so/' + page.id.replace(/-/g, '')
+          });
+        });
+        hasMore = resp.has_more;
+        startCursor = resp.next_cursor;
+      }
+      console.log('[Podcast Sync] Fetched', launchTasks.length, 'launch tasks from Notion');
+    } catch(e) {
+      console.warn('[Podcast Sync] Launch tasks query failed:', e.message);
+      launchTasks = existing.launchTasks || [];
+    }
+
     // Sync episode todos from Notion pages
     if (existing.episodes && existing.episodes.length > 0) {
       for (const ep of existing.episodes) {
@@ -4894,12 +4984,14 @@ async function refreshPodcastFromNotion() {
     // Merge into existing data
     existing.guests = guests;
     existing.topics = topics;
+    existing.templates = templates;
+    existing.launchTasks = launchTasks;
     existing.lastNotionSync = new Date().toISOString();
 
     const dir = path.dirname(DATA_PATH);
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
     fs.writeFileSync(DATA_PATH, JSON.stringify(existing, null, 2));
-    console.log('[Podcast Sync] Saved', guests.length, 'guests +', topics.length, 'topics');
+    console.log('[Podcast Sync] Saved', guests.length, 'guests +', topics.length, 'topics +', templates.length, 'templates +', launchTasks.length, 'tasks');
   } catch(e) {
     console.error('[Podcast Sync] Error:', e.message);
   }

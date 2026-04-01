@@ -196,7 +196,7 @@ module.exports = function createPodcastRouter(notion) {
     res.json(data.templates || []);
   });
 
-  router.patch('/templates/:templateId', (req, res) => {
+  router.patch('/templates/:templateId', async (req, res) => {
     const authHeader = req.headers.authorization;
     const apiKey = process.env.DASHBOARD_API_KEY;
     if (!apiKey || authHeader !== `Bearer ${apiKey}`) {
@@ -212,6 +212,20 @@ module.exports = function createPodcastRouter(notion) {
       if (name !== undefined) tmpl.name = name;
       if (category !== undefined) tmpl.category = category;
       saveData(data);
+      // Sync back to Notion
+      if (notion && tmpl.notionPageId) {
+        try {
+          await notion.pages.update({
+            page_id: tmpl.notionPageId,
+            properties: {
+              'Template Content': { rich_text: [{ text: { content: (template || tmpl.template).slice(0, 2000) } }] },
+              ...(name ? { 'Template Name': { title: [{ text: { content: name } }] } } : {}),
+              ...(category ? { 'Category': { select: { name: category } } } : {})
+            }
+          });
+          console.log('[Podcast] Template synced to Notion:', tmpl.name);
+        } catch(e) { console.warn('[Podcast] Notion template sync failed:', e.message); }
+      }
       res.json({ ok: true });
     } catch (e) { res.status(500).json({ error: e.message }); }
   });
