@@ -2472,6 +2472,11 @@ function toggleMyTask(el) {
     body:JSON.stringify({taskId,title:titleText,done:isChecked})
   }).catch(()=>{});
 
+  // Update DATA.myTasks so sidebar + overview reflect the change
+  var myTask = (DATA.myTasks||[]).find(function(t){ return t.id === taskId || t.notionPageId === taskId; });
+  if (myTask) myTask.done = isChecked;
+  renderSidebar();
+
   const openList = document.getElementById('my-task-list');
   const doneList = document.getElementById('my-done-list');
   if(isChecked){
