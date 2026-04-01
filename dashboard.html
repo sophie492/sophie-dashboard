@@ -1635,8 +1635,17 @@ function renderSidebar(){
   const shreyasPrios=(CEO_BRIEF.shreyasFlagged||CEO_BRIEF.shreyasPriorities||[]).length;
   const openTasks=(DATA.myTasks||[]).filter(t=>!t.done).length;
   const broken=(DATA.tasks||[]).filter(t=>t.status!=='ok'&&t.status!=='off').length;
-  const offsiteTotal=DATA.leadershipOffsite?DATA.leadershipOffsite.phases.reduce((s,p)=>s+p.tasks.length,0):0;
-  const offsiteDone=DATA.leadershipOffsite?DATA.leadershipOffsite.phases.reduce((s,p)=>s+p.tasks.filter(t=>t.done).length,0):0;
+  // Use API data if available, fall back to embedded DATA
+  const _offsiteSource = (function() {
+    if (_offsiteApiData && _offsiteApiData.offsites) {
+      var planning = null;
+      Object.values(_offsiteApiData.offsites).forEach(function(yr) { yr.forEach(function(o) { if (o.status === 'Planning' && !planning) planning = o; }); });
+      if (planning && planning.phases) return planning;
+    }
+    return DATA.leadershipOffsite;
+  })();
+  const offsiteTotal=_offsiteSource?_offsiteSource.phases.reduce((s,p)=>s+p.tasks.length,0):0;
+  const offsiteDone=_offsiteSource?_offsiteSource.phases.reduce((s,p)=>s+p.tasks.filter(t=>t.done).length,0):0;
   const offsitePct=offsiteTotal?Math.round((offsiteDone/offsiteTotal)*100):0;
   const hwTotal=DATA.hackWeek?DATA.hackWeek.phases.reduce((s,p)=>s+p.tasks.length,0):0;
   const hwDone=DATA.hackWeek?DATA.hackWeek.phases.reduce((s,p)=>s+p.tasks.filter(t=>t.done).length,0):0;
