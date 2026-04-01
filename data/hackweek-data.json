@@ -251,174 +251,214 @@
             {
               "text": "Pick the dates — Avoid US and India holidays, check OOO schedules, BLR office holidays",
               "done": false,
-              "lesson": "Jan 2026: Holiday conflicts with MLK Day and BLR holiday caused last-minute schedule changes."
+              "lesson": "Jan 2026: Holiday conflicts with MLK Day and BLR holiday caused last-minute schedule changes.",
+              "dueDate": "2026-04-24"
             },
             {
               "text": "Decide on cross-office schedule (SF & BLR async alignment)",
-              "done": false
+              "done": false,
+              "dueDate": "2026-04-24"
             },
             {
               "text": "Confirm the daily structure (Build → Demo → Optimize/Ship)",
-              "done": false
+              "done": false,
+              "dueDate": "2026-04-24"
             },
             {
               "text": "Cancel all internal meetings for hack week",
-              "done": false
+              "done": false,
+              "dueDate": "2026-06-01"
             },
             {
               "text": "Set up on-call schedule for customer-facing coverage",
-              "done": false
+              "done": false,
+              "dueDate": "2026-06-01"
             },
             {
               "text": "Block calendars with hack week events",
-              "done": false
+              "done": false,
+              "dueDate": "2026-06-01"
             },
             {
               "text": "Set up Loom recording workflow",
-              "done": false
+              "done": false,
+              "dueDate": "2026-06-01"
             }
           ],
           "teams": [
             {
               "text": "Create team sign-up spreadsheet (Google Sheet)",
-              "done": false
+              "done": false,
+              "dueDate": "2026-05-08"
             },
             {
               "text": "Set team formation rules (2-4 people, cross-functional >50%, no solo, PMs/Designers encouraged)",
-              "done": false
+              "done": false,
+              "dueDate": "2026-05-08"
             },
             {
               "text": "Set deadline for team/idea submission (~1 week before)",
-              "done": false
+              "done": false,
+              "dueDate": "2026-05-08"
             },
             {
               "text": "Send reminder nudges for team formation",
-              "done": false
+              "done": false,
+              "dueDate": "2026-05-22"
             },
             {
               "text": "Have Bharat/Shreyas review and approve all ideas",
-              "done": false
+              "done": false,
+              "dueDate": "2026-06-01"
             },
             {
               "text": "Lock all teams and ideas (~3 days before)",
-              "done": false
+              "done": false,
+              "dueDate": "2026-06-05"
             },
             {
               "text": "Confirm attendance in each office",
-              "done": false
+              "done": false,
+              "dueDate": "2026-06-08"
             },
             {
               "text": "Decide on prizes and categories (AI, Customer Impact, Internal Tool)",
-              "done": false
+              "done": false,
+              "dueDate": "2026-04-24"
             },
             {
               "text": "Confirm judges (Shreyas, Rishabh, Bharat + leadership)",
               "done": false,
-              "lesson": "Jan 2026: Both Bharat and Shreyas were absent for scheduled Town Hall announcement."
+              "lesson": "Jan 2026: Both Bharat and Shreyas were absent for scheduled Town Hall announcement.",
+              "dueDate": "2026-04-24"
             }
           ],
           "logistics": [
             {
               "text": "Get budget approved — prizes, travel, food, social events (Evelyn)",
-              "done": false
+              "done": false,
+              "dueDate": "2026-05-01"
             },
             {
               "text": "Assign a BLR logistics lead (Kunal/Sriram + Shiksha)",
-              "done": false
+              "done": false,
+              "dueDate": "2026-04-30"
             },
             {
               "text": "Arrange travel for remote employees (budget $550-600 flights, $350/night hotel)",
               "done": false,
-              "lesson": "Jan 2026: $400 flight budget and $1,400 hotel budget were too tight."
+              "lesson": "Jan 2026: $400 flight budget and $1,400 hotel budget were too tight.",
+              "dueDate": "2026-05-15"
             },
             {
               "text": "Coordinate BLR travel with Kunal/Sriram",
-              "done": false
+              "done": false,
+              "dueDate": "2026-05-15"
             },
             {
               "text": "Plan social events — team dinner (mid-week) + happy hour (end of week), both offices",
-              "done": false
+              "done": false,
+              "dueDate": "2026-05-22"
             },
             {
               "text": "Set up late-night dinner policy (expense dinner if working past 6pm)",
-              "done": false
+              "done": false,
+              "dueDate": "2026-05-22"
             },
             {
               "text": "Distribute prizes ($1,000 per winning team, split among members)",
-              "done": false
+              "done": false,
+              "dueDate": "2026-06-19"
             }
           ],
           "comms": [
             {
               "text": "Create #hack-week-jun-2026 Slack channel",
-              "done": false
+              "done": false,
+              "dueDate": "2026-05-08"
             },
             {
               "text": "Draft and send kick-off announcement in #dev and #general (have Bharat post)",
-              "done": false
+              "done": false,
+              "dueDate": "2026-05-08"
             },
             {
               "text": "Draft Slack announcement templates",
-              "done": false
+              "done": false,
+              "dueDate": "2026-05-15"
             },
             {
               "text": "Post opening message in #hack-week channel",
-              "done": false
+              "done": false,
+              "dueDate": "2026-06-08"
             },
             {
               "text": "Encourage daily progress updates in Slack",
-              "done": false
+              "done": false,
+              "dueDate": "2026-06-09"
             },
             {
               "text": "Post shipping guidance on Day 4",
-              "done": false
+              "done": false,
+              "dueDate": "2026-06-11"
             },
             {
               "text": "Post hack week recap in #general with all team names, Loom links, winners",
-              "done": false
+              "done": false,
+              "dueDate": "2026-06-19"
             },
             {
               "text": "Create LinkedIn content — coordinate timing with marketing",
-              "done": false
+              "done": false,
+              "dueDate": "2026-06-26"
             },
             {
               "text": "Feature hack week at offsite/company events if applicable",
-              "done": false
+              "done": false,
+              "dueDate": "2026-06-26"
             }
           ],
           "judging": [
             {
               "text": "Judges review all demos and Looms (2-3 days)",
-              "done": false
+              "done": false,
+              "dueDate": "2026-06-13"
             },
             {
               "text": "Pick winners across all categories",
-              "done": false
+              "done": false,
+              "dueDate": "2026-06-15"
             },
             {
               "text": "Announce winners at Town Hall (lock date + ensure judges available!)",
               "done": false,
-              "lesson": "Jan 2026: Both Bharat and Shreyas were absent for scheduled Town Hall announcement."
+              "lesson": "Jan 2026: Both Bharat and Shreyas were absent for scheduled Town Hall announcement.",
+              "dueDate": "2026-06-19"
             },
             {
               "text": "Have winning teams re-present polished demos to company",
-              "done": false
+              "done": false,
+              "dueDate": "2026-06-19"
             },
             {
               "text": "Send feedback survey (Google Form)",
-              "done": false
+              "done": false,
+              "dueDate": "2026-06-19"
             },
             {
               "text": "Hold planning retro (Sophie + Bharat + BLR leads)",
-              "done": false
+              "done": false,
+              "dueDate": "2026-06-26"
             },
             {
               "text": "Update master checklist with lessons learned",
-              "done": false
+              "done": false,
+              "dueDate": "2026-06-26"
             },
             {
               "text": "Track which projects made it to production (2-4 weeks later)",
-              "done": false
+              "done": false,
+              "dueDate": "2026-07-06"
             }
           ]
         },

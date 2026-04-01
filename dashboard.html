@@ -4952,18 +4952,32 @@ function renderHackWeek() {
   function renderTabTasks(tabKey, label) {
     var tasks = hwTasks[tabKey] || [];
     var tabDone = tasks.filter(function(t){return t.done;}).length;
+    var today = new Date().toISOString().slice(0,10);
     var html = '<div class="card" style="margin-bottom:12px">';
     html += '<div class="card-head"><span class="card-title">' + label + '</span><span class="hw-tab-task-counter" style="font-size:10px;color:var(--text-muted)">' + tabDone + '/' + tasks.length + '</span></div>';
     html += '<div class="card-body" style="padding:8px 14px">';
     tasks.forEach(function(t, ti) {
+      var dueBadge = '';
+      if (t.dueDate && !t.done) {
+        var daysLeft = Math.ceil((new Date(t.dueDate + 'T23:59:59') - new Date()) / 86400000);
+        if (daysLeft < 0) {
+          dueBadge = '<span style="font-size:8px;padding:1px 5px;border-radius:3px;background:var(--red-soft);color:var(--red);font-weight:700;white-space:nowrap">' + Math.abs(daysLeft) + 'd overdue</span>';
+        } else if (daysLeft <= 7) {
+          dueBadge = '<span style="font-size:8px;padding:1px 5px;border-radius:3px;background:var(--yellow-soft, rgba(219,203,119,0.15));color:var(--yellow);font-weight:700;white-space:nowrap">' + daysLeft + 'd</span>';
+        } else {
+          dueBadge = '<span style="font-size:8px;padding:1px 5px;border-radius:3px;background:var(--surface);color:var(--text-muted);font-weight:600;white-space:nowrap">' + new Date(t.dueDate + 'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'}) + '</span>';
+        }
+      } else if (t.dueDate && t.done) {
+        dueBadge = '<span style="font-size:8px;padding:1px 5px;border-radius:3px;background:var(--green-soft);color:var(--green);font-weight:600;white-space:nowrap">&#10003;</span>';
+      }
       html += '<div class="hw-task' + (t.done?' checked':'') + '" data-hwtab="' + tabKey + '" data-hwtask="' + ti + '" style="display:flex;align-items:flex-start;gap:8px;padding:5px 4px;border-radius:5px;cursor:pointer;transition:background .15s;font-size:11px;position:relative" onclick="toggleHWTabTask(this)">' +
         '<div class="task-checkbox' + (t.done?' checked':'') + '"></div>' +
         '<span class="hw-task-text" style="color:' + (t.done?'var(--text-muted)':'var(--text-dim)') + ';' + (t.done?'text-decoration:line-through;opacity:.5':'') + ';line-height:1.3;flex:1">' + t.text + '</span>' +
+        dueBadge +
         '<span class="hw-task-edit" onclick="event.stopPropagation();editHWTask(\'' + tabKey + '\',' + ti + ')" style="font-size:9px;color:var(--text-muted);cursor:pointer;opacity:0;transition:opacity .15s;padding:2px 4px" onmouseover="this.style.color=\'var(--gold)\'" onmouseout="this.style.color=\'var(--text-muted)\'">&#9998;</span>' +
         '<span class="hw-task-del" onclick="event.stopPropagation();deleteHWTask(\'' + tabKey + '\',' + ti + ')" style="font-size:9px;color:var(--text-muted);cursor:pointer;opacity:0;transition:opacity .15s;padding:2px 4px" onmouseover="this.style.color=\'var(--red)\'" onmouseout="this.style.color=\'var(--text-muted)\'">&#10005;</span>' +
       '</div>';
     });
-    // Add task input
     if (!isComplete) {
       html += '<div style="display:flex;align-items:center;gap:8px;padding:6px 4px;margin-top:4px">';
       html += '<span style="font-size:12px;color:var(--gold);cursor:pointer" onclick="addHWTask(\'' + tabKey + '\')">+</span>';
@@ -5138,6 +5152,43 @@ function renderHackWeek() {
             var tabLabels = {schedule:'Schedule',teams:'Teams',logistics:'Logistics',comms:'Comms',judging:'Judging'};
             return '<span style="font-size:9px;padding:2px 8px;border-radius:4px;background:var(--surface);border:1px solid var(--border);color:' + (d===arr.length&&arr.length>0?'var(--green)':'var(--text-muted)') + '">' + tabLabels[t] + ' ' + d + '/' + arr.length + '</span>';
           }).join('')}
+        </div>
+        <!-- Timeline -->
+        <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border)">
+          <div style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Timeline</div>
+          ${(function() {
+            var allTasks = [];
+            tabNames.forEach(function(tab) {
+              (hwTasks[tab]||[]).forEach(function(t) { if (t.dueDate) allTasks.push({text:t.text,dueDate:t.dueDate,done:t.done,tab:tab}); });
+            });
+            if (allTasks.length === 0) return '<div style="font-size:11px;color:var(--text-muted)">No due dates set.</div>';
+
+            // Group by week
+            var weeks = {};
+            allTasks.forEach(function(t) {
+              var d = new Date(t.dueDate + 'T12:00:00');
+              var weekStart = new Date(d); weekStart.setDate(d.getDate() - d.getDay());
+              var key = weekStart.toISOString().slice(0,10);
+              if (!weeks[key]) weeks[key] = {label: new Date(key + 'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'}), tasks:[]};
+              weeks[key].tasks.push(t);
+            });
+            var sortedWeeks = Object.keys(weeks).sort();
+            var today = new Date().toISOString().slice(0,10);
+
+            return sortedWeeks.map(function(wk) {
+              var w = weeks[wk];
+              var done = w.tasks.filter(function(t){return t.done;}).length;
+              var total = w.tasks.length;
+              var isPast = wk < today;
+              var isCurrent = !isPast && wk <= new Date(new Date().getTime() + 7*86400000).toISOString().slice(0,10);
+              var barColor = done === total ? 'var(--green)' : isCurrent ? 'var(--gold)' : 'var(--text-muted)';
+              return '<div style="display:flex;align-items:center;gap:8px;padding:4px 0;font-size:10px">' +
+                '<span style="min-width:55px;color:' + (isCurrent ? 'var(--gold)' : 'var(--text-muted)') + ';font-weight:' + (isCurrent ? '700' : '500') + '">' + w.label + '</span>' +
+                '<div style="flex:1;height:4px;background:var(--surface);border-radius:2px;overflow:hidden"><div style="height:100%;width:' + (total?Math.round(done/total*100):0) + '%;background:' + barColor + ';border-radius:2px;transition:width .3s"></div></div>' +
+                '<span style="min-width:30px;text-align:right;color:' + (done===total && total>0 ? 'var(--green)' : 'var(--text-muted)') + '">' + done + '/' + total + '</span>' +
+              '</div>';
+            }).join('');
+          })()}
         </div>
       </div>
     </div>
