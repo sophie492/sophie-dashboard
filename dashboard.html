@@ -3577,10 +3577,15 @@ function getSelectedHackweek() {
 
 function switchHackweek(id) {
   _selectedHackweekId = id;
-  renderProjectsPage();
+  // Re-apply checkbox states for the newly selected hack week
+  loadServerCheckboxStates().then(function() {
+    renderProjectsPage();
+  }).catch(function() {
+    renderProjectsPage();
+  });
 }
 
-fetchHackweekData();
+// fetchHackweekData() called in init() to ensure proper sequencing
 
 function syncOffsiteToNotion() {
   const btn = document.getElementById('offsite-sync-btn');
@@ -6290,8 +6295,9 @@ async function init(){
     await fetchLiveCalendar().catch(()=>{});
     await fetchLiveBrief().catch(()=>{});
     await fetchSkillStatus().catch(()=>{});
-    // Don't block on checkbox states — load them in background
-    loadServerCheckboxStates().catch(e=>console.warn('[Init] Checkbox load failed:',e.message));
+    await fetchHackweekData().catch(()=>{});
+    // Load checkbox states AFTER hack week data so states can be applied to phases
+    await loadServerCheckboxStates().catch(e=>console.warn('[Init] Checkbox load failed:',e.message));
     renderSidebar();
     updateFreshness();
     renderOverview();
