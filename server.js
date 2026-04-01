@@ -1523,7 +1523,9 @@ app.post('/api/hackweek', (req, res) => {
   try {
     const dir = path.dirname(HACKWEEK_PATH);
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-    fs.writeFileSync(HACKWEEK_PATH, JSON.stringify({ ...req.body, lastSynced: new Date().toISOString() }, null, 2));
+    const existing = loadHackweekData();
+    const merged = { ...existing, ...req.body, lastSynced: new Date().toISOString() };
+    fs.writeFileSync(HACKWEEK_PATH, JSON.stringify(merged, null, 2));
     res.json({ ok: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });

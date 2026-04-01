@@ -1509,7 +1509,7 @@ function renderSidebar(){
   const offsiteTotal=_offsiteSource?_offsiteSource.phases.reduce((s,p)=>s+p.tasks.length,0):0;
   const offsiteDone=_offsiteSource?_offsiteSource.phases.reduce((s,p)=>s+p.tasks.filter(t=>t.done).length,0):0;
   const offsitePct=offsiteTotal?Math.round((offsiteDone/offsiteTotal)*100):0;
-  const _hwSidebar = (function(){ var hw = getSelectedHackweek(); var ph = (hw.checklist && hw.checklist.phases && hw.checklist.phases.length > 0) ? hw.checklist.phases : (DATA.hackWeek ? DATA.hackWeek.phases : []); return ph; })();
+  const _hwSidebar = (function(){ var hw = getSelectedHackweek(); return (hw.checklist && hw.checklist.phases) ? hw.checklist.phases : []; })();
   const hwTotal=_hwSidebar.reduce(function(s,p){return s+(p.tasks||p.items||[]).length;},0);
   const hwDone=_hwSidebar.reduce(function(s,p){return s+(p.tasks||p.items||[]).filter(function(t){return t.done;}).length;},0);
   const hwPct=hwTotal?Math.round((hwDone/hwTotal)*100):0;
@@ -1861,7 +1861,7 @@ function renderMyWorkSection(){
   let offsiteDone=0,offsiteTotal=0;
   if(offsite){offsite.phases.forEach(p=>{p.tasks.forEach(t=>{offsiteTotal++;if(t.done)offsiteDone++;});});}
   const offsitePct=offsiteTotal>0?Math.round(offsiteDone/offsiteTotal*100):0;
-  const hw=(function(){ var sel = getSelectedHackweek(); if (sel.id) return sel; return DATA.hackWeek; })();
+  const hw=getSelectedHackweek();
   let hwDone=0,hwTotal=0;
   if(hw){var hwPhases = (hw.checklist && hw.checklist.phases && hw.checklist.phases.length > 0) ? hw.checklist.phases : (hw.phases || []); hwPhases.forEach(function(p){(p.tasks||p.items||[]).forEach(function(t){hwTotal++;if(t.done)hwDone++;});});}
   const hwPct=hwTotal>0?Math.round(hwDone/hwTotal*100):0;
@@ -3344,6 +3344,12 @@ async function fetchHackweekData() {
           if (completed.length > 0) _selectedHackweekId = completed[completed.length - 1].id;
         }
       }
+      // Re-render sidebar and overview with fresh data
+      try { renderSidebar(); } catch(e) {}
+      try {
+        var overviewEl = document.getElementById('page-overview');
+        if (overviewEl && overviewEl.style.display !== 'none') renderOverview();
+      } catch(e) {}
     }
   } catch(e) { console.warn('[Hackweek] API fetch failed:', e.message); }
 }
@@ -4894,13 +4900,13 @@ function updateLunchNote(idx, value) {
 
 function renderHackWeek() {
   const hw_selected = getSelectedHackweek();
-  if (!hw_selected.id && !DATA.hackWeek) return '';
+  if (!hw_selected.id) return '';
 
   const hwApi = hw_selected;
   const isComplete = hw_selected.status === 'Complete';
   const isFuture = hw_selected.status === 'Future';
 
-  const phases = (hwApi.checklist && hwApi.checklist.phases && hwApi.checklist.phases.length > 0) ? hwApi.checklist.phases : (DATA.hackWeek ? DATA.hackWeek.phases : []);
+  const phases = (hwApi.checklist && hwApi.checklist.phases) ? hwApi.checklist.phases : [];
 
   const totalTasks = phases.reduce(function(s,p) { return s + (p.tasks||p.items||[]).length; }, 0);
   const doneTasks = phases.reduce(function(s,p) { return s + (p.tasks||p.items||[]).filter(function(t){return t.done;}).length; }, 0);
@@ -4942,7 +4948,7 @@ function renderHackWeek() {
   var hwLogistics = hwApi.logistics || {};
   var hwBudget = hwLogistics.budget || {};
   var hwJudges = hwLogistics.judges || [];
-  var hwContacts = hwLogistics.keyContacts || (DATA.hackWeek ? DATA.hackWeek.keyContacts : {}) || {};
+  var hwContacts = hwLogistics.keyContacts || {};
   var hwRubric = hwApi.rubric || [];
   var hwResourceLinks = hwApi.resourceLinks || [];
   var hwScores = hwApi.scores || [];
@@ -5014,8 +5020,8 @@ function renderHackWeek() {
           <div style="height:100%;width:${pct}%;background:${barColor};border-radius:3px;transition:width .5s"></div>
         </div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
-          <span style="font-size:9px;padding:2px 6px;border-radius:4px;background:var(--surface);border:1px solid var(--border);color:var(--text-dim)">&#9881; ${hwContacts.engineeringLead || 'TBD'}</span>
-          <span style="font-size:9px;padding:2px 6px;border-radius:4px;background:var(--surface);border:1px solid var(--border);color:var(--text-dim)">&#128203; ${hwContacts.operations || 'TBD'}</span>
+          <span style="font-size:9px;padding:2px 6px;border-radius:4px;background:var(--surface);border:1px solid var(--border);color:var(--text-dim)">&#9881; ${(hwContacts.engineeringLead && hwContacts.engineeringLead.name) || hwContacts.engineeringLead || 'TBD'}</span>
+          <span style="font-size:9px;padding:2px 6px;border-radius:4px;background:var(--surface);border:1px solid var(--border);color:var(--text-dim)">&#128203; ${(hwContacts.operations && hwContacts.operations.name) || hwContacts.operations || 'TBD'}</span>
           <span style="font-size:9px;padding:2px 6px;border-radius:4px;background:var(--surface);border:1px solid var(--border);color:var(--text-dim)">&#127919; ${hwJudges.length > 0 ? hwJudges.join(', ') : (hwContacts.judges || 'TBD')}</span>
         </div>
         ${phaseHtml}
@@ -5037,10 +5043,10 @@ function renderHackWeek() {
       <div class="card" style="padding:14px;border-left:3px solid var(--lavender)">
         <div style="font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);font-weight:700">Key Contacts</div>
         <div style="margin-top:6px;font-size:11px;line-height:1.8">
-          <div><span style="color:var(--text-muted)">Eng Lead:</span> <strong>${hwContacts.engineeringLead || 'TBD'}</strong></div>
-          <div><span style="color:var(--text-muted)">Ops:</span> <strong>${hwContacts.operations || 'TBD'}</strong></div>
-          <div><span style="color:var(--text-muted)">BLR:</span> <strong>${hwContacts.blrLogistics || 'TBD'}</strong></div>
-          <div><span style="color:var(--text-muted)">Finance:</span> <strong>${hwContacts.finance || 'TBD'}</strong></div>
+          <div><span style="color:var(--text-muted)">Eng Lead:</span> <strong>${(hwContacts.engineeringLead && hwContacts.engineeringLead.name) || hwContacts.engineeringLead || 'TBD'}</strong></div>
+          <div><span style="color:var(--text-muted)">Ops:</span> <strong>${(hwContacts.operations && hwContacts.operations.name) || hwContacts.operations || 'TBD'}</strong></div>
+          <div><span style="color:var(--text-muted)">BLR:</span> <strong>${Array.isArray(hwContacts.blrLogistics) ? hwContacts.blrLogistics.map(function(c){return c.name||c;}).join(', ') : hwContacts.blrLogistics || 'TBD'}</strong></div>
+          <div><span style="color:var(--text-muted)">Finance:</span> <strong>${(hwContacts.finance && hwContacts.finance.name) || hwContacts.finance || 'TBD'}</strong></div>
         </div>
       </div>
     </div>
@@ -5221,15 +5227,16 @@ function toggleHWTask(el) {
   const pi = +el.dataset.hwphase;
   const ti = +el.dataset.hwtask;
   const hwSel = getSelectedHackweek();
-  const phases = (hwSel.checklist && hwSel.checklist.phases) ? hwSel.checklist.phases : (DATA.hackWeek ? DATA.hackWeek.phases : []);
+  const phases = (hwSel.checklist && hwSel.checklist.phases) ? hwSel.checklist.phases : [];
   if (!phases[pi] || !(phases[pi].tasks||phases[pi].items||[])[ti]) return;
   const tasks = phases[pi].tasks || phases[pi].items || [];
   const task = tasks[ti];
   task.done = !task.done;
   const isChecked = task.done;
 
+  const hwId = hwSel.id || 'default';
   const doneKeys = loadHackWeekDone();
-  const key = pi + '-' + ti;
+  const key = hwId + '-' + pi + '-' + ti;
   if(isChecked) {
     if(!doneKeys.includes(key)) doneKeys.push(key);
   } else {
@@ -5237,7 +5244,7 @@ function toggleHWTask(el) {
     if(idx >= 0) doneKeys.splice(idx, 1);
   }
   saveHackWeekDone(doneKeys);
-  syncCheckbox('hackweek-'+pi+'-'+ti, isChecked, hwSel.notionPageId || '', task.text || task.item || '');
+  syncCheckbox('hackweek-'+hwId+'-'+pi+'-'+ti, isChecked, hwSel.notionPageId || '', task.text || task.item || '');
 
   const cb = el.querySelector('.task-checkbox');
   const label = el.querySelector('span:last-child');
@@ -6134,10 +6141,11 @@ async function loadServerCheckboxStates() {
     }
     // Apply to hack week tasks
     var _hwRestore = getSelectedHackweek();
+    var _hwRestoreId = _hwRestore.id || 'default';
     var _hwPhases = (_hwRestore.checklist && _hwRestore.checklist.phases) ? _hwRestore.checklist.phases : [];
     _hwPhases.forEach(function(p, pi) {
       (p.tasks || p.items || []).forEach(function(t, ti) {
-        var s = states['hackweek-' + pi + '-' + ti];
+        var s = states['hackweek-' + _hwRestoreId + '-' + pi + '-' + ti] || states['hackweek-' + pi + '-' + ti];
         if (s) t.done = s.checked;
       });
     });
