@@ -217,6 +217,89 @@ module.exports = function createPodcastRouter(notion) {
     }
   });
 
+  // ── Create New Episode ──
+  router.post('/episodes/create', (req, res) => {
+    const authHeader = req.headers.authorization;
+    const apiKey = process.env.DASHBOARD_API_KEY;
+    if (!apiKey || authHeader !== `Bearer ${apiKey}`) {
+      return res.status(401).json({ error: 'Invalid or missing API key' });
+    }
+    try {
+      const { title, guest, guestCompany, recordingDate, publishDate, topicId } = req.body;
+      if (!title) return res.status(400).json({ error: 'title required' });
+
+      const data = loadData();
+      if (!data.episodes) data.episodes = [];
+
+      // Generate episode number
+      const maxNum = data.episodes.reduce((max, ep) => Math.max(max, ep.number || 0), 0);
+      const number = maxNum + 1;
+      const id = 'ep-' + number;
+
+      // Default production checklist
+      const todos = [
+        { id: 't1', text: 'Confirm guest and schedule recording', phase: 'Pre-Production', owner: 'Sophie', dueDate: recordingDate || '', done: false },
+        { id: 't2', text: 'Send guest prep brief (topics, format, logistics)', phase: 'Pre-Production', owner: 'Sophie', dueDate: '', done: false },
+        { id: 't3', text: 'Prep Rishabh with talking points and guest background', phase: 'Pre-Production', owner: 'Sophie', dueDate: '', done: false },
+        { id: 't4', text: 'Set up recording (Riverside/Zoom, test audio)', phase: 'Pre-Production', owner: 'Sophie', dueDate: '', done: false },
+        { id: 't5', text: 'Record episode', phase: 'Recording', owner: 'Rishabh', dueDate: recordingDate || '', done: false },
+        { id: 't6', text: 'Send raw recording to editor', phase: 'Post-Production', owner: 'Sophie', dueDate: '', done: false },
+        { id: 't7', text: 'Editor delivers final cut', phase: 'Post-Production', owner: 'Editor', dueDate: '', done: false },
+        { id: 't8', text: 'Review and approve final edit', phase: 'Post-Production', owner: 'Rishabh', dueDate: '', done: false },
+        { id: 't9', text: 'Write show notes and description', phase: 'Publishing', owner: 'Sophie', dueDate: '', done: false },
+        { id: 't10', text: 'Create episode artwork', phase: 'Publishing', owner: 'Jennifer', dueDate: '', done: false },
+        { id: 't11', text: 'Upload to podcast host and schedule', phase: 'Publishing', owner: 'Sophie', dueDate: publishDate || '', done: false },
+        { id: 't12', text: 'Draft LinkedIn teaser post', phase: 'Promotion', owner: 'Jennifer', dueDate: '', done: false },
+        { id: 't13', text: 'Create social clips (3-5)', phase: 'Promotion', owner: 'Jennifer', dueDate: '', done: false },
+        { id: 't14', text: 'Send episode announcement email', phase: 'Promotion', owner: 'Sophie', dueDate: '', done: false },
+        { id: 't15', text: 'Share in Slack', phase: 'Promotion', owner: 'Sophie', dueDate: '', done: false }
+      ];
+
+      const newEp = {
+        id: id,
+        number: number,
+        title: title,
+        guest: guest || '',
+        guestCompany: guestCompany || '',
+        recordingDate: recordingDate || 'TBD',
+        publishDate: publishDate || 'TBD',
+        phase: 'Pre-Production',
+        notionLink: '',
+        todos: todos
+      };
+
+      data.episodes.push(newEp);
+      saveData(data);
+
+      // Create Notion page if Notion is available
+      if (notion) {
+        const PODCAST_HUB = '32f1ad76fd2a816191b0da22a6d0b2ce';
+        notion.pages.create({
+          parent: { page_id: PODCAST_HUB },
+          properties: { title: [{ text: { content: 'Episode ' + number + ': ' + title } }] },
+          children: [
+            { object: 'block', type: 'heading_2', heading_2: { rich_text: [{ text: { content: 'Episode ' + number + ': ' + title } }] } },
+            { object: 'block', type: 'paragraph', paragraph: { rich_text: [{ text: { content: 'Guest: ' + (guest || 'TBD') + (guestCompany ? ' (' + guestCompany + ')' : '') } }] } },
+            { object: 'block', type: 'paragraph', paragraph: { rich_text: [{ text: { content: 'Recording: ' + (recordingDate || 'TBD') + ' | Publish: ' + (publishDate || 'TBD') } }] } },
+            { object: 'block', type: 'divider', divider: {} },
+            { object: 'block', type: 'heading_3', heading_3: { rich_text: [{ text: { content: 'Production Checklist' } }] } },
+            ...todos.map(t => ({
+              object: 'block', type: 'to_do', to_do: { rich_text: [{ text: { content: t.text + ' (' + t.owner + ')' } }], checked: false }
+            }))
+          ]
+        }).then(page => {
+          newEp.notionLink = 'https://www.notion.so/' + page.id.replace(/-/g, '');
+          saveData(data);
+          console.log('[Podcast] Episode Notion page created:', newEp.notionLink);
+        }).catch(e => console.warn('[Podcast] Notion page creation failed:', e.message));
+      }
+
+      res.json({ ok: true, episode: newEp });
+    } catch (e) {
+      res.status(500).json({ error: e.message });
+    }
+  });
+
   // Auto-generate distribution matrix for a new episode
   router.post('/content-distribution/generate', (req, res) => {
     try {

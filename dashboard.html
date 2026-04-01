@@ -7174,7 +7174,20 @@ async function renderPodcastPage(){
   ];
 
   el.innerHTML = `
-    <div class="page-header"><div class="page-title">&#127908; Podcast</div><div class="page-kpis"><a href="${PODCAST_CONFIG.notionHub||'#'}" target="_blank" style="font-size:11px;color:var(--gold)">Notion Hub &#8599;</a></div></div>
+    <div class="page-header"><div class="page-title">&#127908; Podcast</div><div class="page-kpis"><button onclick="document.getElementById('pod-new-ep-form').style.display=document.getElementById('pod-new-ep-form').style.display==='none'?'block':'none'" style="padding:4px 10px;border-radius:4px;background:var(--surface);border:1px solid var(--border);color:var(--gold);font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;margin-right:8px">+ New Episode</button><a href="${PODCAST_CONFIG.notionHub||'#'}" target="_blank" style="font-size:11px;color:var(--gold)">Notion Hub &#8599;</a></div></div>
+    <div id="pod-new-ep-form" style="display:none;margin-bottom:16px;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
+      <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:10px">Create New Episode</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <input id="pod-ep-title" type="text" placeholder="Episode title" style="padding:6px 8px;border-radius:4px;background:var(--bg);border:1px solid var(--border);color:var(--text);font-size:11px;font-family:inherit" />
+        <input id="pod-ep-guest" type="text" placeholder="Guest name" style="padding:6px 8px;border-radius:4px;background:var(--bg);border:1px solid var(--border);color:var(--text);font-size:11px;font-family:inherit" />
+        <input id="pod-ep-company" type="text" placeholder="Guest company" style="padding:6px 8px;border-radius:4px;background:var(--bg);border:1px solid var(--border);color:var(--text);font-size:11px;font-family:inherit" />
+        <input id="pod-ep-record" type="date" placeholder="Recording date" style="padding:6px 8px;border-radius:4px;background:var(--bg);border:1px solid var(--border);color:var(--text);font-size:11px;font-family:inherit" />
+      </div>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button onclick="createPodEpisode()" style="padding:6px 16px;border-radius:4px;background:var(--gold);color:#000;font-size:11px;font-weight:700;border:none;cursor:pointer;font-family:inherit">Create Episode</button>
+        <button onclick="document.getElementById('pod-new-ep-form').style.display='none'" style="padding:6px 16px;border-radius:4px;background:var(--surface);border:1px solid var(--border);color:var(--text-muted);font-size:11px;cursor:pointer;font-family:inherit">Cancel</button>
+      </div>
+    </div>
 
     <!-- Summary cards -->
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
@@ -7314,6 +7327,26 @@ async function renderPodcastPage(){
         updatePodEpProgress(todoEpId);
       };
     });
+  };
+
+  window.createPodEpisode = function() {
+    var title = document.getElementById('pod-ep-title').value.trim();
+    var guest = document.getElementById('pod-ep-guest').value.trim();
+    var company = document.getElementById('pod-ep-company').value.trim();
+    var recordDate = document.getElementById('pod-ep-record').value;
+    if (!title) { alert('Episode title required'); return; }
+
+    fetch('/api/podcast/episodes/create', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json','Authorization':'Bearer sophie-dashboard-secret-change-me'},
+      body: JSON.stringify({ title: title, guest: guest, guestCompany: company, recordingDate: recordDate })
+    }).then(function(r) { return r.json(); }).then(function(d) {
+      if (d.ok) {
+        PODCAST_EPISODES.push(d.episode);
+        document.getElementById('pod-new-ep-form').style.display = 'none';
+        renderPodcastPage();
+      } else { alert(d.error || 'Failed to create episode'); }
+    }).catch(function(e) { alert('Create failed: ' + e.message); });
   };
 
   // -- Sub-tab render functions --
