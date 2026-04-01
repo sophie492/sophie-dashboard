@@ -1546,8 +1546,8 @@ function renderSidebar(){
     <div class="si-children" id="events-children" style="display:none">
       <div style="display:flex;gap:2px;padding:2px 8px 6px 24px;flex-wrap:wrap">
         <button onclick="filterEventsSidebar('all')" class="ev-filter-btn active" style="font-size:8px;padding:2px 6px;border-radius:3px;background:var(--gold);color:#000;border:none;cursor:pointer;font-family:inherit;font-weight:700">All</button>
-        <button onclick="filterEventsSidebar('rishabh')" class="ev-filter-btn" style="font-size:8px;padding:2px 6px;border-radius:3px;background:var(--surface);color:var(--lavender);border:1px solid var(--border);cursor:pointer;font-family:inherit;font-weight:700">Rishabh (${eventsForSidebar.filter(e=>e.rishabh).length})</button>
-        <button onclick="filterEventsSidebar('shreyas')" class="ev-filter-btn" style="font-size:8px;padding:2px 6px;border-radius:3px;background:var(--surface);color:var(--gold);border:1px solid var(--border);cursor:pointer;font-family:inherit;font-weight:700">Shreyas (${eventsForSidebar.filter(e=>e.shreyas).length})</button>
+        <button onclick="filterEventsSidebar('rishabh')" class="ev-filter-btn" style="font-size:8px;padding:2px 6px;border-radius:3px;background:var(--surface);color:var(--lavender);border:1px solid var(--border);cursor:pointer;font-family:inherit;font-weight:700">R (${nearEvents.filter(e=>e.rishabh).length}${farEvents.filter(e=>e.rishabh).length>0?'+'+farEvents.filter(e=>e.rishabh).length:''})</button>
+        <button onclick="filterEventsSidebar('shreyas')" class="ev-filter-btn" style="font-size:8px;padding:2px 6px;border-radius:3px;background:var(--surface);color:var(--gold);border:1px solid var(--border);cursor:pointer;font-family:inherit;font-weight:700">S (${nearEvents.filter(e=>e.shreyas).length}${farEvents.filter(e=>e.shreyas).length>0?'+'+farEvents.filter(e=>e.shreyas).length:''})</button>
         <button onclick="filterEventsSidebar('other')" class="ev-filter-btn" style="font-size:8px;padding:2px 6px;border-radius:3px;background:var(--surface);color:var(--text-muted);border:1px solid var(--border);cursor:pointer;font-family:inherit;font-weight:700">Other</button>
       </div>
       ${nearEvents.map(e=>`<div class="sidebar-item si-child ev-sidebar-item" data-page="event-${e.id}" data-ev-r="${e.rishabh?'1':'0'}" data-ev-s="${e.shreyas?'1':'0'}"><span class="si-label">${e.shortName}</span><span style="margin-left:auto;display:flex;gap:3px;align-items:center">${e.rishabh?'<span style="width:5px;height:5px;border-radius:50%;background:var(--lavender)" title="Rishabh"></span>':''}${e.shreyas?'<span style="width:5px;height:5px;border-radius:50%;background:var(--gold)" title="Shreyas"></span>':''}</span></div>`).join('')}
@@ -3076,13 +3076,38 @@ function renderEventPane(ev) {
 }
 
 function filterEventsSidebar(value) {
+  var hasMatchInFar = false;
   // Filter sidebar event items
   document.querySelectorAll('.ev-sidebar-item').forEach(function(item) {
     var r = item.dataset.evR === '1';
     var s = item.dataset.evS === '1';
     var show = value === 'all' || (value === 'rishabh' && r) || (value === 'shreyas' && s) || (value === 'other' && !r && !s);
     item.style.display = show ? '' : 'none';
+    // Check if any match is in the "Later" section
+    if (show && item.closest('#far-events-children')) hasMatchInFar = true;
   });
+  // Auto-expand "Later" section if it has matching events
+  var farChildren = document.getElementById('far-events-children');
+  if (farChildren && value !== 'all') {
+    if (hasMatchInFar) {
+      farChildren.style.display = 'block';
+      var farChevron = farChildren.previousElementSibling ? farChildren.previousElementSibling.querySelector('.si-chevron') : null;
+      if (farChevron) farChevron.style.transform = 'rotate(90deg)';
+    }
+  }
+  // Also hide the "Later" parent if no matches inside
+  var farParent = farChildren ? farChildren.previousElementSibling : null;
+  if (farParent && value !== 'all') {
+    var farVisible = farChildren.querySelectorAll('.ev-sidebar-item[style=""], .ev-sidebar-item:not([style])');
+    // Check display
+    var anyFarVisible = false;
+    farChildren.querySelectorAll('.ev-sidebar-item').forEach(function(item) {
+      if (item.style.display !== 'none') anyFarVisible = true;
+    });
+    farParent.style.display = anyFarVisible ? '' : 'none';
+  } else if (farParent) {
+    farParent.style.display = '';
+  }
   // Update active button
   document.querySelectorAll('.ev-filter-btn').forEach(function(btn) {
     btn.style.background = 'var(--surface)';
