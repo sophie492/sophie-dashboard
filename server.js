@@ -1670,6 +1670,35 @@ app.patch('/api/hackweek/:id/logistics', (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// ── Hack Week Attendee Toggle ──
+app.patch('/api/hackweek/:id/attendee', (req, res) => {
+  const authHeader = req.headers.authorization || '';
+  const token = authHeader.replace('Bearer ', '');
+  if (token !== (process.env.DASHBOARD_API_KEY || 'sophie-dashboard-secret-change-me')) {
+    return res.status(401).json({ error: 'Invalid API key' });
+  }
+  try {
+    const { name, field, value } = req.body;
+    if (!name || !field) return res.status(400).json({ error: 'name and field required' });
+
+    const data = loadHackweekData();
+    const hw = findHackweekById(data, req.params.id);
+    if (!hw) return res.status(404).json({ error: 'Hack week not found' });
+    if (!hw.attendees) hw.attendees = [];
+
+    // Find or create attendee
+    let attendee = hw.attendees.find(a => a.name.toLowerCase() === name.toLowerCase());
+    if (!attendee) {
+      attendee = { name: name, attending: true, flightBooked: false, hotelConfirmed: false, location: '' };
+      hw.attendees.push(attendee);
+    }
+    attendee[field] = value;
+
+    fs.writeFileSync(HACKWEEK_PATH, JSON.stringify(data, null, 2));
+    res.json({ ok: true, attendee: attendee });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 // ── Hack Week Task CRUD ──
 app.patch('/api/hackweek/:id/task', (req, res) => {
   const authHeader = req.headers.authorization || '';

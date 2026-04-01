@@ -4933,8 +4933,20 @@ function renderHackWeek() {
   var hwScores = hwApi.scores || [];
   var hwPrizes = hwApi.prizeCategories || [];
   var hwTeamRules = hwApi.teamFormationRules || [];
+  var hwAttendees = hwApi.attendees || [];
   var completedHackweeks = _allHackweeks.filter(function(hw) { return hw.status === 'Complete'; });
-  var budgetTotal = (hwBudget.prizes||0) + (hwBudget.travel||0) + (hwBudget.food||0) + (hwBudget.social||0);
+
+  // Auto-compute budget estimates if not manually set
+  var travelersCount = (hwApi.attendees || []).filter(function(a) { return a.attending !== false && a.needsFlight !== false; }).length;
+  var attendeeCount = (hwApi.attendees || []).filter(function(a) { return a.attending !== false; }).length;
+  var autoTravel = travelersCount * (575 + 350 * 4); // avg flight + 4 nights hotel
+  var autoFood = attendeeCount * 25 * 5 * 2; // $25/day, 5 days, 2 offices (rough)
+  var autoSocial = attendeeCount * 130; // dinner $80 + happy hour $50
+  if (!hwBudget.travel && autoTravel > 0) hwBudget.autoTravel = autoTravel;
+  if (!hwBudget.food && autoFood > 0) hwBudget.autoFood = autoFood;
+  if (!hwBudget.social && autoSocial > 0) hwBudget.autoSocial = autoSocial;
+
+  var budgetTotal = (hwBudget.prizes||0) + (hwBudget.travel||hwBudget.autoTravel||0) + (hwBudget.food||hwBudget.autoFood||0) + (hwBudget.social||hwBudget.autoSocial||0);
 
   // Helper: render task checklist for a tab
   function renderTabTasks(tabKey, label) {
@@ -5028,10 +5040,48 @@ function renderHackWeek() {
       if (!showAll) html += '</div></details>';
     } else {
       html += '<div style="font-size:11px;color:var(--text-muted);font-style:italic">No research options added yet. Add via API.</div>';
+      if (category === 'socialEvents') {
+        html += '<button onclick="searchHWVenues()" style="margin-top:8px;padding:6px 12px;border-radius:4px;background:var(--gold);color:#000;font-size:10px;font-weight:700;border:none;cursor:pointer;font-family:inherit">&#128269; Find Venues Near Office</button>';
+      }
     }
 
     html += '</div></div>';
     return html;
+  }
+
+  function renderTravelTracker() {
+    if (hwAttendees.length === 0) return '<div class="card" style="margin-bottom:12px"><div class="card-head"><span class="card-title">&#9992;&#65039; Travel Tracker</span></div><div class="card-body" style="padding:20px;text-align:center;color:var(--text-muted)"><div style="font-size:20px;margin-bottom:6px">&#9992;&#65039;</div><div>No attendees added yet.</div><div style="font-size:11px;margin-top:4px">Add attendees via API: PATCH /api/hackweek/:id/attendee</div></div></div>';
+    var attending = hwAttendees.filter(function(a) { return a.attending !== false; });
+    var travelers = attending.filter(function(a) { return a.needsFlight !== false; });
+    var confirmed = travelers.filter(function(a) { return a.hotelConfirmed && a.flightBooked; }).length;
+    var locals = attending.filter(function(a) { return a.needsFlight === false; }).length;
+
+    var rows = hwAttendees.map(function(a) {
+      var isLocal = a.needsFlight === false;
+      var rowOpacity = a.attending === false ? 'opacity:0.4;' : '';
+      function toggle(field) {
+        if (isLocal && (field === 'hotelConfirmed' || field === 'flightBooked')) {
+          return '<span style="font-size:10px;color:var(--text-muted);font-style:italic">N/A</span>';
+        }
+        var val = a[field];
+        return '<button onclick="toggleHWAttendee(\'' + a.name.replace(/'/g, "\\'") + '\',\'' + field + '\')" style="background:' + (val ? 'var(--green-soft)' : 'var(--surface)') + ';color:' + (val ? 'var(--green)' : 'var(--text-muted)') + ';border:1px solid ' + (val ? 'var(--green)' : 'var(--border)') + ';padding:2px 8px;border-radius:4px;font-size:10px;cursor:pointer;font-family:inherit">' + (val ? '\u2713' : '\u2014') + '</button>';
+      }
+      return '<tr style="border-bottom:1px solid var(--border);font-size:11px;' + rowOpacity + '">' +
+        '<td style="padding:6px 8px;font-weight:600;color:var(--text)">' + a.name + (a.location ? '<div style="font-size:9px;color:var(--text-muted)">' + a.location + '</div>' : '') + '</td>' +
+        '<td style="padding:6px 8px;text-align:center">' + toggle('flightBooked') + '</td>' +
+        '<td style="padding:6px 8px;text-align:center">' + toggle('hotelConfirmed') + '</td>' +
+      '</tr>';
+    }).join('');
+
+    return '<div class="card" style="margin-bottom:12px">' +
+      '<div class="card-head"><span class="card-title">&#9992;&#65039; Travel Tracker</span><span style="font-size:10px;color:var(--text-muted)">' + confirmed + '/' + travelers.length + ' confirmed' + (locals > 0 ? ' (' + locals + ' local)' : '') + '</span></div>' +
+      '<div class="card-body" style="padding:0;overflow-x:auto">' +
+        '<table style="width:100%;border-collapse:collapse"><thead><tr style="border-bottom:2px solid var(--border);font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px">' +
+        '<th style="padding:8px;text-align:left">Name</th>' +
+        '<th style="padding:8px;text-align:center">Flight</th>' +
+        '<th style="padding:8px;text-align:center">Hotel</th>' +
+        '</tr></thead><tbody>' + rows + '</tbody></table>' +
+      '</div></div>';
   }
 
   return `
@@ -5097,7 +5147,7 @@ function renderHackWeek() {
         <div style="font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);font-weight:700">Budget</div>
         <div style="font-size:18px;font-weight:800;color:var(--gold);margin-top:4px">$${budgetTotal.toLocaleString()}</div>
         <div style="font-size:11px;color:var(--text-dim);margin-top:4px">
-          Prizes: $${(hwBudget.prizes||0).toLocaleString()} | Travel: $${(hwBudget.travel||0).toLocaleString()} | Food: $${(hwBudget.food||0).toLocaleString()} | Social: $${(hwBudget.social||0).toLocaleString()}
+          Prizes: $${(hwBudget.prizes||0).toLocaleString()} | Travel: $${(hwBudget.travel||hwBudget.autoTravel||0).toLocaleString()}${hwBudget.autoTravel && !hwBudget.travel ? ' <span style="font-size:9px;color:var(--yellow)">(est)</span>' : ''} | Food: $${(hwBudget.food||hwBudget.autoFood||0).toLocaleString()}${hwBudget.autoFood && !hwBudget.food ? ' <span style="font-size:9px;color:var(--yellow)">(est)</span>' : ''} | Social: $${(hwBudget.social||hwBudget.autoSocial||0).toLocaleString()}${hwBudget.autoSocial && !hwBudget.social ? ' <span style="font-size:9px;color:var(--yellow)">(est)</span>' : ''}
         </div>
         <div style="font-size:10px;margin-top:4px;color:${hwBudget.approved?'var(--green)':'var(--yellow)'}">
           ${hwBudget.approved ? '&#10003; Approved' : '&#9679; Pending approval from ' + (hwBudget.approver || 'Finance')}
@@ -5166,6 +5216,7 @@ function renderHackWeek() {
     ${renderTabTasks('logistics', 'Logistics Tasks')}
     ${renderLogisticsCard('travel', 'Travel', '&#9992;&#65039;', 'travelResearch')}
     ${renderLogisticsCard('socialEvents', 'Social Events', '&#127881;', 'socialResearch')}
+    ${renderTravelTracker()}
   </div>
 
   <!-- TAB: Comms -->
@@ -5467,6 +5518,33 @@ function copyHWTemplate(templateId) {
     btn.textContent = 'Copied!';
     setTimeout(function() { btn.textContent = 'Copy'; }, 1500);
   });
+}
+
+function toggleHWAttendee(name, field) {
+  var hwSel = getSelectedHackweek();
+  if (!hwSel.id) return;
+  var attendee = (hwSel.attendees || []).find(function(a) { return a.name === name; });
+  if (!attendee) return;
+  var newVal = !attendee[field];
+  attendee[field] = newVal;
+
+  fetch('/api/hackweek/' + hwSel.id + '/attendee', {
+    method: 'PATCH',
+    headers: {'Content-Type':'application/json','Authorization':'Bearer sophie-dashboard-secret-change-me'},
+    body: JSON.stringify({ name: name, field: field, value: newVal })
+  }).then(function() { renderProjectsPage(); })
+  .catch(function(e) { console.warn('[HW Attendee] Toggle failed:', e.message); });
+}
+
+function searchHWVenues() {
+  var hwSel = getSelectedHackweek();
+  if (!hwSel.id) return;
+  // Open a pre-filled Google search for team dinner venues near SF office
+  var query = encodeURIComponent('private dining restaurant near SoMa San Francisco group dinner 20-30 people');
+  window.open('https://www.google.com/search?q=' + query, '_blank');
+  // Also open happy hour search
+  var query2 = encodeURIComponent('happy hour bar near SoMa San Francisco group event 20-30 people');
+  window.open('https://www.google.com/search?q=' + query2, '_blank');
 }
 
 function renderFPPCProject(){
