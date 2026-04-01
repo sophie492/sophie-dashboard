@@ -3068,6 +3068,41 @@ function renderEventPane(ev) {
   `;
 }
 
+function filterEvents(value) {
+  var panes = document.querySelectorAll('.mkt-event-pane');
+  var first = null;
+  panes.forEach(function(pane) {
+    var r = pane.dataset.evRishabh === 'true';
+    var s = pane.dataset.evShreyas === 'true';
+    var show = false;
+    if (value === 'all') show = true;
+    else if (value === 'rishabh') show = r;
+    else if (value === 'shreyas') show = s;
+    else if (value === 'both') show = r && s;
+    else if (value === 'other') show = !r && !s;
+    pane.style.display = show ? '' : 'none';
+    if (show && !first) first = pane;
+  });
+  // Activate the first visible pane
+  panes.forEach(function(p) { p.classList.remove('active'); });
+  if (first) first.classList.add('active');
+
+  // Show filter chips
+  var chips = document.getElementById('event-filter-chips');
+  if (chips) {
+    var visible = [];
+    panes.forEach(function(p) { if (p.style.display !== 'none') visible.push(p); });
+    var names = [];
+    visible.forEach(function(p) {
+      var title = p.querySelector('.card-title');
+      if (title) names.push(title.textContent.trim());
+    });
+    chips.innerHTML = visible.length < 8 ? names.map(function(n) {
+      return '<span style="font-size:9px;padding:2px 8px;border-radius:4px;background:var(--surface);border:1px solid var(--border);color:var(--text-dim)">' + n + '</span>';
+    }).join('') : '';
+  }
+}
+
 function updateTodoProgress(evId) {
   const pane = document.getElementById('mkt-' + evId);
   if(!pane) return;
@@ -3262,10 +3297,22 @@ async function renderEventsPage(){
       </div>
     </div>
 
+    <!-- Event filter -->
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+      <select id="event-filter" onchange="filterEvents(this.value)" style="padding:6px 10px;border-radius:6px;background:var(--surface);border:1px solid var(--border);color:var(--text);font-size:12px;font-weight:600;font-family:inherit;cursor:pointer">
+        <option value="all">All Events (${visibleEvents.length})</option>
+        <option value="rishabh">Rishabh's Events (${rEvents.length})</option>
+        <option value="shreyas">Shreyas's Events (${sEvents.length})</option>
+        <option value="both">Both Founders (${visibleEvents.filter(e => e.rishabh && e.shreyas).length})</option>
+        <option value="other">Other Events (${visibleEvents.filter(e => !e.rishabh && !e.shreyas).length})</option>
+      </select>
+      <div id="event-filter-chips" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+    </div>
+
     <!-- Event panes -->
     ${visibleEvents.length === 0 ? '<div style="padding:40px;text-align:center;color:var(--text-muted)">No upcoming events in the next 6 months</div>' : ''}
     ${visibleEvents.map((ev, i) => `
-      <div class="mkt-event-pane ${i===0?'active':''}" id="mkt-${ev.id}">
+      <div class="mkt-event-pane ${i===0?'active':''}" id="mkt-${ev.id}" data-ev-rishabh="${ev.rishabh?'true':'false'}" data-ev-shreyas="${ev.shreyas?'true':'false'}">
         ${renderEventPane(ev)}
       </div>
     `).join('')}
