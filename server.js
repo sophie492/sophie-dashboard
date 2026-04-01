@@ -1670,6 +1670,149 @@ app.patch('/api/hackweek/:id/logistics', (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// ── Create New Hack Week ──
+app.post('/api/hackweek/create', (req, res) => {
+  const authHeader = req.headers.authorization || '';
+  const token = authHeader.replace('Bearer ', '');
+  if (token !== (process.env.DASHBOARD_API_KEY || 'sophie-dashboard-secret-change-me')) {
+    return res.status(401).json({ error: 'Invalid API key' });
+  }
+  try {
+    const { name, targetDate, half, slackChannel } = req.body;
+    if (!name || !targetDate) return res.status(400).json({ error: 'name and targetDate required' });
+
+    const data = loadHackweekData();
+    const year = targetDate.slice(0, 4);
+    if (!data.hackweeks[year]) data.hackweeks[year] = [];
+
+    // Check for duplicates
+    const existing = findHackweekById(data, 'hw-' + year + '-' + (half === 'H1' ? 'jan' : 'jun'));
+    if (existing) return res.status(400).json({ error: 'Hack week already exists for this half' });
+
+    // Compute number
+    let maxNum = 0;
+    Object.values(data.hackweeks).forEach(yr => yr.forEach(hw => { if (hw.number > maxNum) maxNum = hw.number; }));
+
+    const monthStr = new Date(targetDate + 'T12:00:00').toLocaleDateString('en-US', { month: 'short' }).toLowerCase();
+    const id = 'hw-' + year + '-' + monthStr;
+
+    const newHW = {
+      id: id,
+      number: maxNum + 1,
+      name: name,
+      half: half || (parseInt(targetDate.slice(5, 7)) <= 6 ? 'H1' : 'H2'),
+      targetDate: targetDate,
+      status: 'Planning',
+      notionHub: '',
+      slackChannel: slackChannel || '#hack-week-' + monthStr + '-' + year,
+      signupSheet: '',
+      sheetTabMatch: monthStr + ' ' + year,
+      teams: [],
+      scores: [],
+      schedule: {
+        day1: { theme: 'Kick-off + Build', events: [] },
+        day2: { theme: 'Build', events: [] },
+        day3: { theme: 'Demo Day', events: [] },
+        day4: { theme: 'Optimize + Ship', events: [] },
+        day5: { theme: 'Ship + Happy Hour', events: [] }
+      },
+      tasks: {
+        schedule: [
+          { text: 'Pick the dates — avoid US & India holidays', done: false },
+          { text: 'Decide on cross-office schedule (SF & BLR)', done: false },
+          { text: 'Confirm daily structure (Build → Demo → Ship)', done: false },
+          { text: 'Cancel all internal meetings', done: false },
+          { text: 'Set up on-call schedule', done: false },
+          { text: 'Block calendars', done: false },
+          { text: 'Set up Loom recording workflow', done: false }
+        ],
+        teams: [
+          { text: 'Create signup spreadsheet', done: false },
+          { text: 'Set team formation rules', done: false },
+          { text: 'Set submission deadline', done: false },
+          { text: 'Send reminder nudges', done: false },
+          { text: 'Review and approve ideas', done: false },
+          { text: 'Lock teams', done: false },
+          { text: 'Confirm attendance', done: false },
+          { text: 'Decide prizes and categories', done: false },
+          { text: 'Confirm judges', done: false }
+        ],
+        logistics: [
+          { text: 'Get budget approved', done: false },
+          { text: 'Assign BLR logistics lead', done: false },
+          { text: 'Arrange travel for remote employees', done: false },
+          { text: 'Coordinate BLR travel', done: false },
+          { text: 'Plan social events (dinner + happy hour)', done: false },
+          { text: 'Set up dinner policy', done: false },
+          { text: 'Distribute prizes', done: false }
+        ],
+        comms: [
+          { text: 'Create Slack channel', done: false },
+          { text: 'Send kick-off announcement', done: false },
+          { text: 'Draft announcement templates', done: false },
+          { text: 'Post opening message', done: false },
+          { text: 'Encourage daily updates', done: false },
+          { text: 'Post shipping guidance', done: false },
+          { text: 'Post recap with winners', done: false },
+          { text: 'Create LinkedIn content', done: false },
+          { text: 'Feature at company events', done: false }
+        ],
+        judging: [
+          { text: 'Judges review demos and Looms', done: false },
+          { text: 'Pick winners', done: false },
+          { text: 'Announce at Town Hall', done: false },
+          { text: 'Winners re-present demos', done: false },
+          { text: 'Send feedback survey', done: false },
+          { text: 'Hold planning retro', done: false },
+          { text: 'Update checklist with lessons', done: false },
+          { text: 'Track production adoption', done: false }
+        ]
+      },
+      rubric: [
+        { criterion: 'Quality of Idea', weight: 0.333, description: 'Originality, feasibility, and potential impact' },
+        { criterion: 'Code Quality', weight: 0.333, description: 'Architecture, reliability, and production-readiness' },
+        { criterion: 'Demo Quality', weight: 0.334, description: 'Clarity, engagement, and polish of presentation' }
+      ],
+      resourceLinks: [],
+      prizeCategories: [
+        { category: 'Best Use of AI', amount: 1000 },
+        { category: 'Highest Customer Impact', amount: 1000 },
+        { category: 'Best Internal Tool / Most Useful DevTool', amount: 1000 }
+      ],
+      teamFormationRules: [
+        'Teams of 2-4 people',
+        'No solo projects',
+        'Cross-functional: >50% cannot be from same team',
+        'PMs and Designers encouraged'
+      ],
+      logistics: {
+        budget: { prizes: 3000, travel: 0, food: 0, social: 0, approved: false, approver: 'Evelyn' },
+        judges: ['Shreyas', 'Rishabh', 'Bharat'],
+        keyContacts: {
+          engineeringLead: { name: 'Bharat', role: 'Engineering Lead' },
+          operations: { name: 'Sophie', role: 'Operations' },
+          blrLogistics: [{ name: 'Kunal', role: 'BLR lead' }, { name: 'Sriram', role: 'BLR lead' }],
+          finance: { name: 'Evelyn', role: 'Budget approval' }
+        },
+        travel: { status: 'Not Started', statusDetail: '', selectedOption: null, confirmationDetails: '', travelResearch: [] },
+        socialEvents: { status: 'Not Started', statusDetail: '', selectedOption: null, confirmationDetails: '', socialResearch: [] }
+      },
+      attendees: [],
+      winners: {},
+      commsTemplates: [],
+      reviews: [],
+      lessonsLearned: []
+    };
+
+    data.hackweeks[year].push(newHW);
+    // Sort by targetDate within year
+    data.hackweeks[year].sort((a, b) => (a.targetDate || '').localeCompare(b.targetDate || ''));
+
+    fs.writeFileSync(HACKWEEK_PATH, JSON.stringify(data, null, 2));
+    res.json({ ok: true, id: id, hackweek: newHW });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 // ── Hack Week Field Update ──
 app.patch('/api/hackweek/:id/field', (req, res) => {
   const authHeader = req.headers.authorization || '';

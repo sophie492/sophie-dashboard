@@ -5127,7 +5127,18 @@ function renderHackWeek() {
     </select>
     ${isComplete ? '<span style="font-size:10px;padding:3px 8px;border-radius:4px;background:var(--green-soft);color:var(--green);font-weight:700">Complete</span>' : ''}
     ${isFuture ? '<span style="font-size:10px;padding:3px 8px;border-radius:4px;background:var(--surface);color:var(--text-muted);font-weight:700">Future</span>' : ''}
+    <button onclick="showCreateHWForm()" style="padding:4px 10px;border-radius:4px;background:var(--surface);border:1px solid var(--border);color:var(--gold);font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;margin-left:auto">+ New</button>
   </div>
+  <div id="hw-create-form" style="display:none;margin-bottom:12px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px">
+    <div style="font-size:11px;font-weight:700;color:var(--text);margin-bottom:8px">Create New Hack Week</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <input id="hw-create-name" type="text" placeholder="e.g. Hack Week #5" style="padding:6px 8px;border-radius:4px;background:var(--bg);border:1px solid var(--border);color:var(--text);font-size:11px;font-family:inherit" />
+      <input id="hw-create-date" type="date" style="padding:6px 8px;border-radius:4px;background:var(--bg);border:1px solid var(--border);color:var(--text);font-size:11px;font-family:inherit" />
+    </div>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button onclick="createNewHackWeek()" style="padding:6px 16px;border-radius:4px;background:var(--gold);color:#000;font-size:11px;font-weight:700;border:none;cursor:pointer;font-family:inherit">Create</button>
+      <button onclick="document.getElementById('hw-create-form').style.display='none'" style="padding:6px 16px;border-radius:4px;background:var(--surface);border:1px solid var(--border);color:var(--text-muted);font-size:11px;cursor:pointer;font-family:inherit">Cancel</button>
+    </div>
 
   <div class="hw-hub-nav">
     <button class="hw-hub-nav-btn active" data-hw-tab="hw-overview">Overview</button>
@@ -5719,6 +5730,29 @@ function updateHWField(field, value) {
     body: JSON.stringify(body)
   }).then(function() { renderProjectsPage(); })
   .catch(function(e) { console.warn('[HW Field] Update failed:', e.message); });
+}
+
+function showCreateHWForm() {
+  document.getElementById('hw-create-form').style.display = 'block';
+}
+
+function createNewHackWeek() {
+  var name = document.getElementById('hw-create-name').value.trim();
+  var targetDate = document.getElementById('hw-create-date').value;
+  if (!name || !targetDate) { alert('Name and date required'); return; }
+
+  fetch('/api/hackweek/create', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json','Authorization':'Bearer sophie-dashboard-secret-change-me'},
+    body: JSON.stringify({ name: name, targetDate: targetDate })
+  }).then(function(r) { return r.json(); }).then(function(d) {
+    if (d.ok) {
+      // Reload hack week data and switch to the new one
+      _selectedHackweekId = d.id;
+      fetchHackweekData().then(function() { renderProjectsPage(); renderSidebar(); });
+      document.getElementById('hw-create-form').style.display = 'none';
+    } else { alert(d.error || 'Failed to create hack week'); }
+  }).catch(function(e) { alert('Create failed: ' + e.message); });
 }
 
 function updateHWBudget(category, field, value) {
