@@ -7428,8 +7428,8 @@ async function renderPodcastPage(){
           '</div>';
         }).join('') +
       '</div>' +
-      '<div style="display:grid;grid-template-columns:160px 70px 80px 100px 1fr 160px;gap:8px;padding:6px 12px;font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);font-weight:700;border-bottom:1px solid var(--border)">' +
-        '<div>Guest</div><div>Tier</div><div>Relationship</div><div>Status</div><div>Topic Idea</div><div>Why</div>' +
+      '<div style="display:grid;grid-template-columns:160px 70px 70px 80px 100px 1fr 140px;gap:8px;padding:6px 12px;font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);font-weight:700;border-bottom:1px solid var(--border)">' +
+        '<div>Guest</div><div>Tier</div><div>Industry</div><div>Rel.</div><div>Status</div><div>Topic Idea</div><div>Why</div>' +
       '</div>' +
       statuses.map(function(s) {
         const guests = grouped[s];
@@ -7443,17 +7443,18 @@ async function renderPodcastPage(){
             var statusOpts = ['Confirmed','In Conversation','Sent','Drafting','Not Started','Declined'].map(function(opt) {
               return '<option value="'+opt+'"'+(opt===g.outreachStatus?' selected':'')+'>'+opt+'</option>';
             }).join('');
-            return '<div style="display:grid;grid-template-columns:160px 70px 80px 100px 1fr 160px;gap:8px;padding:6px 12px;border-bottom:1px solid var(--border);align-items:center;transition:background .15s" onmouseenter="this.style.background=\'var(--card-hover)\'" onmouseleave="this.style.background=\'none\'">' +
+            return '<div style="display:grid;grid-template-columns:160px 70px 70px 80px 100px 1fr 140px;gap:8px;padding:6px 12px;border-bottom:1px solid var(--border);align-items:center;transition:background .15s" onmouseenter="this.style.background=\'var(--card-hover)\'" onmouseleave="this.style.background=\'none\'">' +
               '<div>' +
-                '<a href="'+g.notionLink+'" target="_blank" style="font-size:12px;font-weight:700;color:var(--text);text-decoration:none">'+g.name+'</a>' +
-                (g.linkedIn ? ' <a href="'+g.linkedIn+'" target="_blank" style="font-size:9px;color:#0A66C2;text-decoration:none;font-weight:700;background:rgba(10,102,194,.1);padding:1px 5px;border-radius:3px;vertical-align:middle">in</a>' : '') +
-                '<div style="font-size:10px;color:var(--text-muted)">'+(g.title ? g.title+', ' : '')+g.company+'</div>' +
+                '<a href="'+(g.notionUrl||g.notionLink||'#')+'" target="_blank" style="font-size:12px;font-weight:700;color:var(--text);text-decoration:none">'+g.name+'</a>' +
+                (g.linkedin||g.linkedIn ? ' <a href="'+(g.linkedin||g.linkedIn)+'" target="_blank" style="font-size:9px;color:#0A66C2;text-decoration:none;font-weight:700;background:rgba(10,102,194,.1);padding:1px 5px;border-radius:3px;vertical-align:middle">in</a>' : '') +
+                '<div style="font-size:10px;color:var(--text-muted)">'+(g.titleCompany || ((g.title ? g.title+', ' : '')+g.company) || '')+'</div>' +
               '</div>' +
-              '<span class="pod-tier-badge" style="background:'+tbg+';color:'+tfg+'">'+g.tier+'</span>' +
-              '<span class="pod-tier-badge" style="background:'+rbg+';color:'+rfg+'">'+g.relationship+'</span>' +
+              '<span class="pod-tier-badge" style="background:'+tbg+';color:'+tfg+'">'+(g.tier||'')+'</span>' +
+              '<span style="font-size:9px;color:var(--text-muted)">'+(g.industry||'')+'</span>' +
+              '<span class="pod-tier-badge" style="background:'+rbg+';color:'+rfg+'">'+(g.relationship||'')+'</span>' +
               '<select onchange="updateGuestStatus(\''+g.id+'\',this.value)" style="font-size:10px;padding:2px 4px;border-radius:4px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-family:inherit;cursor:pointer">'+statusOpts+'</select>' +
-              '<div style="font-size:11px;color:var(--text-dim)">'+g.topicIdea+'</div>' +
-              '<div style="font-size:10px;color:var(--text-muted)">'+g.whyGreat+'</div>' +
+              '<div style="font-size:11px;color:var(--text-dim)">'+(g.episodeTopicIdea||g.topicIdea||'')+'</div>' +
+              '<div style="font-size:10px;color:var(--text-muted)">'+(g.whyGreat||'')+'</div>' +
             '</div>';
           }).join('') +
         '</div>';
@@ -7524,13 +7525,17 @@ async function renderPodcastPage(){
           '<div style="'+(ti < 3 ? '' : 'display:none')+'">' +
             topics.map(function(t) {
               const [pbg,pfg] = priorityColors[t.priority] || priorityColors['Backlog'];
+              var statusColors = {'Idea':['rgba(160,174,192,.12)','#A0AEC0'],'Approved':['rgba(66,153,225,.15)','#4299E1'],'Guest Booked':['rgba(159,122,234,.15)','#9F7AEA'],'Recorded':['rgba(237,137,54,.15)','var(--yellow)'],'Editing':['rgba(237,137,54,.2)','#ED8936'],'Published':['rgba(72,187,120,.15)','var(--green)']};
+              var [sbg,sfg] = statusColors[t.status] || statusColors['Idea'];
               return '<div style="padding:10px 16px;border-top:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-wrap:wrap">' +
+                (t.rishabhRank ? '<span style="font-size:14px;font-weight:800;color:var(--gold);min-width:24px;text-align:center">#' + t.rishabhRank + '</span>' : '<span style="min-width:24px"></span>') +
                 '<div style="flex:1;min-width:200px">' +
-                  '<div style="font-size:12px;font-weight:600;color:var(--text)">'+t.title+'</div>' +
-                  '<div style="font-size:10px;color:var(--text-muted);margin-top:2px">Guest: '+t.guest+'</div>' +
+                  '<div style="font-size:12px;font-weight:600;color:var(--text)">' + (t.notionUrl ? '<a href="'+t.notionUrl+'" target="_blank" style="color:inherit;text-decoration:none">' : '') + t.title + (t.notionUrl ? '</a>' : '') + '</div>' +
+                  '<div style="font-size:10px;color:var(--text-muted);margin-top:2px">' + (t.potentialGuest||t.guest||'No guest assigned') + (t.type ? ' · ' + t.type : '') + '</div>' +
+                  (t.keyQuestion ? '<div style="font-size:10px;color:var(--text-dim);margin-top:2px;font-style:italic">"' + t.keyQuestion + '"</div>' : '') +
                 '</div>' +
-                '<span class="pod-tier-badge" style="background:'+pbg+';color:'+pfg+'">'+t.priority+'</span>' +
-                (t.covered ? '<span class="pod-tier-badge" style="background:rgba(72,187,120,.15);color:var(--green)">Covered</span>' : '') +
+                '<span class="pod-tier-badge" style="background:'+sbg+';color:'+sfg+'">'+(t.status||'Idea')+'</span>' +
+                '<span class="pod-tier-badge" style="background:'+pbg+';color:'+pfg+'">'+(t.priority||'')+'</span>' +
               '</div>';
             }).join('') +
           '</div>' +
