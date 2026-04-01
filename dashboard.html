@@ -4984,14 +4984,26 @@ function renderHackWeek() {
   const hwJudges = hwLogistics.judges || [];
   const hwContacts = hwLogistics.keyContacts || hw.keyContacts || {};
   const hwReviews = hwApi.reviews || [];
+  const hwRubric = hwApi.rubric || [];
+  const hwResourceLinks = hwApi.resourceLinks || [];
+  const hwScores = hwApi.scores || [];
+  const hwPrizes = hwApi.prizeCategories || [];
+  const hwTeamRules = hwApi.teamFormationRules || [];
+  const hwLessons = hwApi.lessonsLearned || [];
+  const hwPrevious = (hwConfig.previousHackWeeks) || {};
 
   // Schedule HTML
   const dayNames = ['day1','day2','day3','day4','day5'];
   const dayLabels = ['Day 1 (Mon)','Day 2 (Tue)','Day 3 (Wed)','Day 4 (Thu)','Day 5 (Fri)'];
-  let scheduleHtml = dayNames.map((d,i) => {
-    const day = hwSchedule[d] || {theme:'TBD',events:[]};
-    const evts = day.events.length > 0 ? day.events.map(e => '<div style="padding:4px 0;font-size:11px;color:var(--text-dim);border-bottom:1px solid var(--border)">' + (e.time||'') + ' ' + (e.name||e) + '</div>').join('') : '<div style="padding:8px 0;font-size:11px;color:var(--text-muted);font-style:italic">No events scheduled yet</div>';
-    return '<div class="card" style="margin-bottom:8px"><div class="card-head"><span class="card-title">' + dayLabels[i] + '</span><span style="font-size:10px;color:var(--gold)">' + day.theme + '</span></div><div class="card-body" style="padding:8px 14px">' + evts + '</div></div>';
+  let scheduleHtml = dayNames.map(function(d,i) {
+    var day = hwSchedule[d] || {theme:'TBD',events:[]};
+    var dayDate = new Date(hwConfig.targetDate || hw.targetDate || '2026-06-08');
+    dayDate.setDate(dayDate.getDate() + i);
+    var now = new Date();
+    var dayDiff = Math.ceil((dayDate - now) / 86400000);
+    var countdownBadge = dayDiff > 0 ? '<span style="font-size:9px;padding:2px 6px;border-radius:4px;background:var(--blue-soft);color:var(--blue);font-weight:700;margin-left:8px">in ' + dayDiff + 'd</span>' : dayDiff === 0 ? '<span style="font-size:9px;padding:2px 6px;border-radius:4px;background:var(--green-soft);color:var(--green);font-weight:700;margin-left:8px">Today</span>' : '<span style="font-size:9px;padding:2px 6px;border-radius:4px;background:var(--surface);color:var(--text-muted);font-weight:700;margin-left:8px">Completed</span>';
+    var evts = day.events.length > 0 ? day.events.map(function(e) { return '<div style="padding:4px 0;font-size:11px;color:var(--text-dim);border-bottom:1px solid var(--border)">' + (e.time||'') + ' ' + (e.name||e) + '</div>'; }).join('') : '<div style="padding:8px 0;font-size:11px;color:var(--text-muted);font-style:italic">No events scheduled yet</div>';
+    return '<div class="card" style="margin-bottom:8px"><div class="card-head"><span class="card-title">' + dayLabels[i] + '</span><span style="display:flex;align-items:center"><span style="font-size:10px;color:var(--gold)">' + day.theme + '</span>' + countdownBadge + '</span></div><div class="card-body" style="padding:8px 14px">' + evts + '</div></div>';
   }).join('');
 
   // Budget total
@@ -4999,15 +5011,15 @@ function renderHackWeek() {
 
   return `
   <div class="hw-hub-nav">
-    <button class="hw-hub-nav-btn active" data-hw-tab="hw-current">Current Hack Week</button>
-    <button class="hw-hub-nav-btn" data-hw-tab="hw-teams">Teams</button>
+    <button class="hw-hub-nav-btn active" data-hw-tab="hw-overview">Overview</button>
     <button class="hw-hub-nav-btn" data-hw-tab="hw-schedule">Schedule</button>
-    <button class="hw-hub-nav-btn" data-hw-tab="hw-logistics">Logistics</button>
-    <button class="hw-hub-nav-btn" data-hw-tab="hw-reviews">Reviews</button>
+    <button class="hw-hub-nav-btn" data-hw-tab="hw-teams">Teams</button>
+    <button class="hw-hub-nav-btn" data-hw-tab="hw-judging">Judging</button>
+    <button class="hw-hub-nav-btn" data-hw-tab="hw-archive">Archive</button>
   </div>
 
-  <!-- TAB: Current Hack Week -->
-  <div class="hw-hub-tab-pane active" data-hw-pane="hw-current">
+  <!-- TAB: Overview -->
+  <div class="hw-hub-tab-pane active" data-hw-pane="hw-overview">
     <div class="card">
       <div class="card-head">
         <div class="card-title">&#129470; Hack Week #3</div>
@@ -5020,6 +5032,7 @@ function renderHackWeek() {
         <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:12px">
           <div style="font-size:11px;color:var(--text-muted)"><strong style="color:var(--text)">Dates:</strong> ${hwConfig.dates || hw.dates}</div>
           <div style="font-size:11px;color:var(--text-muted)"><strong style="color:var(--text)">Slack:</strong> ${hwConfig.slackChannel || '#hack-week-jun-2026'}</div>
+          <div style="font-size:11px;color:var(--text-muted)"><strong style="color:var(--text)">Teams:</strong> ${hwTeams.length} signed up</div>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
           <span style="font-size:12px;font-weight:700;color:var(--text)">Planning Progress</span>
@@ -5036,26 +5049,9 @@ function renderHackWeek() {
         ${phaseHtml}
       </div>
     </div>
-  </div>
 
-  <!-- TAB: Teams -->
-  <div class="hw-hub-tab-pane" data-hw-pane="hw-teams">
-    <div class="card">
-      <div class="card-head"><span class="card-title">Team Sign-ups</span><span style="font-size:11px;color:var(--text-muted)">${hwTeams.length} teams</span></div>
-      <div class="card-body" style="padding:20px;text-align:center;color:var(--text-muted)">
-        ${hwTeams.length > 0 ? hwTeams.map(t => '<div style="padding:8px 0;border-bottom:1px solid var(--border);text-align:left"><span style="font-weight:700;color:var(--text)">' + t.name + '</span> <span style="font-size:11px;color:var(--text-muted)">(' + (t.members||[]).join(', ') + ')</span></div>').join('') : '<div style="font-size:24px;margin-bottom:8px">&#128101;</div><div>No teams signed up yet.</div><div style="font-size:11px;margin-top:4px">Teams will appear here once sign-ups open.</div>'}
-      </div>
-    </div>
-  </div>
-
-  <!-- TAB: Schedule -->
-  <div class="hw-hub-tab-pane" data-hw-pane="hw-schedule">
-    ${scheduleHtml}
-  </div>
-
-  <!-- TAB: Logistics -->
-  <div class="hw-hub-tab-pane" data-hw-pane="hw-logistics">
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+    <!-- Logistics folded into Overview -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
       <div class="card" style="padding:14px;border-left:3px solid var(--gold)">
         <div style="font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);font-weight:700">Budget</div>
         <div style="font-size:18px;font-weight:800;color:var(--gold);margin-top:4px">$${budgetTotal.toLocaleString()}</div>
@@ -5067,33 +5063,172 @@ function renderHackWeek() {
         </div>
       </div>
       <div class="card" style="padding:14px;border-left:3px solid var(--lavender)">
-        <div style="font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);font-weight:700">Judges</div>
-        <div style="margin-top:6px">
-          ${hwJudges.map(j => '<span style="font-size:11px;padding:3px 8px;border-radius:4px;background:var(--surface);border:1px solid var(--border);color:var(--text);margin-right:4px;display:inline-block;margin-bottom:4px">' + j + '</span>').join('')}
-        </div>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-head"><span class="card-title">Key Contacts</span></div>
-      <div class="card-body" style="padding:10px 14px">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px">
-          <div><span style="color:var(--text-muted)">Engineering Lead:</span> <strong>${hwContacts.engineeringLead || 'TBD'}</strong></div>
-          <div><span style="color:var(--text-muted)">Operations:</span> <strong>${hwContacts.operations || 'TBD'}</strong></div>
-          <div><span style="color:var(--text-muted)">BLR Logistics:</span> <strong>${hwContacts.blrLogistics || 'TBD'}</strong></div>
+        <div style="font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);font-weight:700">Key Contacts</div>
+        <div style="margin-top:6px;font-size:11px;line-height:1.8">
+          <div><span style="color:var(--text-muted)">Eng Lead:</span> <strong>${hwContacts.engineeringLead || 'TBD'}</strong></div>
+          <div><span style="color:var(--text-muted)">Ops:</span> <strong>${hwContacts.operations || 'TBD'}</strong></div>
+          <div><span style="color:var(--text-muted)">BLR:</span> <strong>${hwContacts.blrLogistics || 'TBD'}</strong></div>
           <div><span style="color:var(--text-muted)">Finance:</span> <strong>${hwContacts.finance || 'TBD'}</strong></div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- TAB: Reviews -->
-  <div class="hw-hub-tab-pane" data-hw-pane="hw-reviews">
-    <div class="card">
-      <div class="card-head"><span class="card-title">Post-Event Reviews</span></div>
-      <div class="card-body" style="padding:40px;text-align:center;color:var(--text-muted)">
-        ${hwReviews.length > 0 ? hwReviews.map(r => '<div style="padding:8px 0;border-bottom:1px solid var(--border);text-align:left"><strong>' + r.title + '</strong> <span style="font-size:11px;color:var(--text-muted)">' + r.date + '</span></div>').join('') : '<div style="font-size:24px;margin-bottom:8px">&#128203;</div><div>No reviews yet.</div><div style="font-size:11px;margin-top:4px">Post-event reviews will appear here after Hack Week.</div>'}
+  <!-- TAB: Teams -->
+  <div class="hw-hub-tab-pane" data-hw-pane="hw-teams">
+    <div class="card" style="margin-bottom:12px">
+      <div class="card-head"><span class="card-title">Team Sign-ups</span><span style="font-size:11px;color:var(--text-muted)">${hwTeams.length} teams</span></div>
+      <div class="card-body" style="padding:${hwTeams.length > 0 ? '10px 14px' : '20px'};${hwTeams.length === 0 ? 'text-align:center;color:var(--text-muted)' : ''}">
+        ${hwTeams.length > 0 ? hwTeams.map(function(t) {
+          return '<div style="padding:10px 0;border-bottom:1px solid var(--border)">' +
+            '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">' +
+            '<span style="font-weight:700;color:var(--text);font-size:13px">' + t.name + '</span>' +
+            (t.loomUrl ? '<a href="' + t.loomUrl + '" target="_blank" style="font-size:9px;color:var(--gold);text-decoration:none">&#127909; Loom</a>' : '') +
+            '</div>' +
+            '<div style="font-size:11px;color:var(--text-dim);margin-bottom:3px">&#128101; ' + ((t.members||[]).join(', ') || 'No members listed') + '</div>' +
+            (t.idea ? '<div style="font-size:11px;color:var(--text-muted);margin-bottom:2px">&#128161; ' + t.idea + '</div>' : '') +
+            (t.techStack ? '<div style="font-size:10px;color:var(--text-muted)">&#9881; ' + t.techStack + '</div>' : '') +
+            '</div>';
+        }).join('') : '<div style="font-size:24px;margin-bottom:8px">&#128101;</div><div>No teams signed up yet.</div><div style="font-size:11px;margin-top:4px">Teams will appear here once the Google Sheet is populated.</div>'}
       </div>
     </div>
+
+    <!-- Team Formation Rules -->
+    <div class="card" style="margin-bottom:12px">
+      <div class="card-head"><span class="card-title">Team Formation Rules</span></div>
+      <div class="card-body" style="padding:10px 14px">
+        ${hwTeamRules.length > 0 ? '<ul style="margin:0;padding-left:18px;font-size:12px;color:var(--text-dim);line-height:1.8">' + hwTeamRules.map(function(r) { return '<li>' + r + '</li>'; }).join('') + '</ul>' : '<div style="font-size:12px;color:var(--text-muted)">No rules configured yet.</div>'}
+      </div>
+    </div>
+
+    <!-- Resource Links -->
+    <div class="card">
+      <div class="card-head"><span class="card-title">Resources</span></div>
+      <div class="card-body" style="padding:10px 14px">
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          ${hwResourceLinks.map(function(link) {
+            var icons = {github:'&#128187;',figma:'&#127912;',notion:'&#128221;',docs:'&#128196;'};
+            var icon = icons[link.icon] || '&#128279;';
+            if (!link.url) return '<span style="font-size:11px;padding:6px 12px;border-radius:6px;background:var(--surface);border:1px solid var(--border);color:var(--text-muted)">' + icon + ' ' + link.label + ' (not set)</span>';
+            return '<a href="' + link.url + '" target="_blank" style="font-size:11px;padding:6px 12px;border-radius:6px;background:var(--surface);border:1px solid var(--border);color:var(--gold);text-decoration:none;transition:background .15s;font-weight:600" onmouseover="this.style.background=\'rgba(219,203,119,0.08)\'" onmouseout="this.style.background=\'var(--surface)\'">' + icon + ' ' + link.label + ' &#8599;</a>';
+          }).join('')}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: Schedule -->
+  <div class="hw-hub-tab-pane" data-hw-pane="hw-schedule">
+    ${scheduleHtml}
+  </div>
+
+  <!-- TAB: Judging -->
+  <div class="hw-hub-tab-pane" data-hw-pane="hw-judging">
+    <!-- Rubric -->
+    <div class="card" style="margin-bottom:12px">
+      <div class="card-head"><span class="card-title">Judging Rubric</span><span style="font-size:10px;color:var(--text-muted)">Equal weight (1/3 each)</span></div>
+      <div class="card-body" style="padding:10px 14px">
+        ${hwRubric.length > 0 ? hwRubric.map(function(r) { return '<div style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)"><span style="font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(219,203,119,0.1);color:var(--gold);font-weight:700;min-width:40px;text-align:center">' + Math.round(r.weight * 100) + '%</span><div><div style="font-size:12px;font-weight:700;color:var(--text)">' + r.criterion + '</div><div style="font-size:11px;color:var(--text-muted);margin-top:2px">' + r.description + '</div></div></div>'; }).join('') : '<div style="font-size:12px;color:var(--text-muted)">No rubric configured yet.</div>'}
+        <div style="margin-top:10px">
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);font-weight:700;margin-bottom:6px">Judges</div>
+          ${hwJudges.map(function(j) { return '<span style="font-size:11px;padding:3px 8px;border-radius:4px;background:var(--surface);border:1px solid var(--border);color:var(--text);margin-right:4px;display:inline-block;margin-bottom:4px">' + j + '</span>'; }).join('')}
+        </div>
+      </div>
+    </div>
+
+    <!-- Scores -->
+    <div class="card" style="margin-bottom:12px">
+      <div class="card-head"><span class="card-title">Scores</span><span style="font-size:10px;color:var(--text-muted)">${hwScores.length} submissions</span></div>
+      <div class="card-body" style="padding:${hwScores.length > 0 ? '0' : '20px'};${hwScores.length === 0 ? 'text-align:center;color:var(--text-muted)' : 'overflow-x:auto'}">
+        ${hwScores.length > 0 ? (function() {
+          var teamScoreMap = {};
+          hwScores.forEach(function(s) {
+            if (!teamScoreMap[s.team]) teamScoreMap[s.team] = [];
+            teamScoreMap[s.team].push(s);
+          });
+          var tableHtml = '<table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr style="border-bottom:2px solid var(--border)">';
+          tableHtml += '<th style="padding:8px 10px;text-align:left;color:var(--text-muted);font-weight:700">Team</th>';
+          tableHtml += '<th style="padding:8px 10px;text-align:left;color:var(--text-muted);font-weight:700">Judge</th>';
+          tableHtml += '<th style="padding:8px 6px;text-align:center;color:var(--text-muted);font-weight:700">Idea</th>';
+          tableHtml += '<th style="padding:8px 6px;text-align:center;color:var(--text-muted);font-weight:700">Code</th>';
+          tableHtml += '<th style="padding:8px 6px;text-align:center;color:var(--text-muted);font-weight:700">Demo</th>';
+          tableHtml += '<th style="padding:8px 6px;text-align:center;color:var(--gold);font-weight:700">Avg</th>';
+          tableHtml += '</tr></thead><tbody>';
+          hwScores.forEach(function(s) {
+            var vals = [s.idea, s.code, s.demo].filter(function(v) { return v !== null && v !== undefined; });
+            var avg = vals.length > 0 ? (vals.reduce(function(a,b) { return a+b; }, 0) / vals.length).toFixed(1) : '-';
+            tableHtml += '<tr style="border-bottom:1px solid var(--border)">';
+            tableHtml += '<td style="padding:6px 10px;font-weight:600;color:var(--text)">' + s.team + '</td>';
+            tableHtml += '<td style="padding:6px 10px;color:var(--text-dim)">' + s.judge + '</td>';
+            tableHtml += '<td style="padding:6px;text-align:center;color:var(--text-dim)">' + (s.idea || '-') + '</td>';
+            tableHtml += '<td style="padding:6px;text-align:center;color:var(--text-dim)">' + (s.code || '-') + '</td>';
+            tableHtml += '<td style="padding:6px;text-align:center;color:var(--text-dim)">' + (s.demo || '-') + '</td>';
+            tableHtml += '<td style="padding:6px;text-align:center;color:var(--gold);font-weight:700">' + avg + '</td>';
+            tableHtml += '</tr>';
+          });
+          var teamNames = Object.keys(teamScoreMap);
+          if (teamNames.length > 0) {
+            tableHtml += '<tr style="border-top:2px solid var(--border)"><td colspan="6" style="padding:6px 10px;font-size:10px;color:var(--text-muted);font-weight:700;text-transform:uppercase">Team Averages</td></tr>';
+            teamNames.sort(function(a,b) {
+              var aScores = teamScoreMap[a]; var bScores = teamScoreMap[b];
+              var aAvg = aScores.reduce(function(s,sc) { var v = [sc.idea,sc.code,sc.demo].filter(function(x){return x!=null;}); return s + (v.length?v.reduce(function(a,b){return a+b;},0)/v.length:0); }, 0) / aScores.length;
+              var bAvg = bScores.reduce(function(s,sc) { var v = [sc.idea,sc.code,sc.demo].filter(function(x){return x!=null;}); return s + (v.length?v.reduce(function(a,b){return a+b;},0)/v.length:0); }, 0) / bScores.length;
+              return bAvg - aAvg;
+            });
+            teamNames.forEach(function(tn, idx) {
+              var scores = teamScoreMap[tn];
+              var avgIdea = scores.filter(function(s){return s.idea!=null;}).reduce(function(a,s){return a+s.idea;},0) / (scores.filter(function(s){return s.idea!=null;}).length || 1);
+              var avgCode = scores.filter(function(s){return s.code!=null;}).reduce(function(a,s){return a+s.code;},0) / (scores.filter(function(s){return s.code!=null;}).length || 1);
+              var avgDemo = scores.filter(function(s){return s.demo!=null;}).reduce(function(a,s){return a+s.demo;},0) / (scores.filter(function(s){return s.demo!=null;}).length || 1);
+              var overall = ((avgIdea + avgCode + avgDemo) / 3).toFixed(1);
+              tableHtml += '<tr style="background:' + (idx === 0 ? 'rgba(219,203,119,0.05)' : 'transparent') + '">';
+              tableHtml += '<td style="padding:6px 10px;font-weight:700;color:var(--text)">' + (idx === 0 ? '&#127942; ' : '') + tn + '</td>';
+              tableHtml += '<td style="padding:6px 10px;color:var(--text-muted);font-size:10px">' + scores.length + ' judge' + (scores.length>1?'s':'') + '</td>';
+              tableHtml += '<td style="padding:6px;text-align:center;color:var(--text-dim)">' + avgIdea.toFixed(1) + '</td>';
+              tableHtml += '<td style="padding:6px;text-align:center;color:var(--text-dim)">' + avgCode.toFixed(1) + '</td>';
+              tableHtml += '<td style="padding:6px;text-align:center;color:var(--text-dim)">' + avgDemo.toFixed(1) + '</td>';
+              tableHtml += '<td style="padding:6px;text-align:center;color:var(--gold);font-weight:700">' + overall + '</td>';
+              tableHtml += '</tr>';
+            });
+          }
+          tableHtml += '</tbody></table>';
+          return tableHtml;
+        })() : '<div style="font-size:24px;margin-bottom:8px">&#128202;</div><div>No scores submitted yet.</div><div style="font-size:11px;margin-top:4px">Judges submit scores via API after demo day.</div>'}
+      </div>
+    </div>
+
+    <!-- Prizes -->
+    <div class="card">
+      <div class="card-head"><span class="card-title">Prizes</span><span style="font-size:10px;color:var(--gold)">$${hwPrizes.reduce(function(s,p) { return s + (p.amount||0); }, 0).toLocaleString()} total</span></div>
+      <div class="card-body" style="padding:10px 14px">
+        <div style="display:grid;grid-template-columns:repeat(${hwPrizes.length || 3}, 1fr);gap:10px">
+          ${hwPrizes.map(function(p) {
+            var icons = {'Best Use of AI':'&#129302;','Highest Customer Impact':'&#128165;','Best Internal Tool / Most Useful DevTool':'&#128736;'};
+            var icon = icons[p.category] || '&#127942;';
+            return '<div style="padding:12px;border-radius:8px;background:var(--surface);border:1px solid var(--border);text-align:center"><div style="font-size:20px;margin-bottom:6px">' + icon + '</div><div style="font-size:11px;font-weight:700;color:var(--text);margin-bottom:4px">' + p.category + '</div><div style="font-size:16px;font-weight:800;color:var(--gold)">$' + (p.amount||0).toLocaleString() + '</div></div>';
+          }).join('')}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: Archive -->
+  <div class="hw-hub-tab-pane" data-hw-pane="hw-archive">
+    ${hwLessons.length > 0 ? hwLessons.map(function(hw_past) {
+      var notionLink = hw_past.hackWeek.includes('June 2025') ? hwPrevious.june2025Notion :
+                       hw_past.hackWeek.includes('January 2026') ? hwPrevious.jan2026Notion : '';
+      var sheetLink = hw_past.hackWeek.includes('January 2026') ? hwPrevious.jan2026Signup : '';
+      return '<div class="card" style="margin-bottom:12px">' +
+        '<div class="card-head"><span class="card-title">&#128218; ' + hw_past.hackWeek + '</span>' +
+        '<div style="display:flex;gap:8px">' +
+        (notionLink ? '<a href="' + notionLink + '" target="_blank" style="font-size:10px;color:var(--gold);text-decoration:none">Notion &#8599;</a>' : '') +
+        (sheetLink ? '<a href="' + sheetLink + '" target="_blank" style="font-size:10px;color:var(--text-muted);text-decoration:none">Sheet &#8599;</a>' : '') +
+        '</div></div>' +
+        '<div class="card-body" style="padding:10px 14px">' +
+        '<ul style="margin:0;padding-left:18px;font-size:11px;color:var(--text-dim);line-height:1.8">' +
+        hw_past.lessons.map(function(l) { return '<li>' + l + '</li>'; }).join('') +
+        '</ul></div></div>';
+    }).join('') : '<div class="card"><div class="card-body" style="padding:40px;text-align:center;color:var(--text-muted)"><div style="font-size:24px;margin-bottom:8px">&#128218;</div><div>No past hack weeks archived yet.</div></div></div>'}
   </div>`;
 }
 
