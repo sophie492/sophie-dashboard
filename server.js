@@ -4508,6 +4508,11 @@ app.post('/api/events/generate-todos', (req, res) => {
   const event = req.body;
   if (!event || !event.id) return res.status(400).json({ error: 'No event data or missing id' });
 
+  // No EA tasks for events without Rishabh or Shreyas
+  if (!event.rishabh && !event.shreyas) {
+    return res.json({ todos: [], source: 'no-exec' });
+  }
+
   const stored = loadEventTodos();
 
   // If we already generated + stored todos for this event, return those (preserves done states)

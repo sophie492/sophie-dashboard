@@ -3033,8 +3033,8 @@ function renderEventPane(ev) {
           </div>
         </div>
 
-        <!-- Progress -->
-        <div class="card">
+        <!-- Progress (only for exec events) -->
+        ${ev.rishabh || ev.shreyas || ev.todos.length > 0 ? `<div class="card">
           <div class="card-head">
             <div class="card-title">&#128200; Progress</div>
             <span class="badge ${todoPercent >= 75 ? 'tag-green' : todoPercent >= 40 ? 'tag-yellow' : 'tag-red'}">${todoPercent}%</span>
@@ -3045,11 +3045,12 @@ function renderEventPane(ev) {
             </div>
             <div style="font-size:11px;color:var(--text-muted)">${doneTodos} of ${ev.todos.length} tasks done</div>
           </div>
-        </div>
+        </div>` : ''}
       </div>
     </div>
 
-    <!-- To-Do List -->
+    <!-- To-Do List (only for events with Rishabh or Shreyas) -->
+    ${ev.rishabh || ev.shreyas || ev.todos.length > 0 ? `
     <div class="card" style="margin-top:0;height:auto">
       <div class="card-head">
         <div class="card-title">&#9745; EA To-Dos</div>
@@ -3071,7 +3072,7 @@ function renderEventPane(ev) {
         </ul>
         <button class="todo-add-btn" data-event-id="${ev.id}">+ Add task</button>
       </div>
-    </div>
+    </div>` : ''}
   `;
 }
 
