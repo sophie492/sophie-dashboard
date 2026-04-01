@@ -4819,7 +4819,79 @@ async function refreshPodcastFromNotion() {
       topics = existing.topics || [];
     }
 
-    // Merge into existing data (preserve episodes, launch tasks, config, etc.)
+    // Sync episode todos from Notion pages
+    if (existing.episodes && existing.episodes.length > 0) {
+      for (const ep of existing.episodes) {
+        if (!ep.notionLink) continue;
+        try {
+          // Extract page ID from URL
+          const pageIdMatch = ep.notionLink.match(/([a-f0-9]{32})$/);
+          if (!pageIdMatch) continue;
+          const pageId = pageIdMatch[1].replace(/(.{8})(.{4})(.{4})(.{4})(.{12})/, '$1-$2-$3-$4-$5');
+
+          // Read all blocks from the episode page
+          let allBlocks = [];
+          let cursor;
+          do {
+            const resp = await notion.blocks.children.list({ block_id: pageId, page_size: 100, start_cursor: cursor });
+            allBlocks = allBlocks.concat(resp.results);
+            cursor = resp.has_more ? resp.next_cursor : null;
+          } while (cursor);
+
+          // Extract to_do blocks
+          const notionTodos = allBlocks.filter(b => b.type === 'to_do').map(b => ({
+            blockId: b.id,
+            text: b.to_do.rich_text.map(t => t.plain_text).join(''),
+            checked: b.to_do.checked || false
+          }));
+
+          if (notionTodos.length > 0) {
+            // Match Notion todos to existing episode todos by text similarity
+            notionTodos.forEach(nt => {
+              const ntTextClean = nt.text.replace(/\s*\([^)]*\)\s*$/, '').trim().toLowerCase();
+              const match = ep.todos.find(t => {
+                const tClean = t.text.trim().toLowerCase();
+                return tClean === ntTextClean || ntTextClean.includes(tClean) || tClean.includes(ntTextClean);
+              });
+              if (match) {
+                // Notion is authoritative for done state
+                match.done = nt.checked;
+                match.status = nt.checked ? 'Done' : (match.status === 'Done' ? 'To Do' : match.status);
+                match.notionBlockId = nt.blockId;
+              }
+            });
+
+            // Also add any Notion todos that don't exist in the episode (added directly in Notion)
+            notionTodos.forEach(nt => {
+              const ntTextClean = nt.text.replace(/\s*\([^)]*\)\s*$/, '').trim();
+              const exists = ep.todos.some(t => {
+                const tClean = t.text.trim().toLowerCase();
+                const ntLower = ntTextClean.toLowerCase();
+                return tClean === ntLower || ntLower.includes(tClean) || tClean.includes(ntLower);
+              });
+              if (!exists && ntTextClean.length > 0) {
+                ep.todos.push({
+                  id: 'nt-' + nt.blockId.slice(0, 8),
+                  text: ntTextClean,
+                  phase: 'Pre-Production',
+                  owner: 'Sophie',
+                  dueDate: '',
+                  done: nt.checked,
+                  status: nt.checked ? 'Done' : 'To Do',
+                  notionBlockId: nt.blockId,
+                  fromNotion: true
+                });
+              }
+            });
+          }
+        } catch (e) {
+          console.warn('[Podcast Sync] Episode sync failed for', ep.title, ':', e.message);
+        }
+      }
+      console.log('[Podcast Sync] Synced todos for', existing.episodes.filter(e => e.notionLink).length, 'episodes from Notion');
+    }
+
+    // Merge into existing data
     existing.guests = guests;
     existing.topics = topics;
     existing.lastNotionSync = new Date().toISOString();
