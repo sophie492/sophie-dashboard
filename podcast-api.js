@@ -170,6 +170,16 @@ module.exports = function createPodcastRouter(notion) {
       if (guest) {
         guest.outreachStatus = outreachStatus;
         saveData(data);
+        // Sync to Notion if guest has a Notion page
+        if (notion && guest.notionPageId) {
+          try {
+            notion.pages.update({
+              page_id: guest.notionPageId,
+              properties: { 'Outreach Status': { select: { name: outreachStatus } } }
+            }).then(() => console.log('[Podcast] Guest status synced to Notion:', guest.name, '->', outreachStatus))
+              .catch(e => console.warn('[Podcast] Notion guest sync failed:', e.message));
+          } catch (e) { console.warn('[Podcast] Notion guest sync error:', e.message); }
+        }
         return res.json({ ok: true });
       }
       res.status(404).json({ error: 'Guest not found' });
