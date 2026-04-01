@@ -1466,15 +1466,51 @@ app.post('/api/marketing', (req, res) => {
 // ── Hack Week API ──
 const HACKWEEK_PATH = path.join(DATA_DIR, 'hackweek-data.json');
 
+function loadHackweekData() {
+  try { return fs.existsSync(HACKWEEK_PATH) ? JSON.parse(fs.readFileSync(HACKWEEK_PATH, 'utf8')) : { hackweeks: {} }; }
+  catch(e) { return { hackweeks: {} }; }
+}
+
+function findHackweekById(data, id) {
+  for (const year of Object.values(data.hackweeks || {})) {
+    const found = year.find(hw => hw.id === id);
+    if (found) return found;
+  }
+  return null;
+}
+
+function findPlanningHackweek(data) {
+  for (const year of Object.values(data.hackweeks || {})) {
+    const found = year.find(hw => hw.status === 'Planning');
+    if (found) return found;
+  }
+  return null;
+}
+
 app.get('/api/hackweek', (req, res) => {
   try {
-    if (fs.existsSync(HACKWEEK_PATH)) {
-      const data = JSON.parse(fs.readFileSync(HACKWEEK_PATH, 'utf8'));
-      data.config.daysUntil = Math.ceil((new Date(data.config.targetDate) - new Date()) / 86400000);
-      res.json(data);
-    } else {
-      res.json({ config: {}, teams: [], schedule: {}, logistics: {}, reviews: [] });
+    const data = loadHackweekData();
+    // Compute daysUntil for each non-Complete hack week
+    Object.values(data.hackweeks || {}).forEach(year => {
+      year.forEach(hw => {
+        if (hw.targetDate && hw.status !== 'Complete') {
+          hw.daysUntil = Math.ceil((new Date(hw.targetDate) - new Date()) / 86400000);
+        }
+      });
+    });
+    res.json(data);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get('/api/hackweek/:id', (req, res) => {
+  try {
+    const data = loadHackweekData();
+    const hw = findHackweekById(data, req.params.id);
+    if (!hw) return res.status(404).json({ error: 'Hack week not found' });
+    if (hw.targetDate && hw.status !== 'Complete') {
+      hw.daysUntil = Math.ceil((new Date(hw.targetDate) - new Date()) / 86400000);
     }
+    res.json(hw);
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
@@ -1500,35 +1536,27 @@ async function syncHackweekTeamsFromSheet() {
     const auth = await getGoogleSheetsAuth();
     if (!auth) { console.log('[HW Sheet] No auth - skipping sync'); return; }
 
-    const sheets = google.sheets({ version: 'v4', auth });
+    const data = loadHackweekData();
+    const planning = findPlanningHackweek(data);
+    if (!planning) { console.log('[HW Sheet] No Planning hack week found - skipping sync'); return; }
 
-    // Get all sheet tabs to find the right one for current hack week
-    const spreadsheet = await sheets.spreadsheets.get({ spreadsheetId: HACKWEEK_SHEET_ID });
+    const sheetId = (planning.signupSheet || '').match(/\/d\/([^/]+)/)?.[1] || HACKWEEK_SHEET_ID;
+    const sheets = google.sheets({ version: 'v4', auth });
+    const spreadsheet = await sheets.spreadsheets.get({ spreadsheetId: sheetId });
     const sheetTabs = spreadsheet.data.sheets.map(s => s.properties.title);
 
-    // Look for a tab matching current hack week (e.g. "Hack Week #3" or "Jun 2026")
-    // Fall back to last tab if no match (most recent hack week)
-    const hwData = fs.existsSync(HACKWEEK_PATH) ? JSON.parse(fs.readFileSync(HACKWEEK_PATH, 'utf8')) : {};
-    const hwName = (hwData.config && hwData.config.name) || 'Hack Week #3';
-    let targetTab = sheetTabs.find(t => t.toLowerCase().includes(hwName.toLowerCase()));
-    if (!targetTab) targetTab = sheetTabs.find(t => t.toLowerCase().includes('jun 2026') || t.toLowerCase().includes('#3'));
-    if (!targetTab) targetTab = sheetTabs[sheetTabs.length - 1]; // last tab = most recent
+    const tabMatch = (planning.sheetTabMatch || planning.name || '').toLowerCase();
+    let targetTab = sheetTabs.find(t => t.toLowerCase().includes(tabMatch));
+    if (!targetTab) targetTab = sheetTabs[sheetTabs.length - 1];
 
-    console.log('[HW Sheet] Reading tab:', targetTab, 'from', sheetTabs.length, 'tabs');
+    console.log('[HW Sheet] Reading tab:', targetTab, 'for', planning.name);
 
     const range = targetTab + '!A1:Z100';
-    const result = await sheets.spreadsheets.values.get({
-      spreadsheetId: HACKWEEK_SHEET_ID,
-      range: range
-    });
+    const result = await sheets.spreadsheets.values.get({ spreadsheetId: sheetId, range: range });
 
     const rows = result.data.values;
-    if (!rows || rows.length < 2) {
-      console.log('[HW Sheet] No data rows found');
-      return;
-    }
+    if (!rows || rows.length < 2) { console.log('[HW Sheet] No data rows found'); return; }
 
-    // Row 1 = headers, dynamically map columns
     const headers = rows[0].map(h => h.toLowerCase().trim());
     const colMap = {
       name: headers.findIndex(h => h.includes('team') && h.includes('name') || h === 'team'),
@@ -1537,22 +1565,17 @@ async function syncHackweekTeamsFromSheet() {
       techStack: headers.findIndex(h => h.includes('tech') || h.includes('stack') || h.includes('technolog')),
       loomUrl: headers.findIndex(h => h.includes('loom') || h.includes('video') || h.includes('demo link'))
     };
-
-    // Fallback: if 'team' header not found, try first column
     if (colMap.name === -1) colMap.name = 0;
 
     const teams = [];
     for (let i = 1; i < rows.length; i++) {
       const row = rows[i];
       const name = (colMap.name >= 0 && row[colMap.name]) ? row[colMap.name].trim() : '';
-      if (!name) continue; // skip empty rows
-
+      if (!name) continue;
       const membersRaw = (colMap.members >= 0 && row[colMap.members]) ? row[colMap.members] : '';
       const members = membersRaw.split(/[,\n]+/).map(m => m.trim()).filter(Boolean);
-
       teams.push({
-        name: name,
-        members: members,
+        name: name, members: members,
         idea: (colMap.idea >= 0 && row[colMap.idea]) ? row[colMap.idea].trim() : '',
         techStack: (colMap.techStack >= 0 && row[colMap.techStack]) ? row[colMap.techStack].trim() : '',
         loomUrl: (colMap.loomUrl >= 0 && row[colMap.loomUrl]) ? row[colMap.loomUrl].trim() : '',
@@ -1560,21 +1583,17 @@ async function syncHackweekTeamsFromSheet() {
       });
     }
 
-    // Merge into existing hackweek data (preserve other fields)
-    const existing = fs.existsSync(HACKWEEK_PATH) ? JSON.parse(fs.readFileSync(HACKWEEK_PATH, 'utf8')) : {};
-    existing.teams = teams;
-    existing.lastSheetSync = new Date().toISOString();
-    const dir = path.dirname(HACKWEEK_PATH);
-    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-    fs.writeFileSync(HACKWEEK_PATH, JSON.stringify(existing, null, 2));
-    console.log('[HW Sheet] Synced', teams.length, 'teams from sheet');
+    planning.teams = teams;
+    data.lastSheetSync = new Date().toISOString();
+    fs.writeFileSync(HACKWEEK_PATH, JSON.stringify(data, null, 2));
+    console.log('[HW Sheet] Synced', teams.length, 'teams for', planning.name);
   } catch (e) {
     console.error('[HW Sheet] Sync error:', e.message);
   }
 }
 
 // ── Hack Week Scoring ──
-app.patch('/api/hackweek/scores', (req, res) => {
+app.patch('/api/hackweek/:id/scores', (req, res) => {
   const authHeader = req.headers.authorization || '';
   const token = authHeader.replace('Bearer ', '');
   if (token !== (process.env.DASHBOARD_API_KEY || 'sophie-dashboard-secret-change-me')) {
@@ -1584,46 +1603,40 @@ app.patch('/api/hackweek/scores', (req, res) => {
     const { team, judge, idea, code, demo } = req.body;
     if (!team || !judge) return res.status(400).json({ error: 'team and judge required' });
 
-    // Validate scores are 1-10
     for (const [key, val] of Object.entries({ idea, code, demo })) {
       if (val !== undefined && (typeof val !== 'number' || val < 1 || val > 10)) {
         return res.status(400).json({ error: key + ' must be a number 1-10' });
       }
     }
 
-    const data = fs.existsSync(HACKWEEK_PATH) ? JSON.parse(fs.readFileSync(HACKWEEK_PATH, 'utf8')) : {};
-    if (!data.scores) data.scores = [];
+    const data = loadHackweekData();
+    const hw = findHackweekById(data, req.params.id);
+    if (!hw) return res.status(404).json({ error: 'Hack week not found' });
+    if (!hw.scores) hw.scores = [];
 
-    // Validate team exists (if teams are loaded)
-    if (data.teams && data.teams.length > 0) {
-      const teamExists = data.teams.some(t => t.name.toLowerCase() === team.toLowerCase());
-      if (!teamExists) return res.status(400).json({ error: 'Team not found: ' + team, availableTeams: data.teams.map(t => t.name) });
+    if (hw.teams && hw.teams.length > 0) {
+      const teamExists = hw.teams.some(t => t.name.toLowerCase() === team.toLowerCase());
+      if (!teamExists) return res.status(400).json({ error: 'Team not found: ' + team, availableTeams: hw.teams.map(t => t.name) });
     }
 
-    // Upsert: find existing score for same judge+team combo
-    const existingIdx = data.scores.findIndex(s => s.team.toLowerCase() === team.toLowerCase() && s.judge.toLowerCase() === judge.toLowerCase());
-    const scoreEntry = {
-      team: team,
-      judge: judge,
-      idea: idea || null,
-      code: code || null,
-      demo: demo || null,
-      submittedAt: new Date().toISOString()
-    };
+    const existingIdx = hw.scores.findIndex(s => s.team.toLowerCase() === team.toLowerCase() && s.judge.toLowerCase() === judge.toLowerCase());
 
     if (existingIdx >= 0) {
-      // Merge: only overwrite fields that are provided
-      const existing = data.scores[existingIdx];
+      const existing = hw.scores[existingIdx];
       if (idea !== undefined) existing.idea = idea;
       if (code !== undefined) existing.code = code;
       if (demo !== undefined) existing.demo = demo;
       existing.submittedAt = new Date().toISOString();
     } else {
-      data.scores.push(scoreEntry);
+      hw.scores.push({
+        team: team, judge: judge,
+        idea: idea || null, code: code || null, demo: demo || null,
+        submittedAt: new Date().toISOString()
+      });
     }
 
     fs.writeFileSync(HACKWEEK_PATH, JSON.stringify(data, null, 2));
-    res.json({ ok: true, scoresCount: data.scores.length });
+    res.json({ ok: true, scoresCount: hw.scores.length });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
