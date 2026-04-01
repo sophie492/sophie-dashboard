@@ -3148,6 +3148,8 @@ async function renderEventsPage(){
   await Promise.all(todoPromises);
 
   // Apply saved checkbox states AFTER todos are generated
+  // Server states are authoritative; localStorage is fallback only if server has nothing
+  let _serverHasEventStates = false;
   try {
     const cbRes = await fetch('/api/checkbox-states');
     if (cbRes.ok) {
@@ -3155,20 +3157,22 @@ async function renderEventsPage(){
       MKT_EVENTS.forEach(ev => {
         (ev.todos || []).forEach((t, ti) => {
           const s = states['mkt-' + ev.id + '-' + ti];
-          if (s) t.done = s.checked;
+          if (s) { t.done = s.checked; _serverHasEventStates = true; }
         });
       });
     }
   } catch(e) {}
-  // Also apply localStorage states as fallback
-  const mktState = loadMktEventTodos();
-  MKT_EVENTS.forEach(ev => {
-    if (mktState[ev.id]) {
-      (ev.todos || []).forEach((t, ti) => {
-        if (mktState[ev.id][ti] !== undefined) t.done = mktState[ev.id][ti];
-      });
+  // Only use localStorage if server had no event states (first-time migration)
+  if (!_serverHasEventStates) {
+    const mktState = loadMktEventTodos();
+    MKT_EVENTS.forEach(ev => {
+      if (mktState[ev.id]) {
+        (ev.todos || []).forEach((t, ti) => {
+          if (mktState[ev.id][ti] !== undefined) t.done = mktState[ev.id][ti];
+        });
     }
   });
+  }
 
   const todayISO = new Date().toISOString().slice(0,10);
   const sixMonthsOut = new Date(); sixMonthsOut.setMonth(sixMonthsOut.getMonth() + 6);
