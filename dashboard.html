@@ -4930,7 +4930,6 @@ function renderHackWeek() {
   var hwContacts = hwLogistics.keyContacts || {};
   var hwRubric = hwApi.rubric || [];
   var hwResourceLinks = hwApi.resourceLinks || [];
-  var hwScores = hwApi.scores || [];
   var hwPrizes = hwApi.prizeCategories || [];
   var hwTeamRules = hwApi.teamFormationRules || [];
   var hwAttendees = hwApi.attendees || [];
@@ -5410,24 +5409,6 @@ function renderHackWeek() {
         </div>
       </div>
     </div>
-    <div class="card" style="margin-bottom:12px">
-      <div class="card-head"><span class="card-title">Scores</span><span style="font-size:10px;color:var(--text-muted)">${hwScores.length} submissions</span></div>
-      <div class="card-body" style="padding:${hwScores.length > 0 ? '0' : '20px'};${hwScores.length === 0 ? 'text-align:center;color:var(--text-muted)' : 'overflow-x:auto'}">
-        ${hwScores.length > 0 ? (function() {
-          var teamScoreMap = {};
-          hwScores.forEach(function(s) { if (!teamScoreMap[s.team]) teamScoreMap[s.team] = []; teamScoreMap[s.team].push(s); });
-          var tableHtml = '<table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr style="border-bottom:2px solid var(--border)"><th style="padding:8px 10px;text-align:left;color:var(--text-muted);font-weight:700">Team</th><th style="padding:8px 10px;text-align:left;color:var(--text-muted);font-weight:700">Judge</th><th style="padding:8px 6px;text-align:center;color:var(--text-muted);font-weight:700">Idea</th><th style="padding:8px 6px;text-align:center;color:var(--text-muted);font-weight:700">Code</th><th style="padding:8px 6px;text-align:center;color:var(--text-muted);font-weight:700">Demo</th><th style="padding:8px 6px;text-align:center;color:var(--gold);font-weight:700">Avg</th></tr></thead><tbody>';
-          hwScores.forEach(function(s) {
-            var vals = [s.idea, s.code, s.demo].filter(function(v) { return v !== null && v !== undefined; });
-            var avg = vals.length > 0 ? (vals.reduce(function(a,b) { return a+b; }, 0) / vals.length).toFixed(1) : '-';
-            tableHtml += '<tr style="border-bottom:1px solid var(--border)"><td style="padding:6px 10px;font-weight:600;color:var(--text)">' + s.team + '</td><td style="padding:6px 10px;color:var(--text-dim)">' + s.judge + '</td><td style="padding:6px;text-align:center;color:var(--text-dim)">' + (s.idea || '-') + '</td><td style="padding:6px;text-align:center;color:var(--text-dim)">' + (s.code || '-') + '</td><td style="padding:6px;text-align:center;color:var(--text-dim)">' + (s.demo || '-') + '</td><td style="padding:6px;text-align:center;color:var(--gold);font-weight:700">' + avg + '</td></tr>';
-          });
-          tableHtml += '</tbody></table>';
-          return tableHtml;
-        })() : '<div style="font-size:24px;margin-bottom:8px">&#128202;</div><div>No scores submitted yet.</div>'}
-        ${!isComplete ? '<div style="border-top:1px solid var(--border);padding-top:10px;margin-top:10px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);font-weight:700;margin-bottom:8px">Submit Score</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><select id="hw-score-judge" style="padding:6px 8px;border-radius:4px;background:var(--surface);border:1px solid var(--border);color:var(--text);font-size:11px;font-family:inherit"><option value="">Judge...</option>' + hwJudges.map(function(j){return '<option value="'+j+'">'+j+'</option>';}).join('') + '</select><select id="hw-score-team" style="padding:6px 8px;border-radius:4px;background:var(--surface);border:1px solid var(--border);color:var(--text);font-size:11px;font-family:inherit"><option value="">Team...</option>' + hwTeams.map(function(t){return '<option value="'+t.name+'">'+t.name+'</option>';}).join('') + '</select></div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:8px"><div style="text-align:center"><div style="font-size:9px;color:var(--text-muted);margin-bottom:2px">Idea</div><input id="hw-score-idea" type="number" min="1" max="10" placeholder="1-10" style="width:100%;padding:6px;border-radius:4px;background:var(--surface);border:1px solid var(--border);color:var(--text);font-size:12px;text-align:center;font-family:inherit" /></div><div style="text-align:center"><div style="font-size:9px;color:var(--text-muted);margin-bottom:2px">Code</div><input id="hw-score-code" type="number" min="1" max="10" placeholder="1-10" style="width:100%;padding:6px;border-radius:4px;background:var(--surface);border:1px solid var(--border);color:var(--text);font-size:12px;text-align:center;font-family:inherit" /></div><div style="text-align:center"><div style="font-size:9px;color:var(--text-muted);margin-bottom:2px">Demo</div><input id="hw-score-demo" type="number" min="1" max="10" placeholder="1-10" style="width:100%;padding:6px;border-radius:4px;background:var(--surface);border:1px solid var(--border);color:var(--text);font-size:12px;text-align:center;font-family:inherit" /></div></div><button onclick="submitHWScore()" style="margin-top:8px;width:100%;padding:8px;border-radius:6px;background:var(--gold);color:#000;font-size:11px;font-weight:700;border:none;cursor:pointer;font-family:inherit">Submit Score</button></div>' : ''}
-      </div>
-    </div>
     <div class="card">
       <div class="card-head"><span class="card-title">Prizes</span><span style="font-size:10px;color:var(--gold)">$${hwPrizes.reduce(function(s,p) { return s + (p.amount||0); }, 0).toLocaleString()} total</span></div>
       <div class="card-body" style="padding:10px 14px">
@@ -5633,42 +5614,6 @@ function deleteHWTask(tabKey, idx) {
       renderProjectsPage();
     }
   }).catch(function(e) { console.warn('[HW Task] Delete failed:', e.message); });
-}
-
-function submitHWScore() {
-  var hwSel = getSelectedHackweek();
-  if (!hwSel.id) return;
-  var judge = document.getElementById('hw-score-judge').value;
-  var team = document.getElementById('hw-score-team').value;
-  var idea = parseInt(document.getElementById('hw-score-idea').value);
-  var code = parseInt(document.getElementById('hw-score-code').value);
-  var demo = parseInt(document.getElementById('hw-score-demo').value);
-  if (!judge || !team) { alert('Select a judge and team'); return; }
-  if (!idea && !code && !demo) { alert('Enter at least one score (1-10)'); return; }
-
-  var body = { team: team, judge: judge };
-  if (idea) body.idea = idea;
-  if (code) body.code = code;
-  if (demo) body.demo = demo;
-
-  fetch('/api/hackweek/' + hwSel.id + '/scores', {
-    method: 'PATCH',
-    headers: {'Content-Type':'application/json','Authorization':'Bearer sophie-dashboard-secret-change-me'},
-    body: JSON.stringify(body)
-  }).then(function(r) { return r.json(); }).then(function(d) {
-    if (d.ok) {
-      if (!hwSel.scores) hwSel.scores = [];
-      var existing = hwSel.scores.findIndex(function(s) { return s.judge === judge && s.team === team; });
-      if (existing >= 0) {
-        if (idea) hwSel.scores[existing].idea = idea;
-        if (code) hwSel.scores[existing].code = code;
-        if (demo) hwSel.scores[existing].demo = demo;
-      } else {
-        hwSel.scores.push({ team: team, judge: judge, idea: idea||null, code: code||null, demo: demo||null });
-      }
-      renderProjectsPage();
-    } else { alert(d.error || 'Failed to submit score'); }
-  }).catch(function(e) { alert('Score submission failed: ' + e.message); });
 }
 
 function copyHWTemplate(templateId) {

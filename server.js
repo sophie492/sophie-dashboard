@@ -1594,54 +1594,6 @@ async function syncHackweekTeamsFromSheet() {
   }
 }
 
-// ── Hack Week Scoring ──
-app.patch('/api/hackweek/:id/scores', (req, res) => {
-  const authHeader = req.headers.authorization || '';
-  const token = authHeader.replace('Bearer ', '');
-  if (token !== (process.env.DASHBOARD_API_KEY || 'sophie-dashboard-secret-change-me')) {
-    return res.status(401).json({ error: 'Invalid API key' });
-  }
-  try {
-    const { team, judge, idea, code, demo } = req.body;
-    if (!team || !judge) return res.status(400).json({ error: 'team and judge required' });
-
-    for (const [key, val] of Object.entries({ idea, code, demo })) {
-      if (val !== undefined && (typeof val !== 'number' || val < 1 || val > 10)) {
-        return res.status(400).json({ error: key + ' must be a number 1-10' });
-      }
-    }
-
-    const data = loadHackweekData();
-    const hw = findHackweekById(data, req.params.id);
-    if (!hw) return res.status(404).json({ error: 'Hack week not found' });
-    if (!hw.scores) hw.scores = [];
-
-    if (hw.teams && hw.teams.length > 0) {
-      const teamExists = hw.teams.some(t => t.name.toLowerCase() === team.toLowerCase());
-      if (!teamExists) return res.status(400).json({ error: 'Team not found: ' + team, availableTeams: hw.teams.map(t => t.name) });
-    }
-
-    const existingIdx = hw.scores.findIndex(s => s.team.toLowerCase() === team.toLowerCase() && s.judge.toLowerCase() === judge.toLowerCase());
-
-    if (existingIdx >= 0) {
-      const existing = hw.scores[existingIdx];
-      if (idea !== undefined) existing.idea = idea;
-      if (code !== undefined) existing.code = code;
-      if (demo !== undefined) existing.demo = demo;
-      existing.submittedAt = new Date().toISOString();
-    } else {
-      hw.scores.push({
-        team: team, judge: judge,
-        idea: idea || null, code: code || null, demo: demo || null,
-        submittedAt: new Date().toISOString()
-      });
-    }
-
-    fs.writeFileSync(HACKWEEK_PATH, JSON.stringify(data, null, 2));
-    res.json({ ok: true, scoresCount: hw.scores.length });
-  } catch (e) { res.status(500).json({ error: e.message }); }
-});
-
 // ── Hack Week Logistics Pipeline ──
 app.patch('/api/hackweek/:id/logistics', (req, res) => {
   const authHeader = req.headers.authorization || '';
