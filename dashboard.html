@@ -835,73 +835,6 @@ const DATA = {
     ]
   },
 
-  hackWeek: {
-    title: "Hack Week #3",
-    dates: "Week of June 8, 2026",
-    targetDate: "2026-06-08",
-    notionUrl: "https://www.notion.so/3291ad76fd2a81b8a66ff9d04b4a1bbe",
-    notionPageId: "3291ad76fd2a81b8a66ff9d04b4a1bbe",
-    keyContacts: {engineeringLead:"Bharat",operations:"Sophie",judges:"Shreyas, Rishabh, Bharat",blrLogistics:"Kunal, Sriram, Shiksha",finance:"Evelyn"},
-    phases: [
-      {name:"Phase 1: Early Planning",deadline:"Late Apr 2026",tasks:[
-        {text:"Pick the dates \u2014 avoid US & India holidays, check OOO schedules",done:false},
-        {text:"Decide on cross-office schedule (SF & BLR async alignment)",done:false},
-        {text:"Confirm the daily structure (Build \u2192 Demo \u2192 Optimize/Ship)",done:false},
-        {text:"Get budget approved \u2014 prizes, travel, food, social events (Evelyn)",done:false},
-        {text:"Decide on prizes and categories (AI, Customer Impact, Internal Tool)",done:false},
-        {text:"Confirm judges (Shreyas, Rishabh, Bharat + leadership)",done:false},
-        {text:"Assign a BLR logistics lead (Kunal/Sriram + Shiksha)",done:false}
-      ]},
-      {name:"Phase 2: Pre-Event Setup",deadline:"Mid May 2026",tasks:[
-        {text:"Create #hack-week-jun-2026 Slack channel",done:false},
-        {text:"Draft and send kick-off announcement in #dev and #general",done:false},
-        {text:"Create team sign-up spreadsheet (Google Sheets)",done:false},
-        {text:"Send reminder nudges for team formation deadline",done:false},
-        {text:"Set team formation rules (2-4 people, cross-functional, no solo)",done:false},
-        {text:"Set deadline for team/idea submission (~1 week before)",done:false},
-        {text:"Have Bharat/Shreyas review and approve all ideas",done:false},
-        {text:"Lock all teams and ideas (~3 days before)",done:false},
-        {text:"Arrange travel for remote employees (budget $550-600 flights, $350/night hotel)",done:false},
-        {text:"Coordinate BLR travel with Kunal/Sriram",done:false},
-        {text:"Arrange daily lunches for SF and BLR offices",done:false},
-        {text:"Plan social events \u2014 team dinner (mid-week) + happy hour (end of week)",done:false},
-        {text:"Set up late-night dinner policy (expense dinner if working past 6pm)",done:false},
-        {text:"Cancel all internal meetings for hack week",done:false},
-        {text:"Set up on-call schedule for customer coverage",done:false},
-        {text:"Block calendars with hack week events",done:false},
-        {text:"Set up Loom recording workflow + spreadsheet column",done:false}
-      ]},
-      {name:"Phase 3: Week-Of",deadline:"Jun 8\u201312, 2026",tasks:[
-        {text:"Host kick-off session (Bharat/Shreyas)",done:false},
-        {text:"Post opening message in #hack-week channel",done:false},
-        {text:"Confirm attendance in each office",done:false},
-        {text:"Encourage daily progress updates in Slack",done:false},
-        {text:"Offer office hours (Bharat/Shreyas)",done:false},
-        {text:"Set up shared Spotify Jam playlist",done:false},
-        {text:"Run demo sessions per office (mid-week)",done:false},
-        {text:"Record all demos (Loom)",done:false},
-        {text:"Host team dinner after demos",done:false},
-        {text:"Post shipping guidance on Day 4",done:false},
-        {text:"Check in on productionization \u2014 help teams scope down",done:false},
-        {text:"Ensure all Loom links added to spreadsheet",done:false},
-        {text:"Host end-of-week happy hour",done:false}
-      ]},
-      {name:"Phase 4: Post-Event",deadline:"By Jun 26, 2026",tasks:[
-        {text:"Judges review all demos and Looms (2-3 days)",done:false},
-        {text:"Pick winners across all categories",done:false},
-        {text:"Announce winners at Town Hall (lock date + ensure judges available!)",done:false},
-        {text:"Have winning teams re-present polished demos to company",done:false},
-        {text:"Distribute prizes ($1K per winning team)",done:false},
-        {text:"Post hack week recap in #general with all Loom links",done:false},
-        {text:"Create LinkedIn content with Marketing (Ashley)",done:false},
-        {text:"Send feedback survey (Google Form)",done:false},
-        {text:"Hold planning retro (Sophie + Bharat + BLR leads)",done:false},
-        {text:"Update master checklist with lessons learned",done:false},
-        {text:"Track which projects make it to production (2-4 weeks later)",done:false}
-      ]}
-    ]
-  },
-
   linkedinPipeline: {
     title: "LinkedIn Thought Leadership \u2014 Podcast Pipeline",
     icon: "\ud83d\udcbc",
@@ -1539,15 +1472,7 @@ function applyPersistedState() {
       });
     });
   }
-  if (DATA.hackWeek) {
-    const hwDone = new Set(loadHackWeekDone());
-    DATA.hackWeek.phases.forEach((p, pi) => {
-      p.tasks.forEach((t, ti) => {
-        const key = pi + '-' + ti;
-        if (hwDone.has(key)) t.done = true;
-      });
-    });
-  }
+  // Hack week done states applied after API fetch (see fetchHackweekData)
 
   // 5. Apply project done-states for BD, Marketing, LinkedIn
   const gpProjects = {linkedin:'linkedinPipeline'};
@@ -5292,7 +5217,11 @@ function toggleHWPhase(el) {
 function toggleHWTask(el) {
   const pi = +el.dataset.hwphase;
   const ti = +el.dataset.hwtask;
-  const task = DATA.hackWeek.phases[pi].tasks[ti];
+  const hwSel = getSelectedHackweek();
+  const phases = (hwSel.checklist && hwSel.checklist.phases) ? hwSel.checklist.phases : (DATA.hackWeek ? DATA.hackWeek.phases : []);
+  if (!phases[pi] || !(phases[pi].tasks||phases[pi].items||[])[ti]) return;
+  const tasks = phases[pi].tasks || phases[pi].items || [];
+  const task = tasks[ti];
   task.done = !task.done;
   const isChecked = task.done;
 
@@ -5305,7 +5234,7 @@ function toggleHWTask(el) {
     if(idx >= 0) doneKeys.splice(idx, 1);
   }
   saveHackWeekDone(doneKeys);
-  syncCheckbox('hackweek-'+pi+'-'+ti, isChecked, DATA.hackWeek?.notionPageId, task.text);
+  syncCheckbox('hackweek-'+pi+'-'+ti, isChecked, hwSel.notionPageId || '', task.text || task.item || '');
 
   const cb = el.querySelector('.task-checkbox');
   const label = el.querySelector('span:last-child');
@@ -5323,16 +5252,15 @@ function toggleHWTask(el) {
     label.style.color = 'var(--text-dim)';
   }
 
-  const pTasks = DATA.hackWeek.phases[pi].tasks;
+  const pTasks = tasks;
   const pDone = pTasks.filter(t=>t.done).length;
   const pTotal = pTasks.length;
   const phaseEl = el.closest('[data-hwphase]');
   const counter = phaseEl.querySelector('.hw-phase-head span:last-child');
   if(counter) counter.textContent = pDone + '/' + pTotal;
 
-  const allPhases = DATA.hackWeek.phases;
-  const totalDone = allPhases.reduce((s,p) => s + p.tasks.filter(t=>t.done).length, 0);
-  const totalAll = allPhases.reduce((s,p) => s + p.tasks.length, 0);
+  const totalDone = phases.reduce((s,p) => s + (p.tasks||p.items||[]).filter(t=>t.done).length, 0);
+  const totalAll = phases.reduce((s,p) => s + (p.tasks||p.items||[]).length, 0);
   const newPct = totalAll ? Math.round((totalDone/totalAll)*100) : 0;
   const card = el.closest('.card');
   const pctLabel = card.querySelector('.card-body > div:first-child > span:last-child');
@@ -6202,14 +6130,14 @@ async function loadServerCheckboxStates() {
       });
     }
     // Apply to hack week tasks
-    if (DATA.hackWeek) {
-      DATA.hackWeek.phases.forEach((p, pi) => {
-        p.tasks.forEach((t, ti) => {
-          const s = states['hackweek-' + pi + '-' + ti];
-          if (s) t.done = s.checked;
-        });
+    var _hwRestore = getSelectedHackweek();
+    var _hwPhases = (_hwRestore.checklist && _hwRestore.checklist.phases) ? _hwRestore.checklist.phases : [];
+    _hwPhases.forEach(function(p, pi) {
+      (p.tasks || p.items || []).forEach(function(t, ti) {
+        var s = states['hackweek-' + pi + '-' + ti];
+        if (s) t.done = s.checked;
       });
-    }
+    });
     // Apply to marketing event todos
     MKT_EVENTS.forEach(ev => {
       ev.todos.forEach((t, ti) => {
