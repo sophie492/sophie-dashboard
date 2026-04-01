@@ -2317,7 +2317,11 @@ app.post('/api/events/update', async (req, res) => {
     const { eventId, field, value } = req.body;
     const overrides = fs.existsSync(EVENTS_OVERRIDES_PATH) ? JSON.parse(fs.readFileSync(EVENTS_OVERRIDES_PATH, 'utf8')) : {};
     if (!overrides[eventId]) overrides[eventId] = {};
-    overrides[eventId][field] = value;
+    if (value === '__DELETE__') {
+      delete overrides[eventId][field];
+    } else {
+      overrides[eventId][field] = value;
+    }
     overrides[eventId].lastUpdated = new Date().toISOString();
     fs.writeFileSync(EVENTS_OVERRIDES_PATH, JSON.stringify(overrides, null, 2));
 
