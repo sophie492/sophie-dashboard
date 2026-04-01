@@ -459,7 +459,8 @@
             "template": ":trophy: *{{name}} Results!*\n\nWhat an incredible week. Here are your winners:\n\n:robot_face: *Best Use of AI:* {{winnerAI}}\n:boom: *Highest Customer Impact:* {{winnerImpact}}\n:toolbox: *Best Internal Tool:* {{winnerTool}}\n\nAll teams shipped real products within a week — not prototypes. Huge props to everyone.\n\nFull demos and Loom links: {{signupLink}}\n\nCongrats to all teams! :tada:"
           }
         ],
-        "attendees": []
+        "attendees": [],
+        "winners": {}
       }
     ],
     "2027": [

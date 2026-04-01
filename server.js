@@ -1670,6 +1670,26 @@ app.patch('/api/hackweek/:id/logistics', (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// ── Hack Week Winner Selection ──
+app.patch('/api/hackweek/:id/winner', (req, res) => {
+  const authHeader = req.headers.authorization || '';
+  const token = authHeader.replace('Bearer ', '');
+  if (token !== (process.env.DASHBOARD_API_KEY || 'sophie-dashboard-secret-change-me')) {
+    return res.status(401).json({ error: 'Invalid API key' });
+  }
+  try {
+    const { category, teamName } = req.body;
+    if (!category) return res.status(400).json({ error: 'category required' });
+    const data = loadHackweekData();
+    const hw = findHackweekById(data, req.params.id);
+    if (!hw) return res.status(404).json({ error: 'Hack week not found' });
+    if (!hw.winners) hw.winners = {};
+    hw.winners[category] = teamName || null;
+    fs.writeFileSync(HACKWEEK_PATH, JSON.stringify(data, null, 2));
+    res.json({ ok: true, winners: hw.winners });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 // ── Hack Week Team Status ──
 app.patch('/api/hackweek/:id/team-status', (req, res) => {
   const authHeader = req.headers.authorization || '';

@@ -5252,6 +5252,27 @@ function renderHackWeek() {
       html += '</div></div>';
       return html;
     })()}
+    <div class="card" style="margin-top:12px"><div class="card-head"><span class="card-title">&#128197; Communication Timeline</span></div>
+    <div class="card-body" style="padding:10px 14px">
+      ${(function() {
+        var timeline = [
+          { week: '4 weeks before', items: ['Create Slack channel', 'Send kick-off announcement'] },
+          { week: '2 weeks before', items: ['Send team formation reminder', 'Draft announcement templates'] },
+          { week: '1 week before', items: ['Final reminder — submission deadline'] },
+          { week: 'Day 1', items: ['Post opening message in #hack-week'] },
+          { week: 'Daily', items: ['Encourage progress updates'] },
+          { week: 'Day 4', items: ['Post shipping guidance'] },
+          { week: '1 week after', items: ['Post recap with winners + Loom links'] },
+          { week: '2 weeks after', items: ['LinkedIn content', 'Feature at events'] }
+        ];
+        return timeline.map(function(t) {
+          return '<div style="display:flex;gap:12px;padding:6px 0;border-bottom:1px solid var(--border)">' +
+            '<span style="min-width:100px;font-size:10px;font-weight:700;color:var(--gold)">' + t.week + '</span>' +
+            '<div style="flex:1;font-size:11px;color:var(--text-dim)">' + t.items.join(' &middot; ') + '</div>' +
+          '</div>';
+        }).join('');
+      })()}
+    </div></div>
   </div>
 
   <!-- TAB: Judging -->
@@ -5326,6 +5347,33 @@ function renderHackWeek() {
         </div>
       </div>
     </div>
+
+    <!-- Winner Selection -->
+    ${!isComplete && hwTeams.length > 0 && hwPrizes.length > 0 ? (function() {
+      var winners = hwApi.winners || {};
+      var html = '<div class="card" style="margin-top:12px"><div class="card-head"><span class="card-title">&#127942; Winner Selection</span></div><div class="card-body" style="padding:10px 14px">';
+      hwPrizes.forEach(function(p) {
+        var catKey = p.category;
+        var currentWinner = winners[catKey] || '';
+        html += '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">' +
+          '<span style="font-size:11px;font-weight:700;color:var(--text);min-width:200px">' + catKey + '</span>' +
+          '<select onchange="selectHWWinner(\'' + catKey.replace(/'/g,"\\'") + '\',this.value)" style="flex:1;padding:4px 8px;border-radius:4px;background:var(--surface);border:1px solid var(--border);color:' + (currentWinner ? 'var(--gold)' : 'var(--text-muted)') + ';font-size:11px;font-family:inherit;cursor:pointer;font-weight:' + (currentWinner ? '700' : '400') + '">' +
+          '<option value="">Select winner...</option>' +
+          hwTeams.map(function(t) { return '<option value="' + t.name.replace(/"/g,'&quot;') + '"' + (t.name === currentWinner ? ' selected' : '') + '>' + t.name + '</option>'; }).join('') +
+          '</select></div>';
+      });
+      html += '</div></div>';
+      return html;
+    })() : ''}
+    ${isComplete && hwApi.winners && Object.keys(hwApi.winners).length > 0 ? (function() {
+      var winners = hwApi.winners;
+      var html = '<div class="card" style="margin-top:12px"><div class="card-head"><span class="card-title">&#127942; Winners</span></div><div class="card-body" style="padding:10px 14px">';
+      Object.entries(winners).forEach(function(e) {
+        if (e[1]) html += '<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px"><span style="color:var(--text-muted);min-width:200px">' + e[0] + '</span><strong style="color:var(--gold)">' + e[1] + '</strong></div>';
+      });
+      html += '</div></div>';
+      return html;
+    })() : ''}
   </div>
 
   <!-- TAB: Archive -->
@@ -5349,6 +5397,7 @@ function renderHackWeek() {
         (hw_future.planningStart ? '<div class="card-body" style="padding:6px 14px"><div style="font-size:11px;color:var(--text-muted)">Planning starts: ' + hw_future.planningStart + '</div></div>' : '') +
         '</div>';
     }).join('') + '</div>' : ''}
+    ${completedHackweeks.length >= 2 ? '<div class="card" style="margin-top:16px"><div class="card-head"><span class="card-title">&#128200; Hack Week Comparison</span></div><div class="card-body" style="padding:0;overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr style="border-bottom:2px solid var(--border)"><th style="padding:8px 10px;text-align:left;color:var(--text-muted)">Metric</th>' + completedHackweeks.map(function(hw) { return '<th style="padding:8px 10px;text-align:center;color:var(--text)">' + hw.name + '</th>'; }).join('') + '</tr></thead><tbody><tr style="border-bottom:1px solid var(--border)"><td style="padding:6px 10px;color:var(--text-muted)">Teams</td>' + completedHackweeks.map(function(hw) { return '<td style="padding:6px 10px;text-align:center;color:var(--text)">' + (hw.teams||[]).length + '</td>'; }).join('') + '</tr><tr style="border-bottom:1px solid var(--border)"><td style="padding:6px 10px;color:var(--text-muted)">Lessons</td>' + completedHackweeks.map(function(hw) { return '<td style="padding:6px 10px;text-align:center;color:var(--text)">' + (hw.lessonsLearned||[]).length + '</td>'; }).join('') + '</tr></tbody></table></div></div>' : ''}
   </div>`;
 }
 
@@ -5608,6 +5657,22 @@ function lockAllHWTeams() {
       renderProjectsPage();
     }
   }).catch(function(e) { console.warn('[HW Team] Lock failed:', e.message); });
+}
+
+function selectHWWinner(category, teamName) {
+  var hwSel = getSelectedHackweek();
+  if (!hwSel.id) return;
+  if (!hwSel.winners) hwSel.winners = {};
+  hwSel.winners[category] = teamName || null;
+
+  fetch('/api/hackweek/' + hwSel.id + '/winner', {
+    method: 'PATCH',
+    headers: {'Content-Type':'application/json','Authorization':'Bearer sophie-dashboard-secret-change-me'},
+    body: JSON.stringify({ category: category, teamName: teamName || null })
+  }).then(function() {
+    // Update winner names in comms templates
+    renderProjectsPage();
+  }).catch(function(e) { console.warn('[HW Winner] Update failed:', e.message); });
 }
 
 function renderFPPCProject(){
