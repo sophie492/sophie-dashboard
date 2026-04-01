@@ -2336,6 +2336,74 @@ app.post('/api/events/update', async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
+// ── Auto-match events to Notion pages ──
+app.post('/api/events/auto-link-notion', async (req, res) => {
+  const authHeader = req.headers.authorization || '';
+  const token = authHeader.replace('Bearer ', '');
+  if (token !== (process.env.DASHBOARD_API_KEY || 'sophie-dashboard-secret-change-me')) {
+    return res.status(401).json({ error: 'Invalid API key' });
+  }
+  if (!notion) return res.status(503).json({ error: 'Notion not configured' });
+  try {
+    const { events } = req.body; // [{ id, name }] — events with empty notionLink
+    if (!events || !events.length) return res.json({ ok: true, linked: 0 });
+
+    const overrides = fs.existsSync(EVENTS_OVERRIDES_PATH) ? JSON.parse(fs.readFileSync(EVENTS_OVERRIDES_PATH, 'utf8')) : {};
+    let linked = 0;
+    const results = [];
+
+    for (const ev of events) {
+      // Skip if already has a notionLink override
+      if (overrides[ev.id] && overrides[ev.id].notionLink) continue;
+
+      try {
+        // Search Notion by event name
+        const searchResult = await notion.search({
+          query: ev.name,
+          filter: { property: 'object', value: 'page' },
+          page_size: 5
+        });
+
+        // Find best match — title must contain key words from event name
+        const nameWords = ev.name.toLowerCase().replace(/[—–\-&]/g, ' ').split(/\s+/).filter(w => w.length > 2);
+        const match = searchResult.results.find(page => {
+          let title = '';
+          Object.values(page.properties || {}).forEach(prop => {
+            if (prop.type === 'title' && prop.title) title = prop.title.map(t => t.plain_text).join('');
+          });
+          if (!title && page.child_page) title = page.child_page.title || '';
+          const titleLower = title.toLowerCase();
+          // At least 2 key words must match, or >60% of words
+          const matches = nameWords.filter(w => titleLower.includes(w));
+          return matches.length >= Math.min(2, nameWords.length) || matches.length >= nameWords.length * 0.6;
+        });
+
+        if (match) {
+          const notionUrl = 'https://www.notion.so/' + match.id.replace(/-/g, '');
+          if (!overrides[ev.id]) overrides[ev.id] = {};
+          overrides[ev.id].notionLink = notionUrl;
+          overrides[ev.id].lastUpdated = new Date().toISOString();
+          linked++;
+          let matchTitle = '';
+          Object.values(match.properties || {}).forEach(prop => {
+            if (prop.type === 'title' && prop.title) matchTitle = prop.title.map(t => t.plain_text).join('');
+          });
+          results.push({ eventId: ev.id, eventName: ev.name, notionTitle: matchTitle, notionUrl: notionUrl });
+          console.log('[Events] Auto-linked:', ev.name, '->', matchTitle);
+        }
+      } catch (e) {
+        console.warn('[Events] Notion search failed for', ev.name, ':', e.message);
+      }
+    }
+
+    if (linked > 0) {
+      fs.writeFileSync(EVENTS_OVERRIDES_PATH, JSON.stringify(overrides, null, 2));
+    }
+
+    res.json({ ok: true, linked, results });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 app.get('/api/events/overrides', (req, res) => {
   try {
     if (fs.existsSync(EVENTS_OVERRIDES_PATH)) {

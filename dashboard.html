@@ -3133,9 +3133,31 @@ async function renderEventsPage(){
       if (ov.description !== undefined) ev.description = ov.description;
       if (ov.rishabh !== undefined) ev.rishabh = ov.rishabh === true || ov.rishabh === 'true';
       if (ov.shreyas !== undefined) ev.shreyas = ov.shreyas === true || ov.shreyas === 'true';
+      if (ov.notionLink !== undefined) ev.notionLink = ov.notionLink;
       if (ov.addTeamMember !== undefined && !ev.team.includes(ov.addTeamMember)) ev.team.push(ov.addTeamMember);
     }
   });
+
+  // Auto-link events without Notion pages (fire-and-forget, non-blocking)
+  var unlinkedEvents = MKT_EVENTS.filter(ev => !ev.notionLink).map(ev => ({ id: ev.id, name: ev.name }));
+  if (unlinkedEvents.length > 0) {
+    fetch('/api/events/auto-link-notion', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json','Authorization':'Bearer sophie-dashboard-secret-change-me'},
+      body: JSON.stringify({ events: unlinkedEvents })
+    }).then(r => r.json()).then(d => {
+      if (d.linked > 0) {
+        console.log('[Events] Auto-linked', d.linked, 'events to Notion');
+        // Apply the new links to in-memory events
+        (d.results || []).forEach(r => {
+          var ev = MKT_EVENTS.find(e => e.id === r.eventId);
+          if (ev) ev.notionLink = r.notionUrl;
+        });
+        // Re-render to show the new links
+        renderEventsPage();
+      }
+    }).catch(() => {});
+  }
 
   // Auto-generate todos for events with empty todo lists
   const todoPromises = MKT_EVENTS.filter(ev => !ev.todos || ev.todos.length === 0).map(ev =>
