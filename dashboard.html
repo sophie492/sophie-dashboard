@@ -1588,6 +1588,7 @@ function navigateTo(page){
   // Handle event sub-pages
   if(page.startsWith('event-')){
     const eventId=page.replace('event-','');
+    _activeEventId = eventId;
     document.querySelectorAll('.sidebar-item').forEach(i=>i.classList.remove('active'));
     document.querySelector(`.sidebar-item[data-page="${page}"]`)?.classList.add('active');
     document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
@@ -3115,7 +3116,10 @@ function filterEvents(value) {
   });
   // Activate the first visible pane
   panes.forEach(function(p) { p.classList.remove('active'); });
-  if (first) first.classList.add('active');
+  if (first) {
+    first.classList.add('active');
+    _activeEventId = first.id.replace('mkt-', '');
+  }
 
   // Show filter chips
   var chips = document.getElementById('event-filter-chips');
@@ -3218,8 +3222,21 @@ async function renderEventsPage(){
           var ev = MKT_EVENTS.find(e => e.id === r.eventId);
           if (ev) ev.notionLink = r.notionUrl;
         });
-        // Re-render to show the new links
-        renderEventsPage();
+        // Update Notion links in-place without full re-render
+        (d.results || []).forEach(function(r) {
+          var pane = document.getElementById('mkt-' + r.eventId);
+          if (pane) {
+            var notionSlot = pane.querySelector('.card-badges');
+            if (notionSlot && r.notionUrl && !pane.querySelector('a[href*="notion.so"]')) {
+              var a = document.createElement('a');
+              a.href = r.notionUrl;
+              a.target = '_blank';
+              a.style.cssText = 'font-size:10px;color:var(--accent)';
+              a.textContent = 'Notion ↗';
+              notionSlot.appendChild(a);
+            }
+          }
+        });
       }
     }).catch(() => {});
   }
@@ -3234,10 +3251,7 @@ async function renderEventsPage(){
     }).then(r => r.json()).then(d => {
       if (d.enriched > 0) {
         console.log('[Events] Enriched', d.enriched, 'events from Notion');
-        (d.results || []).forEach(r => {
-          // Notion metadata synced (dates, status) — rishabh/shreyas managed manually
-        });
-        renderEventsPage();
+        // Notion metadata synced (dates, status) — no re-render needed
       }
     }).catch(() => {});
   }
@@ -3338,7 +3352,7 @@ async function renderEventsPage(){
     <!-- Event panes -->
     ${visibleEvents.length === 0 ? '<div style="padding:40px;text-align:center;color:var(--text-muted)">No upcoming events in the next 6 months</div>' : ''}
     ${visibleEvents.map((ev, i) => `
-      <div class="mkt-event-pane ${i===0?'active':''}" id="mkt-${ev.id}" data-ev-rishabh="${ev.rishabh?'true':'false'}" data-ev-shreyas="${ev.shreyas?'true':'false'}">
+      <div class="mkt-event-pane ${(_activeEventId ? ev.id === _activeEventId : i===0)?'active':''}" id="mkt-${ev.id}" data-ev-rishabh="${ev.rishabh?'true':'false'}" data-ev-shreyas="${ev.shreyas?'true':'false'}">
         ${renderEventPane(ev)}
       </div>
     `).join('')}
@@ -3492,6 +3506,7 @@ function saveEventTodosToServer(eventId, todos) {
 let _offsiteApiData = null;
 let _hackweekApiData = null;
 let _allHackweeks = [];
+let _activeEventId = null;
 let _selectedHackweekId = null;
 
 async function fetchOffsiteData() {
