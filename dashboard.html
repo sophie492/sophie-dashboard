@@ -1584,8 +1584,9 @@ function renderSidebar(){
   const offsiteTotal=_offsiteSource?_offsiteSource.phases.reduce((s,p)=>s+p.tasks.length,0):0;
   const offsiteDone=_offsiteSource?_offsiteSource.phases.reduce((s,p)=>s+p.tasks.filter(t=>t.done).length,0):0;
   const offsitePct=offsiteTotal?Math.round((offsiteDone/offsiteTotal)*100):0;
-  const hwTotal=DATA.hackWeek?DATA.hackWeek.phases.reduce((s,p)=>s+p.tasks.length,0):0;
-  const hwDone=DATA.hackWeek?DATA.hackWeek.phases.reduce((s,p)=>s+p.tasks.filter(t=>t.done).length,0):0;
+  const _hwSidebar = (function(){ var hw = getSelectedHackweek(); var ph = (hw.checklist && hw.checklist.phases && hw.checklist.phases.length > 0) ? hw.checklist.phases : (DATA.hackWeek ? DATA.hackWeek.phases : []); return ph; })();
+  const hwTotal=_hwSidebar.reduce(function(s,p){return s+(p.tasks||p.items||[]).length;},0);
+  const hwDone=_hwSidebar.reduce(function(s,p){return s+(p.tasks||p.items||[]).filter(function(t){return t.done;}).length;},0);
   const hwPct=hwTotal?Math.round((hwDone/hwTotal)*100):0;
 
   const liTotal=DATA.linkedinPipeline?DATA.linkedinPipeline.phases.reduce((s,p)=>s+p.tasks.length,0):0;
@@ -1935,9 +1936,9 @@ function renderMyWorkSection(){
   let offsiteDone=0,offsiteTotal=0;
   if(offsite){offsite.phases.forEach(p=>{p.tasks.forEach(t=>{offsiteTotal++;if(t.done)offsiteDone++;});});}
   const offsitePct=offsiteTotal>0?Math.round(offsiteDone/offsiteTotal*100):0;
-  const hw=DATA.hackWeek;
+  const hw=(function(){ var sel = getSelectedHackweek(); if (sel.id) return sel; return DATA.hackWeek; })();
   let hwDone=0,hwTotal=0;
-  if(hw){hw.phases.forEach(p=>{p.tasks.forEach(t=>{hwTotal++;if(t.done)hwDone++;});});}
+  if(hw){var hwPhases = (hw.checklist && hw.checklist.phases && hw.checklist.phases.length > 0) ? hw.checklist.phases : (hw.phases || []); hwPhases.forEach(function(p){(p.tasks||p.items||[]).forEach(function(t){hwTotal++;if(t.done)hwDone++;});});}
   const hwPct=hwTotal>0?Math.round(hwDone/hwTotal*100):0;
 
   return `
@@ -1961,7 +1962,7 @@ function renderMyWorkSection(){
       ${hw?`<div class="card" data-nav="project-hackweek" style="cursor:pointer">
         <div class="card-head"><span class="card-title">\uD83E\uDDEA Hack Week</span><span class="badge tag-accent">${hwPct}%</span></div>
         <div class="card-body compact">
-          <div style="font-size:11px;color:var(--text-dim)">${hw.dates}</div>
+          <div style="font-size:11px;color:var(--text-dim)">${hw.targetDate ? new Date(hw.targetDate + 'T12:00:00').toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'}) : (hw.dates || '')}</div>
           ${progressBar(hwPct)}
           <div style="font-size:9px;color:var(--text-muted);margin-top:4px">${hwDone}/${hwTotal} tasks</div>
         </div>
@@ -3386,6 +3387,8 @@ async function renderEventsPage(){
 // -- Projects Page --
 let _offsiteApiData = null;
 let _hackweekApiData = null;
+let _allHackweeks = [];
+let _selectedHackweekId = null;
 
 async function fetchOffsiteData() {
   try {
@@ -3397,7 +3400,23 @@ async function fetchOffsiteData() {
 async function fetchHackweekData() {
   try {
     const res = await fetch('/api/hackweek');
-    if (res.ok) { _hackweekApiData = await res.json(); }
+    if (res.ok) {
+      const data = await res.json();
+      _hackweekApiData = data;
+      _allHackweeks = [];
+      Object.values(data.hackweeks || {}).forEach(function(year) {
+        year.forEach(function(hw) { _allHackweeks.push(hw); });
+      });
+      _allHackweeks.sort(function(a,b) { return (a.targetDate||'').localeCompare(b.targetDate||''); });
+      if (!_selectedHackweekId) {
+        var planning = _allHackweeks.find(function(hw) { return hw.status === 'Planning'; });
+        if (planning) { _selectedHackweekId = planning.id; }
+        else {
+          var completed = _allHackweeks.filter(function(hw) { return hw.status === 'Complete'; });
+          if (completed.length > 0) _selectedHackweekId = completed[completed.length - 1].id;
+        }
+      }
+    }
   } catch(e) { console.warn('[Hackweek] API fetch failed:', e.message); }
 }
 
@@ -3618,6 +3637,15 @@ document.addEventListener('click', function(e) {
 });
 
 // Fetch hack week API data on load
+function getSelectedHackweek() {
+  return _allHackweeks.find(function(hw) { return hw.id === _selectedHackweekId; }) || {};
+}
+
+function switchHackweek(id) {
+  _selectedHackweekId = id;
+  renderProjectsPage();
+}
+
 fetchHackweekData();
 
 function syncOffsiteToNotion() {
@@ -4937,66 +4965,73 @@ function updateLunchNote(idx, value) {
 }
 
 function renderHackWeek() {
-  const hw = DATA.hackWeek;
-  if(!hw) return '';
+  const hw_selected = getSelectedHackweek();
+  if (!hw_selected.id && !DATA.hackWeek) return '';
 
-  const totalTasks = hw.phases.reduce((s,p) => s + p.tasks.length, 0);
-  const doneTasks = hw.phases.reduce((s,p) => s + p.tasks.filter(t=>t.done).length, 0);
+  const hwApi = hw_selected;
+  const isComplete = hw_selected.status === 'Complete';
+  const isFuture = hw_selected.status === 'Future';
+
+  const phases = (hwApi.checklist && hwApi.checklist.phases && hwApi.checklist.phases.length > 0) ? hwApi.checklist.phases : (DATA.hackWeek ? DATA.hackWeek.phases : []);
+
+  const totalTasks = phases.reduce(function(s,p) { return s + (p.tasks||p.items||[]).length; }, 0);
+  const doneTasks = phases.reduce(function(s,p) { return s + (p.tasks||p.items||[]).filter(function(t){return t.done;}).length; }, 0);
   const pct = totalTasks ? Math.round((doneTasks/totalTasks)*100) : 0;
-  const daysUntil = Math.ceil((new Date(hw.targetDate) - new Date()) / 86400000);
+  const daysUntil = hwApi.daysUntil || Math.ceil((new Date(hwApi.targetDate || '2026-06-08') - new Date()) / 86400000);
 
   let phaseHtml = '';
-  hw.phases.forEach((p, pi) => {
-    const pDone = p.tasks.filter(t=>t.done).length;
-    const pTotal = p.tasks.length;
-    const allDone = pDone === pTotal;
-    const isFirst = pi === 0;
+  if (!isComplete && !isFuture && phases.length > 0) {
+    phases.forEach(function(p, pi) {
+      var tasks = p.tasks || p.items || [];
+      var pDone = tasks.filter(function(t){return t.done;}).length;
+      var pTotal = tasks.length;
+      var allDone = pDone === pTotal;
+      var isFirst = pi === 0;
 
-    phaseHtml += `
-      <div class="hw-phase${allDone?' phase-done':''}" data-hwphase="${pi}">
-        <div class="hw-phase-head" onclick="toggleHWPhase(this)" style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)">
-          <span class="hw-chevron" style="font-size:10px;color:var(--text-muted);transition:transform .2s;transform:rotate(${isFirst?'90':'0'}deg)">&#9654;</span>
-          <span style="font-size:11px;font-weight:700;color:${allDone?'var(--green)':'var(--text)'};flex:1">${p.name}</span>
-          <span style="font-size:9px;color:var(--text-muted);font-weight:600">${p.deadline}</span>
-          <span style="font-size:9px;padding:2px 6px;border-radius:4px;font-weight:700;${allDone?'background:var(--green-soft);color:var(--green)':'background:var(--surface);color:var(--text-muted)'}">${pDone}/${pTotal}</span>
-        </div>
-        <div class="hw-phase-body" style="display:${isFirst?'block':'none'};padding:4px 0 4px 18px">`;
+      phaseHtml += '<div class="hw-phase' + (allDone?' phase-done':'') + '" data-hwphase="' + pi + '">' +
+        '<div class="hw-phase-head" onclick="toggleHWPhase(this)" style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)">' +
+          '<span class="hw-chevron" style="font-size:10px;color:var(--text-muted);transition:transform .2s;transform:rotate(' + (isFirst?'90':'0') + 'deg)">&#9654;</span>' +
+          '<span style="font-size:11px;font-weight:700;color:' + (allDone?'var(--green)':'var(--text)') + ';flex:1">' + (p.name || p.deadline || '') + '</span>' +
+          '<span style="font-size:9px;color:var(--text-muted);font-weight:600">' + (p.deadline || '') + '</span>' +
+          '<span style="font-size:9px;padding:2px 6px;border-radius:4px;font-weight:700;' + (allDone?'background:var(--green-soft);color:var(--green)':'background:var(--surface);color:var(--text-muted)') + '">' + pDone + '/' + pTotal + '</span>' +
+        '</div>' +
+        '<div class="hw-phase-body" style="display:' + (isFirst?'block':'none') + ';padding:4px 0 4px 18px">';
 
-    p.tasks.forEach((t, ti) => {
-      phaseHtml += `
-          <div class="hw-task${t.done?' checked':''}" data-hwphase="${pi}" data-hwtask="${ti}" onclick="toggleHWTask(this)" style="display:flex;align-items:flex-start;gap:8px;padding:5px 4px;border-radius:5px;cursor:pointer;transition:background .15s;font-size:11px">
-            <div class="task-checkbox${t.done?' checked':''}"></div>
-            <span style="color:${t.done?'var(--text-muted)':'var(--text-dim)'};${t.done?'text-decoration:line-through;opacity:.5':''};line-height:1.3">${t.text}</span>
-          </div>`;
+      tasks.forEach(function(t, ti) {
+        phaseHtml += '<div class="hw-task' + (t.done?' checked':'') + '" data-hwphase="' + pi + '" data-hwtask="' + ti + '" onclick="toggleHWTask(this)" style="display:flex;align-items:flex-start;gap:8px;padding:5px 4px;border-radius:5px;cursor:pointer;transition:background .15s;font-size:11px">' +
+          '<div class="task-checkbox' + (t.done?' checked':'') + '"></div>' +
+          '<span style="color:' + (t.done?'var(--text-muted)':'var(--text-dim)') + ';' + (t.done?'text-decoration:line-through;opacity:.5':'') + ';line-height:1.3">' + (t.text || t.item || '') + '</span>' +
+        '</div>';
+      });
+      phaseHtml += '</div></div>';
     });
-    phaseHtml += '</div></div>';
-  });
+  }
 
-  const barColor = pct >= 75 ? 'var(--green)' : pct >= 40 ? 'var(--yellow)' : 'var(--accent)';
+  var barColor = pct >= 75 ? 'var(--green)' : pct >= 40 ? 'var(--yellow)' : 'var(--accent)';
 
-  // Hack Week API data
-  const hwApi = _hackweekApiData || {};
-  const hwConfig = hwApi.config || {};
-  const hwTeams = hwApi.teams || [];
-  const hwSchedule = hwApi.schedule || {};
-  const hwLogistics = hwApi.logistics || {};
-  const hwBudget = hwLogistics.budget || {};
-  const hwJudges = hwLogistics.judges || [];
-  const hwContacts = hwLogistics.keyContacts || hw.keyContacts || {};
-  const hwRubric = hwApi.rubric || [];
-  const hwResourceLinks = hwApi.resourceLinks || [];
-  const hwScores = hwApi.scores || [];
-  const hwPrizes = hwApi.prizeCategories || [];
-  const hwTeamRules = hwApi.teamFormationRules || [];
-  const hwLessons = hwApi.lessonsLearned || [];
-  const hwPrevious = (hwConfig.previousHackWeeks) || {};
+  var hwTeams = hwApi.teams || [];
+  var hwSchedule = hwApi.schedule || {};
+  var hwLogistics = hwApi.logistics || {};
+  var hwBudget = hwLogistics.budget || {};
+  var hwJudges = hwLogistics.judges || [];
+  var hwContacts = hwLogistics.keyContacts || (DATA.hackWeek ? DATA.hackWeek.keyContacts : {}) || {};
+  var hwRubric = hwApi.rubric || [];
+  var hwResourceLinks = hwApi.resourceLinks || [];
+  var hwScores = hwApi.scores || [];
+  var hwPrizes = hwApi.prizeCategories || [];
+  var hwTeamRules = hwApi.teamFormationRules || [];
+  var hwLessons = hwApi.lessonsLearned || [];
+
+  var completedHackweeks = _allHackweeks.filter(function(hw) { return hw.status === 'Complete'; });
+
+  var budgetTotal = (hwBudget.prizes||0) + (hwBudget.travel||0) + (hwBudget.food||0) + (hwBudget.social||0);
 
   // Schedule HTML
   const dayNames = ['day1','day2','day3','day4','day5'];
   const dayLabels = ['Day 1 (Mon)','Day 2 (Tue)','Day 3 (Wed)','Day 4 (Thu)','Day 5 (Fri)'];
   let scheduleHtml = dayNames.map(function(d,i) {
     var day = hwSchedule[d] || {theme:'TBD',events:[]};
-    var dayDate = new Date(hwConfig.targetDate || hw.targetDate || '2026-06-08');
+    var dayDate = new Date(hwApi.targetDate || '2026-06-08');
     dayDate.setDate(dayDate.getDate() + i);
     var now = new Date();
     var dayDiff = Math.ceil((dayDate - now) / 86400000);
@@ -5005,10 +5040,20 @@ function renderHackWeek() {
     return '<div class="card" style="margin-bottom:8px"><div class="card-head"><span class="card-title">' + dayLabels[i] + '</span><span style="display:flex;align-items:center"><span style="font-size:10px;color:var(--gold)">' + day.theme + '</span>' + countdownBadge + '</span></div><div class="card-body" style="padding:8px 14px">' + evts + '</div></div>';
   }).join('');
 
-  // Budget total
-  const budgetTotal = (hwBudget.prizes||0) + (hwBudget.travel||0) + (hwBudget.food||0) + (hwBudget.social||0);
-
   return `
+  <!-- Hack Week Selector -->
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+    <select onchange="switchHackweek(this.value)" style="padding:6px 10px;border-radius:6px;background:var(--surface);border:1px solid var(--border);color:var(--text);font-size:12px;font-weight:600;font-family:inherit;cursor:pointer">
+      ${_allHackweeks.map(function(hw) {
+        var label = hw.name + ' \u2014 ' + (hw.targetDate ? new Date(hw.targetDate + 'T12:00:00').toLocaleDateString('en-US', {month:'short', year:'numeric'}) : 'TBD');
+        var statusBadge = hw.status === 'Planning' ? ' (Active)' : hw.status === 'Future' ? ' (Future)' : '';
+        return '<option value="' + hw.id + '"' + (hw.id === _selectedHackweekId ? ' selected' : '') + '>' + label + statusBadge + '</option>';
+      }).join('')}
+    </select>
+    ${isComplete ? '<span style="font-size:10px;padding:3px 8px;border-radius:4px;background:var(--green-soft);color:var(--green);font-weight:700">Complete</span>' : ''}
+    ${isFuture ? '<span style="font-size:10px;padding:3px 8px;border-radius:4px;background:var(--surface);color:var(--text-muted);font-weight:700">Future</span>' : ''}
+  </div>
+
   <div class="hw-hub-nav">
     <button class="hw-hub-nav-btn active" data-hw-tab="hw-overview">Overview</button>
     <button class="hw-hub-nav-btn" data-hw-tab="hw-schedule">Schedule</button>
@@ -5021,16 +5066,16 @@ function renderHackWeek() {
   <div class="hw-hub-tab-pane active" data-hw-pane="hw-overview">
     <div class="card">
       <div class="card-head">
-        <div class="card-title">&#129470; Hack Week #3</div>
+        <div class="card-title">&#129470; ${hwApi.name || 'Hack Week'}</div>
         <div class="card-badges">
-          <span class="badge ${daysUntil<=14?'tag-yellow':'tag-blue'}">${daysUntil}d away</span>
-          <a href="${hw.notionUrl || hwConfig.notionHub || ''}" target="_blank" style="font-size:10px;color:var(--gold)">Notion &#8599;</a>
+          ${!isComplete ? '<span class="badge ' + (daysUntil<=14?'tag-yellow':'tag-blue') + '">' + daysUntil + 'd away</span>' : '<span class="badge tag-green">Complete</span>'}
+          <a href="${hwApi.notionHub || ''}" target="_blank" style="font-size:10px;color:var(--gold)">Notion &#8599;</a>
         </div>
       </div>
       <div class="card-body" style="padding:10px 14px">
         <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:12px">
-          <div style="font-size:11px;color:var(--text-muted)"><strong style="color:var(--text)">Dates:</strong> ${hwConfig.dates || hw.dates}</div>
-          <div style="font-size:11px;color:var(--text-muted)"><strong style="color:var(--text)">Slack:</strong> ${hwConfig.slackChannel || '#hack-week-jun-2026'}</div>
+          <div style="font-size:11px;color:var(--text-muted)"><strong style="color:var(--text)">Dates:</strong> ${hwApi.targetDate ? new Date(hwApi.targetDate + 'T12:00:00').toLocaleDateString('en-US', {month:'long', day:'numeric', year:'numeric'}) : 'TBD'}</div>
+          <div style="font-size:11px;color:var(--text-muted)"><strong style="color:var(--text)">Slack:</strong> ${hwApi.slackChannel || ''}</div>
           <div style="font-size:11px;color:var(--text-muted)"><strong style="color:var(--text)">Teams:</strong> ${hwTeams.length} signed up</div>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
@@ -5043,7 +5088,7 @@ function renderHackWeek() {
         <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
           <span style="font-size:9px;padding:2px 6px;border-radius:4px;background:var(--surface);border:1px solid var(--border);color:var(--text-dim)">&#9881; ${hwContacts.engineeringLead || 'TBD'}</span>
           <span style="font-size:9px;padding:2px 6px;border-radius:4px;background:var(--surface);border:1px solid var(--border);color:var(--text-dim)">&#128203; ${hwContacts.operations || 'TBD'}</span>
-          <span style="font-size:9px;padding:2px 6px;border-radius:4px;background:var(--surface);border:1px solid var(--border);color:var(--text-dim)">&#127919; ${hwJudges.length > 0 ? hwJudges.join(', ') : (hw.keyContacts ? hw.keyContacts.judges : 'TBD')}</span>
+          <span style="font-size:9px;padding:2px 6px;border-radius:4px;background:var(--surface);border:1px solid var(--border);color:var(--text-dim)">&#127919; ${hwJudges.length > 0 ? hwJudges.join(', ') : (hwContacts.judges || 'TBD')}</span>
         </div>
         ${phaseHtml}
       </div>
@@ -5213,21 +5258,26 @@ function renderHackWeek() {
 
   <!-- TAB: Archive -->
   <div class="hw-hub-tab-pane" data-hw-pane="hw-archive">
-    ${hwLessons.length > 0 ? hwLessons.map(function(hw_past) {
-      var notionLink = hw_past.hackWeek.includes('June 2025') ? hwPrevious.june2025Notion :
-                       hw_past.hackWeek.includes('January 2026') ? hwPrevious.jan2026Notion : '';
-      var sheetLink = hw_past.hackWeek.includes('January 2026') ? hwPrevious.jan2026Signup : '';
+    ${completedHackweeks.length > 0 ? completedHackweeks.map(function(hw_past) {
       return '<div class="card" style="margin-bottom:12px">' +
-        '<div class="card-head"><span class="card-title">&#128218; ' + hw_past.hackWeek + '</span>' +
-        '<div style="display:flex;gap:8px">' +
-        (notionLink ? '<a href="' + notionLink + '" target="_blank" style="font-size:10px;color:var(--gold);text-decoration:none">Notion &#8599;</a>' : '') +
-        (sheetLink ? '<a href="' + sheetLink + '" target="_blank" style="font-size:10px;color:var(--text-muted);text-decoration:none">Sheet &#8599;</a>' : '') +
+        '<div class="card-head"><span class="card-title">&#128218; ' + hw_past.name + '</span>' +
+        '<div style="display:flex;gap:8px;align-items:center">' +
+        (hw_past.notionHub ? '<a href="' + hw_past.notionHub + '" target="_blank" style="font-size:10px;color:var(--gold);text-decoration:none">Notion &#8599;</a>' : '') +
+        (hw_past.signupSheet ? '<a href="' + hw_past.signupSheet + '" target="_blank" style="font-size:10px;color:var(--text-muted);text-decoration:none">Sheet &#8599;</a>' : '') +
+        '<button onclick="switchHackweek(\x27' + hw_past.id + '\x27)" style="font-size:9px;padding:2px 8px;border-radius:4px;background:var(--surface);border:1px solid var(--border);color:var(--gold);cursor:pointer;font-family:inherit">View &#8599;</button>' +
         '</div></div>' +
         '<div class="card-body" style="padding:10px 14px">' +
-        '<ul style="margin:0;padding-left:18px;font-size:11px;color:var(--text-dim);line-height:1.8">' +
-        hw_past.lessons.map(function(l) { return '<li>' + l + '</li>'; }).join('') +
-        '</ul></div></div>';
+        ((hw_past.lessonsLearned || []).length > 0 ? '<ul style="margin:0;padding-left:18px;font-size:11px;color:var(--text-dim);line-height:1.8">' +
+        hw_past.lessonsLearned.map(function(l) { return '<li>' + l + '</li>'; }).join('') +
+        '</ul>' : '<div style="font-size:11px;color:var(--text-muted)">No lessons recorded.</div>') +
+        '</div></div>';
     }).join('') : '<div class="card"><div class="card-body" style="padding:40px;text-align:center;color:var(--text-muted)"><div style="font-size:24px;margin-bottom:8px">&#128218;</div><div>No past hack weeks archived yet.</div></div></div>'}
+
+    ${_allHackweeks.filter(function(hw) { return hw.status === 'Future'; }).length > 0 ? '<div style="margin-top:16px"><div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Upcoming</div>' + _allHackweeks.filter(function(hw) { return hw.status === 'Future'; }).map(function(hw_future) {
+      return '<div class="card" style="margin-bottom:8px;opacity:0.7"><div class="card-head"><span class="card-title">' + hw_future.name + '</span><span style="font-size:10px;color:var(--text-muted)">' + (hw_future.targetDate ? new Date(hw_future.targetDate + 'T12:00:00').toLocaleDateString('en-US', {month:'short', year:'numeric'}) : 'TBD') + '</span></div>' +
+        (hw_future.planningStart ? '<div class="card-body" style="padding:6px 14px"><div style="font-size:11px;color:var(--text-muted)">Planning starts: ' + hw_future.planningStart + '</div></div>' : '') +
+        '</div>';
+    }).join('') + '</div>' : ''}
   </div>`;
 }
 
@@ -5485,7 +5535,7 @@ function renderProjectsPage(){
   el.innerHTML=`
     <div class="project-content">
       <div class="project-pane ${activeProject==='hackweek'?'active':''}" id="pane-hackweek">
-        <div class="page-header"><div class="page-title">&#129470; Hack Week #3</div></div>
+        <div class="page-header"><div class="page-title">&#129470; ${(getSelectedHackweek().name || 'Hack Week')}</div></div>
         ${renderHackWeek()}
       </div>
       <div class="project-pane ${activeProject==='fppc'?'active':''}" id="pane-fppc">
