@@ -20,122 +20,1081 @@
       "publishDate": "2026-04-24",
       "notionLink": "https://www.notion.so/fermat-commerce/3301ad76fd2a8169a243cfc00f4023d8",
       "todos": [
-        {"id":"t1","text":"Confirm guest + send calendar invite","owner":"Sophie","phase":"Pre-Production","dueDate":"2026-03-31","done":false,"status":"To Do"},
-        {"id":"t2","text":"Research guest","owner":"Sophie","phase":"Pre-Production","dueDate":"2026-04-03","done":false,"status":"To Do"},
-        {"id":"t3","text":"Prepare 5-7 discussion questions","owner":"Sophie","phase":"Pre-Production","dueDate":"2026-04-05","done":false,"status":"To Do"},
-        {"id":"t4","text":"Pre-interview call (optional)","owner":"Sophie","phase":"Pre-Production","dueDate":"2026-04-07","done":false,"status":"To Do"},
-        {"id":"t5","text":"Confirm any guest announcements","owner":"Sophie","phase":"Pre-Production","dueDate":"2026-04-09","done":false,"status":"To Do"},
-        {"id":"t6","text":"Test audio/video on Riverside","owner":"Rishabh","phase":"Recording","dueDate":"2026-04-10","done":false,"status":"To Do"},
-        {"id":"t7","text":"Record episode","owner":"Rishabh","phase":"Recording","dueDate":"2026-04-10","done":false,"status":"To Do"},
-        {"id":"t8","text":"Editor downloads raw footage","owner":"Editor","phase":"Post-Production","dueDate":"2026-04-11","done":false,"status":"To Do"},
-        {"id":"t9","text":"Full episode edit","owner":"Editor","phase":"Post-Production","dueDate":"2026-04-15","done":false,"status":"To Do"},
-        {"id":"t10","text":"Cut 3-5 social clips","owner":"Editor","phase":"Post-Production","dueDate":"2026-04-15","done":false,"status":"To Do"},
-        {"id":"t11","text":"Rishabh reviews and approves","owner":"Rishabh","phase":"Post-Production","dueDate":"2026-04-17","done":false,"status":"To Do"},
-        {"id":"t12","text":"Write episode description + SEO","owner":"Sophie","phase":"Publishing","dueDate":"2026-04-22","done":false,"status":"To Do"},
-        {"id":"t13","text":"Upload to hosting platform","owner":"Sophie","phase":"Publishing","dueDate":"2026-04-22","done":false,"status":"To Do"},
-        {"id":"t14","text":"Send email announcement","owner":"Sophie","phase":"Publishing","dueDate":"2026-04-24","done":false,"status":"To Do"},
-        {"id":"t15","text":"Create blog post on Fermat site","owner":"Sophie","phase":"Publishing","dueDate":"2026-04-24","done":false,"status":"To Do"},
-        {"id":"t16","text":"LinkedIn post on Rishabh's account","owner":"Jennifer","phase":"Promotion","dueDate":"2026-04-24","done":false,"status":"To Do"},
-        {"id":"t17","text":"Schedule 3-5 clips via Social Pilot","owner":"Jennifer","phase":"Promotion","dueDate":"2026-04-27","done":false,"status":"To Do"},
-        {"id":"t18","text":"Share in Slack channels","owner":"Sophie","phase":"Promotion","dueDate":"2026-04-24","done":false,"status":"To Do"},
-        {"id":"t19","text":"Set up Google retargeting ad","owner":"Jennifer","phase":"Promotion","dueDate":"2026-04-24","done":false,"status":"To Do"}
+        {
+          "id": "t1",
+          "text": "Confirm guest + send calendar invite",
+          "owner": "Sophie",
+          "phase": "Pre-Production",
+          "dueDate": "2026-03-31",
+          "done": false,
+          "status": "To Do"
+        },
+        {
+          "id": "t2",
+          "text": "Research guest",
+          "owner": "Sophie",
+          "phase": "Pre-Production",
+          "dueDate": "2026-04-03",
+          "done": false,
+          "status": "To Do"
+        },
+        {
+          "id": "t3",
+          "text": "Prepare 5-7 discussion questions",
+          "owner": "Sophie",
+          "phase": "Pre-Production",
+          "dueDate": "2026-04-05",
+          "done": false,
+          "status": "To Do"
+        },
+        {
+          "id": "t4",
+          "text": "Pre-interview call (optional)",
+          "owner": "Sophie",
+          "phase": "Pre-Production",
+          "dueDate": "2026-04-07",
+          "done": false,
+          "status": "To Do"
+        },
+        {
+          "id": "t5",
+          "text": "Confirm any guest announcements",
+          "owner": "Sophie",
+          "phase": "Pre-Production",
+          "dueDate": "2026-04-09",
+          "done": false,
+          "status": "To Do"
+        },
+        {
+          "id": "t6",
+          "text": "Test audio/video on Riverside",
+          "owner": "Rishabh",
+          "phase": "Recording",
+          "dueDate": "2026-04-10",
+          "done": false,
+          "status": "To Do"
+        },
+        {
+          "id": "t7",
+          "text": "Record episode",
+          "owner": "Rishabh",
+          "phase": "Recording",
+          "dueDate": "2026-04-10",
+          "done": false,
+          "status": "To Do"
+        },
+        {
+          "id": "t8",
+          "text": "Editor downloads raw footage",
+          "owner": "Editor",
+          "phase": "Post-Production",
+          "dueDate": "2026-04-11",
+          "done": false,
+          "status": "To Do"
+        },
+        {
+          "id": "t9",
+          "text": "Full episode edit",
+          "owner": "Editor",
+          "phase": "Post-Production",
+          "dueDate": "2026-04-15",
+          "done": false,
+          "status": "To Do"
+        },
+        {
+          "id": "t10",
+          "text": "Cut 3-5 social clips",
+          "owner": "Editor",
+          "phase": "Post-Production",
+          "dueDate": "2026-04-15",
+          "done": false,
+          "status": "To Do"
+        },
+        {
+          "id": "t11",
+          "text": "Rishabh reviews and approves",
+          "owner": "Rishabh",
+          "phase": "Post-Production",
+          "dueDate": "2026-04-17",
+          "done": false,
+          "status": "To Do"
+        },
+        {
+          "id": "t12",
+          "text": "Write episode description + SEO",
+          "owner": "Sophie",
+          "phase": "Publishing",
+          "dueDate": "2026-04-22",
+          "done": false,
+          "status": "To Do"
+        },
+        {
+          "id": "t13",
+          "text": "Upload to hosting platform",
+          "owner": "Sophie",
+          "phase": "Publishing",
+          "dueDate": "2026-04-22",
+          "done": false,
+          "status": "To Do"
+        },
+        {
+          "id": "t14",
+          "text": "Send email announcement",
+          "owner": "Sophie",
+          "phase": "Publishing",
+          "dueDate": "2026-04-24",
+          "done": false,
+          "status": "To Do"
+        },
+        {
+          "id": "t15",
+          "text": "Create blog post on Fermat site",
+          "owner": "Sophie",
+          "phase": "Publishing",
+          "dueDate": "2026-04-24",
+          "done": false,
+          "status": "To Do"
+        },
+        {
+          "id": "t16",
+          "text": "LinkedIn post on Rishabh's account",
+          "owner": "Jennifer",
+          "phase": "Promotion",
+          "dueDate": "2026-04-24",
+          "done": false,
+          "status": "To Do"
+        },
+        {
+          "id": "t17",
+          "text": "Schedule 3-5 clips via Social Pilot",
+          "owner": "Jennifer",
+          "phase": "Promotion",
+          "dueDate": "2026-04-27",
+          "done": false,
+          "status": "To Do"
+        },
+        {
+          "id": "t18",
+          "text": "Share in Slack channels",
+          "owner": "Sophie",
+          "phase": "Promotion",
+          "dueDate": "2026-04-24",
+          "done": false,
+          "status": "To Do"
+        },
+        {
+          "id": "t19",
+          "text": "Set up Google retargeting ad",
+          "owner": "Jennifer",
+          "phase": "Promotion",
+          "dueDate": "2026-04-24",
+          "done": false,
+          "status": "To Do"
+        }
       ]
     }
   ],
   "guests": [
-    {"id":"g1","name":"Jatin Pahuja","title":"VP Product","company":"Albertsons","tier":"Tier 1","industry":"Grocery-CPG","relationship":"Strong","outreachStatus":"Not Started","topicIdea":"Who owns the revenue when AI does the shopping?","whyGreat":"VMG flagged as great get.","linkedIn":"https://www.linkedin.com/in/jatinpahuja","notionLink":"https://www.notion.so/fermat-commerce/32f1ad76fd2a81ea9067daa3b498863a"},
-    {"id":"g2","name":"Anshuman","title":"CDO","company":"GNC","tier":"Tier 1","industry":"Retail","relationship":"Active","outreachStatus":"Not Started","topicIdea":"AI personalization at scale","whyGreat":"Active relationship, Pittsburgh visit planned.","linkedIn":"https://www.linkedin.com/in/anshumantaneja/","notionLink":"https://www.notion.so/fermat-commerce/32f1ad76fd2a81afa81ee5b4c5be5d18"},
-    {"id":"g3","name":"Shirley Gao","title":"CDO","company":"PacSun","tier":"Tier 1","industry":"Fashion","relationship":"Active","outreachStatus":"Not Started","topicIdea":"AI in fashion retail","whyGreat":"Known via VMG.","linkedIn":"https://www.linkedin.com/in/shirley-gao-5540568/","notionLink":"https://www.notion.so/fermat-commerce/32f1ad76fd2a81168718f5028332e55f"},
-    {"id":"g4","name":"Liz Garry","title":"VP Ecommerce","company":"Pandora","tier":"Tier 1","industry":"Retail","relationship":"Active","outreachStatus":"Not Started","topicIdea":"AI in luxury commerce","whyGreat":"Known contact.","linkedIn":"https://www.linkedin.com/in/elizabeth-garry-50905b45/","notionLink":"https://www.notion.so/fermat-commerce/32f1ad76fd2a813e8c69ecd5f5906b05"},
-    {"id":"g5","name":"Bob Yarbrough","title":"SVP Ecommerce","company":"Knitwell","tier":"Tier 1","industry":"Multi-brand","relationship":"Active","outreachStatus":"Not Started","topicIdea":"Multi-brand retail AI","whyGreat":"Known contact. Multi-brand perspective.","linkedIn":"https://www.linkedin.com/in/byarby94/","notionLink":"https://www.notion.so/fermat-commerce/32f1ad76fd2a8142a9c5eea602fbb032"},
-    {"id":"g6","name":"Danielle Ragan","title":"SVP Data & AI","company":"Fabletics","tier":"Tier 1","industry":"Fashion","relationship":"New Contact","outreachStatus":"Not Started","topicIdea":"AI personalization at scale","whyGreat":"Meeting secured. DTC-to-enterprise journey.","linkedIn":"https://www.linkedin.com/in/danielleragan/","notionLink":"https://www.notion.so/fermat-commerce/32f1ad76fd2a81c8a847f602b484dcd7"},
-    {"id":"g7","name":"Sneha Narahalli","title":"CPO","company":"Sephora","tier":"Tier 1","industry":"Beauty","relationship":"No Relationship","outreachStatus":"Not Started","topicIdea":"AI in beauty retail","whyGreat":"Dream Tier 1. Huge credibility.","linkedIn":"https://www.linkedin.com/in/sneha-narahalli/","notionLink":"https://www.notion.so/fermat-commerce/32f1ad76fd2a81ab837bd2c01fa5fb9e"},
-    {"id":"g8","name":"Viv Rettke","title":"CMO","company":"J.Jill","tier":"Tier 1","industry":"Retail","relationship":"Active","outreachStatus":"Not Started","topicIdea":"AI in retail marketing","whyGreat":"Rishabh doing reference intro.","linkedIn":"https://www.linkedin.com/in/viv-rettke/","notionLink":"https://www.notion.so/fermat-commerce/32f1ad76fd2a8182bd99d089c1ad3d2e"},
-    {"id":"g9","name":"Sid Mahapatra","title":"","company":"Brooks Running","tier":"Tier 1","industry":"Athletic","relationship":"New Contact","outreachStatus":"Not Started","topicIdea":"AI in lifestyle retail","whyGreat":"Gifting follow-up underway.","linkedIn":"https://www.linkedin.com/in/sid-mahapatra","notionLink":"https://www.notion.so/fermat-commerce/32f1ad76fd2a81ecad2ac3ed297454bf"},
-    {"id":"g10","name":"Jake Bailey","title":"","company":"Meta","tier":"Tier 1","industry":"Tech-Platform","relationship":"New Contact","outreachStatus":"Not Started","topicIdea":"Meta commerce AI strategy","whyGreat":"First intro held with Rishabh and Shreyas.","linkedIn":"https://www.linkedin.com/in/commerceexecutive/","notionLink":"https://www.notion.so/fermat-commerce/32f1ad76fd2a81c58333c52a2fdac8ea"},
-    {"id":"g11","name":"Eric Seufert","title":"","company":"Mobile Dev Memo","tier":"Tier 2","industry":"Media-Analyst","relationship":"Strong","outreachStatus":"Not Started","topicIdea":"Post-ATT commerce landscape","whyGreat":"4+ appearances on his pod. Guest swap opp.","linkedIn":"https://www.linkedin.com/in/ericseufert","notionLink":"https://www.notion.so/fermat-commerce/32f1ad76fd2a814abbd6dada0a0b8eda"},
-    {"id":"g12","name":"Deborah Weinswig","title":"","company":"Coresight Research","tier":"Tier 2","industry":"Media-Analyst","relationship":"No Relationship","outreachStatus":"Not Started","topicIdea":"State of retail AI research","whyGreat":"Hosts Retailistic. Cross-promo potential.","linkedIn":"https://www.linkedin.com/in/deborahweinswig","notionLink":"https://www.notion.so/fermat-commerce/32f1ad76fd2a813285b2caf178bbf1bc"},
-    {"id":"g13","name":"Phillip Jackson","title":"","company":"Future Commerce","tier":"Tier 2","industry":"Media-Analyst","relationship":"No Relationship","outreachStatus":"Not Started","topicIdea":"Commerce culture + AI","whyGreat":"Top commerce podcast. Cross-promo.","linkedIn":"https://www.linkedin.com/in/philwinkle/","notionLink":"https://www.notion.so/fermat-commerce/32f1ad76fd2a815d8885eeea951aac0c"},
-    {"id":"g14","name":"Ricardo Belmar","title":"","company":"Retail Razor Show","tier":"Tier 2","industry":"Media-Analyst","relationship":"No Relationship","outreachStatus":"Not Started","topicIdea":"Retail tech landscape","whyGreat":"NRF Retail Voice. Well-connected.","linkedIn":"https://www.linkedin.com/in/rbelmar/","notionLink":"https://www.notion.so/fermat-commerce/32f1ad76fd2a81739467d456322b072d"},
-    {"id":"g15","name":"Vivek Kumar","title":"CEO","company":"Articore ($320M GMV)","tier":"Tier 3","industry":"Tech-Platform","relationship":"Active","outreachStatus":"Not Started","topicIdea":"Marketplace AI","whyGreat":"Large-scale marketplace perspective.","linkedIn":"https://www.linkedin.com/in/vivekunc/","notionLink":"https://www.notion.so/fermat-commerce/32f1ad76fd2a81a8ab4bd186c97236af"},
-    {"id":"g16","name":"Mike Beckham","title":"CEO","company":"Simple Modern ($250M)","tier":"Tier 3","industry":"Retail","relationship":"No Relationship","outreachStatus":"Not Started","topicIdea":"DTC to enterprise","whyGreat":"Bootstrapped. Compelling founder story.","linkedIn":"https://www.linkedin.com/in/mikebeckhamsm","notionLink":"https://www.notion.so/fermat-commerce/32f1ad76fd2a8173a3e4dc3cdb00d359"},
-    {"id":"g17","name":"Aaron Schwartz","title":"","company":"Orita","tier":"Tier 3","industry":"Tech-Platform","relationship":"Active","outreachStatus":"Not Started","topicIdea":"AI in retention","whyGreat":"Already connected.","linkedIn":"https://www.linkedin.com/in/aaroncharlesschwartz","notionLink":"https://www.notion.so/fermat-commerce/32f1ad76fd2a812f9720e6b321a1ef2b"},
-    {"id":"g18","name":"Matt Yalowitz","title":"","company":"Stripe Ventures","tier":"Tier 4","industry":"VC-Finance","relationship":"Active","outreachStatus":"Not Started","topicIdea":"Agentic commerce bet","whyGreat":"Top 3 investment area for Stripe.","linkedIn":"https://www.linkedin.com/in/myalowitz/","notionLink":"https://www.notion.so/fermat-commerce/32f1ad76fd2a811d85e8f94700422f8c"},
-    {"id":"g19","name":"Peter McCrory","title":"Head of Econ","company":"Anthropic","tier":"Tier 4","industry":"Tech-Platform","relationship":"No Relationship","outreachStatus":"Not Started","topicIdea":"AI economics + commerce","whyGreat":"Jack working on getting him.","linkedIn":"https://www.linkedin.com/in/peter-mccrory-econ/","notionLink":"https://www.notion.so/fermat-commerce/32f1ad76fd2a817b821cdc265c7d56df"},
-    {"id":"g20","name":"Sucharita Kodali","title":"VP Analyst","company":"Forrester","tier":"Dream","industry":"Media-Analyst","relationship":"No Relationship","outreachStatus":"Not Started","topicIdea":"Enterprise digital transformation","whyGreat":"Top retail analyst.","linkedIn":"https://www.linkedin.com/in/sucharitamulpuru/","notionLink":"https://www.notion.so/fermat-commerce/32f1ad76fd2a81e9b2eccad646e5443d"},
-    {"id":"g21","name":"Tobi Lutke","title":"CEO","company":"Shopify","tier":"Dream","industry":"Tech-Platform","relationship":"No Relationship","outreachStatus":"Not Started","topicIdea":"AI-powered commerce platforms","whyGreat":"Massive visibility.","linkedIn":"https://ca.linkedin.com/in/tobiaslutke","notionLink":"https://www.notion.so/fermat-commerce/32f1ad76fd2a81fca560d10877099208"},
-    {"id":"g22","name":"Harley Finkelstein","title":"President","company":"Shopify","tier":"Dream","industry":"Tech-Platform","relationship":"No Relationship","outreachStatus":"Not Started","topicIdea":"Future of commerce","whyGreat":"More accessible, strong media presence.","linkedIn":"https://ca.linkedin.com/in/harleyf","notionLink":"https://www.notion.so/fermat-commerce/32f1ad76fd2a817b8bc5d6bcea1bcb4a"}
+    {
+      "id": "g1",
+      "name": "Jatin Pahuja",
+      "title": "VP Product",
+      "company": "Albertsons",
+      "tier": "Tier 1",
+      "industry": "Grocery-CPG",
+      "relationship": "Strong",
+      "outreachStatus": "Not Started",
+      "topicIdea": "Who owns the revenue when AI does the shopping?",
+      "whyGreat": "VMG flagged as great get.",
+      "linkedIn": "https://www.linkedin.com/in/jatinpahuja",
+      "notionLink": "https://www.notion.so/fermat-commerce/32f1ad76fd2a81ea9067daa3b498863a"
+    },
+    {
+      "id": "g2",
+      "name": "Anshuman",
+      "title": "CDO",
+      "company": "GNC",
+      "tier": "Tier 1",
+      "industry": "Retail",
+      "relationship": "Active",
+      "outreachStatus": "Not Started",
+      "topicIdea": "AI personalization at scale",
+      "whyGreat": "Active relationship, Pittsburgh visit planned.",
+      "linkedIn": "https://www.linkedin.com/in/anshumantaneja/",
+      "notionLink": "https://www.notion.so/fermat-commerce/32f1ad76fd2a81afa81ee5b4c5be5d18"
+    },
+    {
+      "id": "g3",
+      "name": "Shirley Gao",
+      "title": "CDO",
+      "company": "PacSun",
+      "tier": "Tier 1",
+      "industry": "Fashion",
+      "relationship": "Active",
+      "outreachStatus": "Not Started",
+      "topicIdea": "AI in fashion retail",
+      "whyGreat": "Known via VMG.",
+      "linkedIn": "https://www.linkedin.com/in/shirley-gao-5540568/",
+      "notionLink": "https://www.notion.so/fermat-commerce/32f1ad76fd2a81168718f5028332e55f"
+    },
+    {
+      "id": "g4",
+      "name": "Liz Garry",
+      "title": "VP Ecommerce",
+      "company": "Pandora",
+      "tier": "Tier 1",
+      "industry": "Retail",
+      "relationship": "Active",
+      "outreachStatus": "Not Started",
+      "topicIdea": "AI in luxury commerce",
+      "whyGreat": "Known contact.",
+      "linkedIn": "https://www.linkedin.com/in/elizabeth-garry-50905b45/",
+      "notionLink": "https://www.notion.so/fermat-commerce/32f1ad76fd2a813e8c69ecd5f5906b05"
+    },
+    {
+      "id": "g5",
+      "name": "Bob Yarbrough",
+      "title": "SVP Ecommerce",
+      "company": "Knitwell",
+      "tier": "Tier 1",
+      "industry": "Multi-brand",
+      "relationship": "Active",
+      "outreachStatus": "Not Started",
+      "topicIdea": "Multi-brand retail AI",
+      "whyGreat": "Known contact. Multi-brand perspective.",
+      "linkedIn": "https://www.linkedin.com/in/byarby94/",
+      "notionLink": "https://www.notion.so/fermat-commerce/32f1ad76fd2a8142a9c5eea602fbb032"
+    },
+    {
+      "id": "g6",
+      "name": "Danielle Ragan",
+      "title": "SVP Data & AI",
+      "company": "Fabletics",
+      "tier": "Tier 1",
+      "industry": "Fashion",
+      "relationship": "New Contact",
+      "outreachStatus": "Not Started",
+      "topicIdea": "AI personalization at scale",
+      "whyGreat": "Meeting secured. DTC-to-enterprise journey.",
+      "linkedIn": "https://www.linkedin.com/in/danielleragan/",
+      "notionLink": "https://www.notion.so/fermat-commerce/32f1ad76fd2a81c8a847f602b484dcd7"
+    },
+    {
+      "id": "g7",
+      "name": "Sneha Narahalli",
+      "title": "CPO",
+      "company": "Sephora",
+      "tier": "Tier 1",
+      "industry": "Beauty",
+      "relationship": "No Relationship",
+      "outreachStatus": "Not Started",
+      "topicIdea": "AI in beauty retail",
+      "whyGreat": "Dream Tier 1. Huge credibility.",
+      "linkedIn": "https://www.linkedin.com/in/sneha-narahalli/",
+      "notionLink": "https://www.notion.so/fermat-commerce/32f1ad76fd2a81ab837bd2c01fa5fb9e"
+    },
+    {
+      "id": "g8",
+      "name": "Viv Rettke",
+      "title": "CMO",
+      "company": "J.Jill",
+      "tier": "Tier 1",
+      "industry": "Retail",
+      "relationship": "Active",
+      "outreachStatus": "Not Started",
+      "topicIdea": "AI in retail marketing",
+      "whyGreat": "Rishabh doing reference intro.",
+      "linkedIn": "https://www.linkedin.com/in/viv-rettke/",
+      "notionLink": "https://www.notion.so/fermat-commerce/32f1ad76fd2a8182bd99d089c1ad3d2e"
+    },
+    {
+      "id": "g9",
+      "name": "Sid Mahapatra",
+      "title": "",
+      "company": "Brooks Running",
+      "tier": "Tier 1",
+      "industry": "Athletic",
+      "relationship": "New Contact",
+      "outreachStatus": "Not Started",
+      "topicIdea": "AI in lifestyle retail",
+      "whyGreat": "Gifting follow-up underway.",
+      "linkedIn": "https://www.linkedin.com/in/sid-mahapatra",
+      "notionLink": "https://www.notion.so/fermat-commerce/32f1ad76fd2a81ecad2ac3ed297454bf"
+    },
+    {
+      "id": "g10",
+      "name": "Jake Bailey",
+      "title": "",
+      "company": "Meta",
+      "tier": "Tier 1",
+      "industry": "Tech-Platform",
+      "relationship": "New Contact",
+      "outreachStatus": "Not Started",
+      "topicIdea": "Meta commerce AI strategy",
+      "whyGreat": "First intro held with Rishabh and Shreyas.",
+      "linkedIn": "https://www.linkedin.com/in/commerceexecutive/",
+      "notionLink": "https://www.notion.so/fermat-commerce/32f1ad76fd2a81c58333c52a2fdac8ea"
+    },
+    {
+      "id": "g11",
+      "name": "Eric Seufert",
+      "title": "",
+      "company": "Mobile Dev Memo",
+      "tier": "Tier 2",
+      "industry": "Media-Analyst",
+      "relationship": "Strong",
+      "outreachStatus": "Not Started",
+      "topicIdea": "Post-ATT commerce landscape",
+      "whyGreat": "4+ appearances on his pod. Guest swap opp.",
+      "linkedIn": "https://www.linkedin.com/in/ericseufert",
+      "notionLink": "https://www.notion.so/fermat-commerce/32f1ad76fd2a814abbd6dada0a0b8eda"
+    },
+    {
+      "id": "g12",
+      "name": "Deborah Weinswig",
+      "title": "",
+      "company": "Coresight Research",
+      "tier": "Tier 2",
+      "industry": "Media-Analyst",
+      "relationship": "No Relationship",
+      "outreachStatus": "Not Started",
+      "topicIdea": "State of retail AI research",
+      "whyGreat": "Hosts Retailistic. Cross-promo potential.",
+      "linkedIn": "https://www.linkedin.com/in/deborahweinswig",
+      "notionLink": "https://www.notion.so/fermat-commerce/32f1ad76fd2a813285b2caf178bbf1bc"
+    },
+    {
+      "id": "g13",
+      "name": "Phillip Jackson",
+      "title": "",
+      "company": "Future Commerce",
+      "tier": "Tier 2",
+      "industry": "Media-Analyst",
+      "relationship": "No Relationship",
+      "outreachStatus": "Not Started",
+      "topicIdea": "Commerce culture + AI",
+      "whyGreat": "Top commerce podcast. Cross-promo.",
+      "linkedIn": "https://www.linkedin.com/in/philwinkle/",
+      "notionLink": "https://www.notion.so/fermat-commerce/32f1ad76fd2a815d8885eeea951aac0c"
+    },
+    {
+      "id": "g14",
+      "name": "Ricardo Belmar",
+      "title": "",
+      "company": "Retail Razor Show",
+      "tier": "Tier 2",
+      "industry": "Media-Analyst",
+      "relationship": "No Relationship",
+      "outreachStatus": "Not Started",
+      "topicIdea": "Retail tech landscape",
+      "whyGreat": "NRF Retail Voice. Well-connected.",
+      "linkedIn": "https://www.linkedin.com/in/rbelmar/",
+      "notionLink": "https://www.notion.so/fermat-commerce/32f1ad76fd2a81739467d456322b072d"
+    },
+    {
+      "id": "g15",
+      "name": "Vivek Kumar",
+      "title": "CEO",
+      "company": "Articore ($320M GMV)",
+      "tier": "Tier 3",
+      "industry": "Tech-Platform",
+      "relationship": "Active",
+      "outreachStatus": "Not Started",
+      "topicIdea": "Marketplace AI",
+      "whyGreat": "Large-scale marketplace perspective.",
+      "linkedIn": "https://www.linkedin.com/in/vivekunc/",
+      "notionLink": "https://www.notion.so/fermat-commerce/32f1ad76fd2a81a8ab4bd186c97236af"
+    },
+    {
+      "id": "g16",
+      "name": "Mike Beckham",
+      "title": "CEO",
+      "company": "Simple Modern ($250M)",
+      "tier": "Tier 3",
+      "industry": "Retail",
+      "relationship": "No Relationship",
+      "outreachStatus": "Not Started",
+      "topicIdea": "DTC to enterprise",
+      "whyGreat": "Bootstrapped. Compelling founder story.",
+      "linkedIn": "https://www.linkedin.com/in/mikebeckhamsm",
+      "notionLink": "https://www.notion.so/fermat-commerce/32f1ad76fd2a8173a3e4dc3cdb00d359"
+    },
+    {
+      "id": "g17",
+      "name": "Aaron Schwartz",
+      "title": "",
+      "company": "Orita",
+      "tier": "Tier 3",
+      "industry": "Tech-Platform",
+      "relationship": "Active",
+      "outreachStatus": "Not Started",
+      "topicIdea": "AI in retention",
+      "whyGreat": "Already connected.",
+      "linkedIn": "https://www.linkedin.com/in/aaroncharlesschwartz",
+      "notionLink": "https://www.notion.so/fermat-commerce/32f1ad76fd2a812f9720e6b321a1ef2b"
+    },
+    {
+      "id": "g18",
+      "name": "Matt Yalowitz",
+      "title": "",
+      "company": "Stripe Ventures",
+      "tier": "Tier 4",
+      "industry": "VC-Finance",
+      "relationship": "Active",
+      "outreachStatus": "Not Started",
+      "topicIdea": "Agentic commerce bet",
+      "whyGreat": "Top 3 investment area for Stripe.",
+      "linkedIn": "https://www.linkedin.com/in/myalowitz/",
+      "notionLink": "https://www.notion.so/fermat-commerce/32f1ad76fd2a811d85e8f94700422f8c"
+    },
+    {
+      "id": "g19",
+      "name": "Peter McCrory",
+      "title": "Head of Econ",
+      "company": "Anthropic",
+      "tier": "Tier 4",
+      "industry": "Tech-Platform",
+      "relationship": "No Relationship",
+      "outreachStatus": "Not Started",
+      "topicIdea": "AI economics + commerce",
+      "whyGreat": "Jack working on getting him.",
+      "linkedIn": "https://www.linkedin.com/in/peter-mccrory-econ/",
+      "notionLink": "https://www.notion.so/fermat-commerce/32f1ad76fd2a817b821cdc265c7d56df"
+    },
+    {
+      "id": "g20",
+      "name": "Sucharita Kodali",
+      "title": "VP Analyst",
+      "company": "Forrester",
+      "tier": "Dream",
+      "industry": "Media-Analyst",
+      "relationship": "No Relationship",
+      "outreachStatus": "Not Started",
+      "topicIdea": "Enterprise digital transformation",
+      "whyGreat": "Top retail analyst.",
+      "linkedIn": "https://www.linkedin.com/in/sucharitamulpuru/",
+      "notionLink": "https://www.notion.so/fermat-commerce/32f1ad76fd2a81e9b2eccad646e5443d"
+    },
+    {
+      "id": "g21",
+      "name": "Tobi Lutke",
+      "title": "CEO",
+      "company": "Shopify",
+      "tier": "Dream",
+      "industry": "Tech-Platform",
+      "relationship": "No Relationship",
+      "outreachStatus": "Not Started",
+      "topicIdea": "AI-powered commerce platforms",
+      "whyGreat": "Massive visibility.",
+      "linkedIn": "https://ca.linkedin.com/in/tobiaslutke",
+      "notionLink": "https://www.notion.so/fermat-commerce/32f1ad76fd2a81fca560d10877099208"
+    },
+    {
+      "id": "g22",
+      "name": "Harley Finkelstein",
+      "title": "President",
+      "company": "Shopify",
+      "tier": "Dream",
+      "industry": "Tech-Platform",
+      "relationship": "No Relationship",
+      "outreachStatus": "Not Started",
+      "topicIdea": "Future of commerce",
+      "whyGreat": "More accessible, strong media presence.",
+      "linkedIn": "https://ca.linkedin.com/in/harleyf",
+      "notionLink": "https://www.notion.so/fermat-commerce/32f1ad76fd2a817b8bc5d6bcea1bcb4a"
+    }
   ],
   "launchTasks": [
-    {"id":"lt1","text":"Finalize podcast name","owner":"Rishabh","priority":"Critical","phase":"Setup","status":"Not Started","dueDate":"2026-04-03","dependsOn":"--","notionLink":"https://www.notion.so/fermat-commerce/596164ba6411460d82b82ad4d7a3a06a"},
-    {"id":"lt2","text":"Pick first guest","owner":"Rishabh","priority":"Critical","phase":"Setup","status":"Not Started","dueDate":"2026-04-03","dependsOn":"--","notionLink":"https://www.notion.so/fermat-commerce/32f1ad76fd2a818da523c936f5b5dece"},
-    {"id":"lt3","text":"Follow up with Jack on editor intro","owner":"Sophie","priority":"Critical","phase":"Setup","status":"Waiting","dueDate":"2026-03-27","dependsOn":"--","notionLink":"https://www.notion.so/fermat-commerce/71c36281af4a402ab7c1e96d823215c6"},
-    {"id":"lt4","text":"Connect with editor","owner":"Sophie","priority":"Critical","phase":"Setup","status":"Not Started","dueDate":"2026-04-10","dependsOn":"Jack intro","notionLink":"https://www.notion.so/fermat-commerce/9b8f28ad890a4d60812c7e3a3984d113"},
-    {"id":"lt5","text":"Set up Riverside account","owner":"Sophie","priority":"High","phase":"Setup","status":"Not Started","dueDate":"2026-04-03","dependsOn":"--","notionLink":"https://www.notion.so/fermat-commerce/9c8c9ecbf72d4fbd801aab18b6c4da23"},
-    {"id":"lt6","text":"Choose hosting platform","owner":"Sophie","priority":"High","phase":"Setup","status":"Not Started","dueDate":"2026-04-03","dependsOn":"--","notionLink":"https://www.notion.so/fermat-commerce/244e1a5a917040c09bbbf0042d50ee17"},
-    {"id":"lt7","text":"Decide on cadence","owner":"Rishabh","priority":"High","phase":"Setup","status":"Not Started","dueDate":"2026-04-03","dependsOn":"--","notionLink":"https://www.notion.so/fermat-commerce/32f1ad76fd2a817f8b5cd9c08fde942f"},
-    {"id":"lt8","text":"Set editor/production budget","owner":"Rishabh","priority":"High","phase":"Setup","status":"Not Started","dueDate":"2026-04-03","dependsOn":"Connect with editor","notionLink":"https://www.notion.so/fermat-commerce/32f1ad76fd2a81858ad0f9f746ab8f30"},
-    {"id":"lt9","text":"Decide on editor","owner":"Rishabh","priority":"High","phase":"Setup","status":"Not Started","dueDate":"2026-04-10","dependsOn":"Connect with editor","notionLink":"https://www.notion.so/fermat-commerce/278bcb2973bf43fd97d33e31c3d4e546"},
-    {"id":"lt10","text":"Commission cover art","owner":"Jennifer","priority":"High","phase":"Setup","status":"Not Started","dueDate":"2026-04-10","dependsOn":"Finalize name","notionLink":"https://www.notion.so/fermat-commerce/1f73995199be450980e268600f856b72"},
-    {"id":"lt11","text":"Create podcast landing page","owner":"Jennifer","priority":"High","phase":"Setup","status":"Not Started","dueDate":"2026-04-17","dependsOn":"Finalize name, Cover art","notionLink":"https://www.notion.so/fermat-commerce/64a90c7129da4b818d3cd1c062a36158"},
-    {"id":"lt12","text":"Set up Social Pilot","owner":"Sophie","priority":"Medium","phase":"Setup","status":"Not Started","dueDate":"2026-04-10","dependsOn":"--","notionLink":"https://www.notion.so/fermat-commerce/e70a90e204cf41aba0bb6b4f88865162"},
-    {"id":"lt13","text":"Set up email list / newsletter","owner":"Jennifer","priority":"Medium","phase":"Setup","status":"Not Started","dueDate":"2026-04-10","dependsOn":"--","notionLink":"https://www.notion.so/fermat-commerce/32f1ad76fd2a8109b731e2b1c31b731d"},
-    {"id":"lt14","text":"Decide: EoE brand or fresh start","owner":"Rishabh","priority":"High","phase":"Setup","status":"Not Started","dueDate":"2026-04-03","dependsOn":"Finalize name","notionLink":"https://www.notion.so/fermat-commerce/3301ad76fd2a8185ba84e4442a92797a"},
-    {"id":"lt15","text":"Build guest outreach templates","owner":"Sophie","priority":"Medium","phase":"Pre-Production","status":"Not Started","dueDate":"2026-04-10","dependsOn":"Finalize name","notionLink":"https://www.notion.so/fermat-commerce/a53b669c963f4e7eb13e85a266fdab5a"},
-    {"id":"lt16","text":"Submit to directories","owner":"Sophie","priority":"High","phase":"Pre-Production","status":"Not Started","dueDate":"2026-04-17","dependsOn":"Hosting platform, Cover art","notionLink":"https://www.notion.so/fermat-commerce/4aabab82e3134fa3bf2fcb2e5e1056f8"},
-    {"id":"lt17","text":"Coordinate with Moxie PR","owner":"Jennifer","priority":"Medium","phase":"Pre-Production","status":"Not Started","dueDate":"2026-04-17","dependsOn":"Finalize name","notionLink":"https://www.notion.so/fermat-commerce/8991bebf6b5c48b7ada45e893867b5d3"},
-    {"id":"lt18","text":"Book first guest","owner":"Sophie","priority":"Critical","phase":"Pre-Production","status":"Not Started","dueDate":"2026-04-24","dependsOn":"Finalize name, Templates","notionLink":"https://www.notion.so/fermat-commerce/d363c7929156421a8e2c40fa72ae3209"},
-    {"id":"lt19","text":"Record intro/outro audio","owner":"Rishabh","priority":"Medium","phase":"Pre-Production","status":"Not Started","dueDate":"2026-04-24","dependsOn":"Name, Cover art","notionLink":"https://www.notion.so/fermat-commerce/32f1ad76fd2a8100b616d1b52fa986aa"},
-    {"id":"lt20","text":"Prepare launch promo assets","owner":"Jennifer","priority":"High","phase":"Launch","status":"Not Started","dueDate":"2026-05-08","dependsOn":"Cover art, First cuts","notionLink":"https://www.notion.so/fermat-commerce/ca2d3f54842d46b18d160b021cfced20"},
-    {"id":"lt21","text":"Launch LinkedIn announcement","owner":"Jennifer","priority":"High","phase":"Launch","status":"Not Started","dueDate":"2026-05-15","dependsOn":"Publish Ep 1","notionLink":"https://www.notion.so/fermat-commerce/6766449115ce4af2b137e7f74a0da268"},
-    {"id":"lt22","text":"Launch email blast","owner":"Jennifer","priority":"High","phase":"Launch","status":"Not Started","dueDate":"2026-05-15","dependsOn":"Publish Ep 1","notionLink":"https://www.notion.so/fermat-commerce/2dd750019aea484089c522458cbd05e4"},
-    {"id":"lt23","text":"Begin clip distribution cadence","owner":"Jennifer","priority":"Medium","phase":"Launch","status":"Not Started","dueDate":"2026-05-15","dependsOn":"Publish Ep 1","notionLink":"https://www.notion.so/fermat-commerce/7e99de66604e44be96b528de2502a2e5"}
+    {
+      "id": "lt1",
+      "text": "Finalize podcast name",
+      "owner": "Rishabh",
+      "priority": "Critical",
+      "phase": "Setup",
+      "status": "Not Started",
+      "dueDate": "2026-04-03",
+      "dependsOn": "--",
+      "notionLink": "https://www.notion.so/fermat-commerce/596164ba6411460d82b82ad4d7a3a06a"
+    },
+    {
+      "id": "lt2",
+      "text": "Pick first guest",
+      "owner": "Rishabh",
+      "priority": "Critical",
+      "phase": "Setup",
+      "status": "Not Started",
+      "dueDate": "2026-04-03",
+      "dependsOn": "--",
+      "notionLink": "https://www.notion.so/fermat-commerce/32f1ad76fd2a818da523c936f5b5dece"
+    },
+    {
+      "id": "lt3",
+      "text": "Follow up with Jack on editor intro",
+      "owner": "Sophie",
+      "priority": "Critical",
+      "phase": "Setup",
+      "status": "Waiting",
+      "dueDate": "2026-03-27",
+      "dependsOn": "--",
+      "notionLink": "https://www.notion.so/fermat-commerce/71c36281af4a402ab7c1e96d823215c6"
+    },
+    {
+      "id": "lt4",
+      "text": "Connect with editor",
+      "owner": "Sophie",
+      "priority": "Critical",
+      "phase": "Setup",
+      "status": "Not Started",
+      "dueDate": "2026-04-10",
+      "dependsOn": "Jack intro",
+      "notionLink": "https://www.notion.so/fermat-commerce/9b8f28ad890a4d60812c7e3a3984d113"
+    },
+    {
+      "id": "lt5",
+      "text": "Set up Riverside account",
+      "owner": "Sophie",
+      "priority": "High",
+      "phase": "Setup",
+      "status": "Not Started",
+      "dueDate": "2026-04-03",
+      "dependsOn": "--",
+      "notionLink": "https://www.notion.so/fermat-commerce/9c8c9ecbf72d4fbd801aab18b6c4da23"
+    },
+    {
+      "id": "lt6",
+      "text": "Choose hosting platform",
+      "owner": "Sophie",
+      "priority": "High",
+      "phase": "Setup",
+      "status": "Not Started",
+      "dueDate": "2026-04-03",
+      "dependsOn": "--",
+      "notionLink": "https://www.notion.so/fermat-commerce/244e1a5a917040c09bbbf0042d50ee17"
+    },
+    {
+      "id": "lt7",
+      "text": "Decide on cadence",
+      "owner": "Rishabh",
+      "priority": "High",
+      "phase": "Setup",
+      "status": "Not Started",
+      "dueDate": "2026-04-03",
+      "dependsOn": "--",
+      "notionLink": "https://www.notion.so/fermat-commerce/32f1ad76fd2a817f8b5cd9c08fde942f"
+    },
+    {
+      "id": "lt8",
+      "text": "Set editor/production budget",
+      "owner": "Rishabh",
+      "priority": "High",
+      "phase": "Setup",
+      "status": "Not Started",
+      "dueDate": "2026-04-03",
+      "dependsOn": "Connect with editor",
+      "notionLink": "https://www.notion.so/fermat-commerce/32f1ad76fd2a81858ad0f9f746ab8f30"
+    },
+    {
+      "id": "lt9",
+      "text": "Decide on editor",
+      "owner": "Rishabh",
+      "priority": "High",
+      "phase": "Setup",
+      "status": "Not Started",
+      "dueDate": "2026-04-10",
+      "dependsOn": "Connect with editor",
+      "notionLink": "https://www.notion.so/fermat-commerce/278bcb2973bf43fd97d33e31c3d4e546"
+    },
+    {
+      "id": "lt10",
+      "text": "Commission cover art",
+      "owner": "Jennifer",
+      "priority": "High",
+      "phase": "Setup",
+      "status": "Not Started",
+      "dueDate": "2026-04-10",
+      "dependsOn": "Finalize name",
+      "notionLink": "https://www.notion.so/fermat-commerce/1f73995199be450980e268600f856b72"
+    },
+    {
+      "id": "lt11",
+      "text": "Create podcast landing page",
+      "owner": "Jennifer",
+      "priority": "High",
+      "phase": "Setup",
+      "status": "Not Started",
+      "dueDate": "2026-04-17",
+      "dependsOn": "Finalize name, Cover art",
+      "notionLink": "https://www.notion.so/fermat-commerce/64a90c7129da4b818d3cd1c062a36158"
+    },
+    {
+      "id": "lt12",
+      "text": "Set up Social Pilot",
+      "owner": "Sophie",
+      "priority": "Medium",
+      "phase": "Setup",
+      "status": "Not Started",
+      "dueDate": "2026-04-10",
+      "dependsOn": "--",
+      "notionLink": "https://www.notion.so/fermat-commerce/e70a90e204cf41aba0bb6b4f88865162"
+    },
+    {
+      "id": "lt13",
+      "text": "Set up email list / newsletter",
+      "owner": "Jennifer",
+      "priority": "Medium",
+      "phase": "Setup",
+      "status": "Not Started",
+      "dueDate": "2026-04-10",
+      "dependsOn": "--",
+      "notionLink": "https://www.notion.so/fermat-commerce/32f1ad76fd2a8109b731e2b1c31b731d"
+    },
+    {
+      "id": "lt14",
+      "text": "Decide: EoE brand or fresh start",
+      "owner": "Rishabh",
+      "priority": "High",
+      "phase": "Setup",
+      "status": "Not Started",
+      "dueDate": "2026-04-03",
+      "dependsOn": "Finalize name",
+      "notionLink": "https://www.notion.so/fermat-commerce/3301ad76fd2a8185ba84e4442a92797a"
+    },
+    {
+      "id": "lt15",
+      "text": "Build guest outreach templates",
+      "owner": "Sophie",
+      "priority": "Medium",
+      "phase": "Pre-Production",
+      "status": "Not Started",
+      "dueDate": "2026-04-10",
+      "dependsOn": "Finalize name",
+      "notionLink": "https://www.notion.so/fermat-commerce/a53b669c963f4e7eb13e85a266fdab5a"
+    },
+    {
+      "id": "lt16",
+      "text": "Submit to directories",
+      "owner": "Sophie",
+      "priority": "High",
+      "phase": "Pre-Production",
+      "status": "Not Started",
+      "dueDate": "2026-04-17",
+      "dependsOn": "Hosting platform, Cover art",
+      "notionLink": "https://www.notion.so/fermat-commerce/4aabab82e3134fa3bf2fcb2e5e1056f8"
+    },
+    {
+      "id": "lt17",
+      "text": "Coordinate with Moxie PR",
+      "owner": "Jennifer",
+      "priority": "Medium",
+      "phase": "Pre-Production",
+      "status": "Not Started",
+      "dueDate": "2026-04-17",
+      "dependsOn": "Finalize name",
+      "notionLink": "https://www.notion.so/fermat-commerce/8991bebf6b5c48b7ada45e893867b5d3"
+    },
+    {
+      "id": "lt18",
+      "text": "Book first guest",
+      "owner": "Sophie",
+      "priority": "Critical",
+      "phase": "Pre-Production",
+      "status": "Not Started",
+      "dueDate": "2026-04-24",
+      "dependsOn": "Finalize name, Templates",
+      "notionLink": "https://www.notion.so/fermat-commerce/d363c7929156421a8e2c40fa72ae3209"
+    },
+    {
+      "id": "lt19",
+      "text": "Record intro/outro audio",
+      "owner": "Rishabh",
+      "priority": "Medium",
+      "phase": "Pre-Production",
+      "status": "Not Started",
+      "dueDate": "2026-04-24",
+      "dependsOn": "Name, Cover art",
+      "notionLink": "https://www.notion.so/fermat-commerce/32f1ad76fd2a8100b616d1b52fa986aa"
+    },
+    {
+      "id": "lt20",
+      "text": "Prepare launch promo assets",
+      "owner": "Jennifer",
+      "priority": "High",
+      "phase": "Launch",
+      "status": "Not Started",
+      "dueDate": "2026-05-08",
+      "dependsOn": "Cover art, First cuts",
+      "notionLink": "https://www.notion.so/fermat-commerce/ca2d3f54842d46b18d160b021cfced20"
+    },
+    {
+      "id": "lt21",
+      "text": "Launch LinkedIn announcement",
+      "owner": "Jennifer",
+      "priority": "High",
+      "phase": "Launch",
+      "status": "Not Started",
+      "dueDate": "2026-05-15",
+      "dependsOn": "Publish Ep 1",
+      "notionLink": "https://www.notion.so/fermat-commerce/6766449115ce4af2b137e7f74a0da268"
+    },
+    {
+      "id": "lt22",
+      "text": "Launch email blast",
+      "owner": "Jennifer",
+      "priority": "High",
+      "phase": "Launch",
+      "status": "Not Started",
+      "dueDate": "2026-05-15",
+      "dependsOn": "Publish Ep 1",
+      "notionLink": "https://www.notion.so/fermat-commerce/2dd750019aea484089c522458cbd05e4"
+    },
+    {
+      "id": "lt23",
+      "text": "Begin clip distribution cadence",
+      "owner": "Jennifer",
+      "priority": "Medium",
+      "phase": "Launch",
+      "status": "Not Started",
+      "dueDate": "2026-05-15",
+      "dependsOn": "Publish Ep 1",
+      "notionLink": "https://www.notion.so/fermat-commerce/7e99de66604e44be96b528de2502a2e5"
+    }
   ],
   "topics": [
-    {"title":"Who Owns the Revenue When AI Does the Shopping?","theme":"Agentic Commerce","priority":"Launch Episode","guest":"Jatin Pahuja (Albertsons)","covered":false},
-    {"title":"AI Discovery is Eating Google","theme":"AI Discovery","priority":"Launch Episode","guest":"TBD","covered":false},
-    {"title":"Why Enterprise Retail is Finally Ready for AI","theme":"Industry Trends","priority":"Launch Episode","guest":"Rishabh (solo)","covered":false},
-    {"title":"The Agentic Commerce Bet","theme":"Agentic Commerce","priority":"High","guest":"Matt Yalowitz (Stripe)","covered":false},
-    {"title":"The GEO Playbook for Enterprise Brands","theme":"AI Discovery","priority":"High","guest":"TBD","covered":false},
-    {"title":"The Death of the Product Page","theme":"AI Discovery","priority":"High","guest":"Shirley Gao / Liz Garry","covered":false},
-    {"title":"Will AI Kill the CMO?","theme":"Industry Trends","priority":"High","guest":"Viv Rettke / Sucharita Kodali","covered":false},
-    {"title":"When Your Best Customer Is a Bot","theme":"Agentic Commerce","priority":"High","guest":"Jake Bailey / Peter McCrory","covered":false},
-    {"title":"What Anthropic Thinks About Commerce","theme":"Agentic Commerce","priority":"High","guest":"Peter McCrory","covered":false},
-    {"title":"AI-Powered Personalization at Scale","theme":"Personalization","priority":"High","guest":"Anshuman / Danielle Ragan","covered":false},
-    {"title":"The Post-ATT Commerce Landscape","theme":"Post-ATT","priority":"High","guest":"Eric Seufert","covered":false},
-    {"title":"From DTC to Enterprise: What Changes","theme":"Industry Trends","priority":"High","guest":"Mike Beckham","covered":false},
-    {"title":"The Grocery AI Revolution","theme":"Personalization","priority":"High","guest":"Jatin Pahuja","covered":false},
-    {"title":"The $45M Founder's Guide to Enterprise Retail","theme":"Behind the Scenes","priority":"High","guest":"Rishabh (solo)","covered":false},
-    {"title":"The Enterprise Retail AI Stack","theme":"Behind the Scenes","priority":"Medium","guest":"Rishabh (solo)","covered":false},
-    {"title":"The Creator-Commerce Collision","theme":"Post-ATT","priority":"Medium","guest":"Eric Seufert / Vivek Kumar","covered":false},
-    {"title":"AI Agents as the New Sales Channel","theme":"Agentic Commerce","priority":"Medium","guest":"TBD","covered":false},
-    {"title":"The SaaSpocalypse and Retail Tech","theme":"Industry Trends","priority":"Medium","guest":"TBD","covered":false},
-    {"title":"Building AI Commerce from the Inside","theme":"Behind the Scenes","priority":"Medium","guest":"Rishabh (solo)","covered":false},
-    {"title":"Retail Media Networks Meet AI","theme":"Retail Media","priority":"Medium","guest":"TBD","covered":false},
-    {"title":"AI Shopping vs. Human Shopping","theme":"AI Discovery","priority":"Medium","guest":"Sneha Narahalli / Viv Rettke","covered":false},
-    {"title":"Why Every Retailer Needs a Chief AI Officer","theme":"Industry Trends","priority":"Medium","guest":"Anshuman / Bob Yarbrough","covered":false},
-    {"title":"Multi-Brand Retail in the Age of AI","theme":"Industry Trends","priority":"Medium","guest":"Bob Yarbrough","covered":false},
-    {"title":"Lessons from 8 Podcast Appearances","theme":"Behind the Scenes","priority":"Backlog","guest":"Rishabh (solo)","covered":false},
-    {"title":"How NRF 2027 Will Look Different","theme":"Industry Trends","priority":"Backlog","guest":"TBD","covered":false}
+    {
+      "title": "Who Owns the Revenue When AI Does the Shopping?",
+      "theme": "Agentic Commerce",
+      "priority": "Launch Episode",
+      "guest": "Jatin Pahuja (Albertsons)",
+      "covered": false
+    },
+    {
+      "title": "AI Discovery is Eating Google",
+      "theme": "AI Discovery",
+      "priority": "Launch Episode",
+      "guest": "TBD",
+      "covered": false
+    },
+    {
+      "title": "Why Enterprise Retail is Finally Ready for AI",
+      "theme": "Industry Trends",
+      "priority": "Launch Episode",
+      "guest": "Rishabh (solo)",
+      "covered": false
+    },
+    {
+      "title": "The Agentic Commerce Bet",
+      "theme": "Agentic Commerce",
+      "priority": "High",
+      "guest": "Matt Yalowitz (Stripe)",
+      "covered": false
+    },
+    {
+      "title": "The GEO Playbook for Enterprise Brands",
+      "theme": "AI Discovery",
+      "priority": "High",
+      "guest": "TBD",
+      "covered": false
+    },
+    {
+      "title": "The Death of the Product Page",
+      "theme": "AI Discovery",
+      "priority": "High",
+      "guest": "Shirley Gao / Liz Garry",
+      "covered": false
+    },
+    {
+      "title": "Will AI Kill the CMO?",
+      "theme": "Industry Trends",
+      "priority": "High",
+      "guest": "Viv Rettke / Sucharita Kodali",
+      "covered": false
+    },
+    {
+      "title": "When Your Best Customer Is a Bot",
+      "theme": "Agentic Commerce",
+      "priority": "High",
+      "guest": "Jake Bailey / Peter McCrory",
+      "covered": false
+    },
+    {
+      "title": "What Anthropic Thinks About Commerce",
+      "theme": "Agentic Commerce",
+      "priority": "High",
+      "guest": "Peter McCrory",
+      "covered": false
+    },
+    {
+      "title": "AI-Powered Personalization at Scale",
+      "theme": "Personalization",
+      "priority": "High",
+      "guest": "Anshuman / Danielle Ragan",
+      "covered": false
+    },
+    {
+      "title": "The Post-ATT Commerce Landscape",
+      "theme": "Post-ATT",
+      "priority": "High",
+      "guest": "Eric Seufert",
+      "covered": false
+    },
+    {
+      "title": "From DTC to Enterprise: What Changes",
+      "theme": "Industry Trends",
+      "priority": "High",
+      "guest": "Mike Beckham",
+      "covered": false
+    },
+    {
+      "title": "The Grocery AI Revolution",
+      "theme": "Personalization",
+      "priority": "High",
+      "guest": "Jatin Pahuja",
+      "covered": false
+    },
+    {
+      "title": "The $45M Founder's Guide to Enterprise Retail",
+      "theme": "Behind the Scenes",
+      "priority": "High",
+      "guest": "Rishabh (solo)",
+      "covered": false
+    },
+    {
+      "title": "The Enterprise Retail AI Stack",
+      "theme": "Behind the Scenes",
+      "priority": "Medium",
+      "guest": "Rishabh (solo)",
+      "covered": false
+    },
+    {
+      "title": "The Creator-Commerce Collision",
+      "theme": "Post-ATT",
+      "priority": "Medium",
+      "guest": "Eric Seufert / Vivek Kumar",
+      "covered": false
+    },
+    {
+      "title": "AI Agents as the New Sales Channel",
+      "theme": "Agentic Commerce",
+      "priority": "Medium",
+      "guest": "TBD",
+      "covered": false
+    },
+    {
+      "title": "The SaaSpocalypse and Retail Tech",
+      "theme": "Industry Trends",
+      "priority": "Medium",
+      "guest": "TBD",
+      "covered": false
+    },
+    {
+      "title": "Building AI Commerce from the Inside",
+      "theme": "Behind the Scenes",
+      "priority": "Medium",
+      "guest": "Rishabh (solo)",
+      "covered": false
+    },
+    {
+      "title": "Retail Media Networks Meet AI",
+      "theme": "Retail Media",
+      "priority": "Medium",
+      "guest": "TBD",
+      "covered": false
+    },
+    {
+      "title": "AI Shopping vs. Human Shopping",
+      "theme": "AI Discovery",
+      "priority": "Medium",
+      "guest": "Sneha Narahalli / Viv Rettke",
+      "covered": false
+    },
+    {
+      "title": "Why Every Retailer Needs a Chief AI Officer",
+      "theme": "Industry Trends",
+      "priority": "Medium",
+      "guest": "Anshuman / Bob Yarbrough",
+      "covered": false
+    },
+    {
+      "title": "Multi-Brand Retail in the Age of AI",
+      "theme": "Industry Trends",
+      "priority": "Medium",
+      "guest": "Bob Yarbrough",
+      "covered": false
+    },
+    {
+      "title": "Lessons from 8 Podcast Appearances",
+      "theme": "Behind the Scenes",
+      "priority": "Backlog",
+      "guest": "Rishabh (solo)",
+      "covered": false
+    },
+    {
+      "title": "How NRF 2027 Will Look Different",
+      "theme": "Industry Trends",
+      "priority": "Backlog",
+      "guest": "TBD",
+      "covered": false
+    }
   ],
   "reviews": [
-    {"id":"r1","meeting":"April 2026 Review","date":"2026-04-30","status":"Upcoming","episodesPublished":0,"episodesRecorded":0,"guestPipeline":"Confirmed: 0 | In Conversation: 0 | Sent: 0 | Drafting: 0 | Not Started: 22","launchPrep":"Done: 1/25 | In Progress: 0 | Waiting: 1 | Not Started: 23","keyWins":"Podcast pipeline automation fully built. 6 automations running.","issues":"Podcast name not finalized. Editor intro pending from Jack.","actionItems":"","notionLink":"https://www.notion.so/fermat-commerce/3301ad76fd2a81e59f36d1d260f2441e"}
+    {
+      "id": "r1",
+      "meeting": "April 2026 Review",
+      "date": "2026-04-30",
+      "status": "Upcoming",
+      "episodesPublished": 0,
+      "episodesRecorded": 0,
+      "guestPipeline": "Confirmed: 0 | In Conversation: 0 | Sent: 0 | Drafting: 0 | Not Started: 22",
+      "launchPrep": "Done: 1/25 | In Progress: 0 | Waiting: 1 | Not Started: 23",
+      "keyWins": "Podcast pipeline automation fully built. 6 automations running.",
+      "issues": "Podcast name not finalized. Editor intro pending from Jack.",
+      "actionItems": "",
+      "notionLink": "https://www.notion.so/fermat-commerce/3301ad76fd2a81e59f36d1d260f2441e"
+    }
   ],
   "contentDistribution": [
     {
       "episodeId": "ep1",
       "episodeTitle": "TBD (Awaiting Rishabh's Selection)",
       "channels": [
-        {"id":"cd1","channel":"LinkedIn","type":"Teaser post","status":"Not Started","owner":"Jennifer","scheduledDate":null,"publishedUrl":null,"notes":""},
-        {"id":"cd2","channel":"LinkedIn","type":"Key insight post","status":"Not Started","owner":"Jennifer","scheduledDate":null,"publishedUrl":null,"notes":""},
-        {"id":"cd3","channel":"LinkedIn","type":"Recap post","status":"Not Started","owner":"Jennifer","scheduledDate":null,"publishedUrl":null,"notes":""},
-        {"id":"cd4","channel":"Email","type":"Episode announcement","status":"Not Started","owner":"Sophie","scheduledDate":null,"publishedUrl":null,"notes":""},
-        {"id":"cd5","channel":"Slack","type":"Internal share","status":"Not Started","owner":"Sophie","scheduledDate":null,"publishedUrl":null,"notes":""},
-        {"id":"cd6","channel":"Blog","type":"Blog post","status":"Not Started","owner":"Sophie","scheduledDate":null,"publishedUrl":null,"notes":""},
-        {"id":"cd7","channel":"Social Pilot","type":"3-5 clips","status":"Not Started","owner":"Jennifer","scheduledDate":null,"publishedUrl":null,"notes":""},
-        {"id":"cd8","channel":"Google Ads","type":"Retargeting ad","status":"Not Started","owner":"Jennifer","scheduledDate":null,"publishedUrl":null,"notes":""}
+        {
+          "id": "cd1",
+          "channel": "LinkedIn",
+          "type": "Teaser post",
+          "status": "Not Started",
+          "owner": "Jennifer",
+          "scheduledDate": null,
+          "publishedUrl": null,
+          "notes": ""
+        },
+        {
+          "id": "cd2",
+          "channel": "LinkedIn",
+          "type": "Key insight post",
+          "status": "Not Started",
+          "owner": "Jennifer",
+          "scheduledDate": null,
+          "publishedUrl": null,
+          "notes": ""
+        },
+        {
+          "id": "cd3",
+          "channel": "LinkedIn",
+          "type": "Recap post",
+          "status": "Not Started",
+          "owner": "Jennifer",
+          "scheduledDate": null,
+          "publishedUrl": null,
+          "notes": ""
+        },
+        {
+          "id": "cd4",
+          "channel": "Email",
+          "type": "Episode announcement",
+          "status": "Not Started",
+          "owner": "Sophie",
+          "scheduledDate": null,
+          "publishedUrl": null,
+          "notes": ""
+        },
+        {
+          "id": "cd5",
+          "channel": "Slack",
+          "type": "Internal share",
+          "status": "Not Started",
+          "owner": "Sophie",
+          "scheduledDate": null,
+          "publishedUrl": null,
+          "notes": ""
+        },
+        {
+          "id": "cd6",
+          "channel": "Blog",
+          "type": "Blog post",
+          "status": "Not Started",
+          "owner": "Sophie",
+          "scheduledDate": null,
+          "publishedUrl": null,
+          "notes": ""
+        },
+        {
+          "id": "cd7",
+          "channel": "Social Pilot",
+          "type": "3-5 clips",
+          "status": "Not Started",
+          "owner": "Jennifer",
+          "scheduledDate": null,
+          "publishedUrl": null,
+          "notes": ""
+        },
+        {
+          "id": "cd8",
+          "channel": "Google Ads",
+          "type": "Retargeting ad",
+          "status": "Not Started",
+          "owner": "Jennifer",
+          "scheduledDate": null,
+          "publishedUrl": null,
+          "notes": ""
+        }
       ]
     }
   ],
-  "lastSynced": "2026-03-27T00:00:00.000Z"
+  "lastSynced": "2026-03-27T00:00:00.000Z",
+  "templates": [
+    {
+      "id": "outreach-cold",
+      "name": "Guest Outreach — Cold",
+      "category": "Pre-Production",
+      "template": "Subject: Would love to have you on Retail AI Transformation\n\nHi {{guestName}},\n\nI'm Rishabh, CEO of FERMÀT Commerce. We're launching a podcast called Retail AI Transformation — conversations with operators making the change.\n\nI'd love to have you on because {{whyGreat}}.\n\nThe format is conversational — 25-35 minutes, recorded on Riverside. We'd explore {{topicIdea}}.\n\nWould you be open to a quick call to discuss?\n\nBest,\nRishabh"
+    },
+    {
+      "id": "outreach-warm",
+      "name": "Guest Outreach — Warm Intro",
+      "category": "Pre-Production",
+      "template": "Subject: Podcast conversation — {{topicIdea}}\n\nHi {{guestName}},\n\n{{mutualConnection}} suggested I reach out. I'm launching a podcast on enterprise retail AI transformation and your work at {{guestCompany}} is exactly the kind of operator perspective our audience needs.\n\nThe format is relaxed — 25-35 min conversation, not a formal interview. I'd love to explore {{topicIdea}} with you.\n\nWould you have 15 minutes this week for a quick pre-call?\n\nBest,\nRishabh"
+    },
+    {
+      "id": "guest-prep-brief",
+      "name": "Guest Prep Brief",
+      "category": "Pre-Production",
+      "template": "# Guest Prep Brief — Episode {{episodeNumber}}\n\n**Guest:** {{guestName}}, {{guestTitle}} at {{guestCompany}}\n**Recording Date:** {{recordingDate}}\n**Format:** Conversational interview, 25-35 minutes on Riverside\n\n## What to Expect\n- Rishabh will lead the conversation — no script, just natural discussion\n- We'll cover: {{topicIdea}}\n- Feel free to share specific examples, data, or stories from your experience\n- Recording will be edited before publishing (we cut awkward pauses, filler, etc.)\n\n## Logistics\n- **Platform:** Riverside.fm (link will be sent 24 hours before)\n- **Audio:** Use headphones + quiet room for best quality\n- **Video:** Camera on preferred but not required\n- **Duration:** Plan for 40 minutes total (5 min setup + 30 min conversation + 5 min buffer)\n\n## Discussion Topics\n1. {{keyQuestion}}\n2. Your journey to {{guestCompany}} and the AI transformation you're leading\n3. What's working vs. what's harder than expected\n4. Advice for other enterprise retailers starting this journey\n5. What you're betting on for the next 12 months"
+    },
+    {
+      "id": "rishabh-prep",
+      "name": "Rishabh Recording Prep",
+      "category": "Pre-Production",
+      "template": "# Recording Prep — {{episodeTitle}}\n\n**Guest:** {{guestName}} ({{guestCompany}})\n**Date:** {{recordingDate}}\n\n## Guest Background\n- [Research to be filled by Sophie]\n\n## Thesis Connection\nThis episode connects to: {{thesisPoints}}\n\n## Key Question\n{{keyQuestion}}\n\n## Suggested Opener\n\"{{guestName}}, you're at the center of something interesting at {{guestCompany}} — [specific thing]. What made you bet on AI when most enterprise retailers were still skeptical?\"\n\n## Talking Points\n1. Their AI transformation journey — what triggered the shift\n2. {{topicIdea}}\n3. What's surprised them most\n4. Where they disagree with conventional wisdom\n5. What they'd tell their peers who haven't started yet\n\n## Lightning Round\n- Most underrated AI use case in retail?\n- One thing you'd do differently if starting over?\n- Prediction for retail AI in 2027?"
+    },
+    {
+      "id": "show-notes",
+      "name": "Show Notes / Episode Description",
+      "category": "Publishing",
+      "template": "# Episode {{episodeNumber}}: {{episodeTitle}}\n\n{{guestName}}, {{guestTitle}} at {{guestCompany}}, joins Rishabh to discuss {{topicIdea}}.\n\n## What We Cover\n- {{keyPoint1}}\n- {{keyPoint2}}\n- {{keyPoint3}}\n\n## About the Guest\n{{guestName}} is {{guestBio}}.\n\n## Links\n- {{guestLinkedIn}}\n- FERMÀT Commerce: https://www.fermatcommerce.com\n- Subscribe: [Apple Podcasts] [Spotify] [YouTube]\n\n## Timestamps\n- 0:00 — Intro\n- 2:00 — {{topic1}}\n- 10:00 — {{topic2}}\n- 20:00 — {{topic3}}\n- 28:00 — Lightning round"
+    },
+    {
+      "id": "linkedin-teaser",
+      "name": "LinkedIn — Teaser Post (Rishabh)",
+      "category": "Promotion",
+      "template": "{{hookLine}}\n\nI sat down with {{guestName}} from {{guestCompany}} to talk about {{topicIdea}}.\n\nOne thing that stood out:\n\n→ {{keyInsight}}\n\nFull episode drops {{publishDate}}.\n\n{{listenLink}}"
+    },
+    {
+      "id": "linkedin-recap",
+      "name": "LinkedIn — Recap Post (Rishabh)",
+      "category": "Promotion",
+      "template": "New episode of Retail AI Transformation:\n\n{{episodeTitle}} — with {{guestName}}\n\n3 things I learned:\n\n→ {{insight1}}\n→ {{insight2}}\n→ {{insight3}}\n\n\"{{topQuote}}\" — {{guestName}}\n\nListen here: {{listenLink}}"
+    },
+    {
+      "id": "email-announcement",
+      "name": "Email — Episode Announcement",
+      "category": "Promotion",
+      "template": "Subject: New episode: {{episodeTitle}}\n\nHi,\n\nEpisode {{episodeNumber}} of Retail AI Transformation is live.\n\n{{guestName}} ({{guestTitle}}, {{guestCompany}}) joined me to discuss {{topicIdea}}.\n\nKey takeaway: {{keyInsight}}\n\nListen now: {{listenLink}}\n\n— Rishabh"
+    },
+    {
+      "id": "slack-internal",
+      "name": "Internal Slack Share",
+      "category": "Promotion",
+      "template": ":microphone: *New Podcast Episode*\n\n*{{episodeTitle}}* — Episode {{episodeNumber}}\nGuest: {{guestName}} ({{guestCompany}})\n\nKey talking points:\n• {{keyPoint1}}\n• {{keyPoint2}}\n• {{keyPoint3}}\n\n:headphones: Listen: {{listenLink}}\n\nIf you share on LinkedIn, here are some angles:\n→ {{shareAngle1}}\n→ {{shareAngle2}}"
+    }
+  ]
 }

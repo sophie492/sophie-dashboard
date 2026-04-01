@@ -190,6 +190,32 @@ module.exports = function createPodcastRouter(notion) {
     }
   });
 
+  // ── Templates ──
+  router.get('/templates', (req, res) => {
+    const data = loadData();
+    res.json(data.templates || []);
+  });
+
+  router.patch('/templates/:templateId', (req, res) => {
+    const authHeader = req.headers.authorization;
+    const apiKey = process.env.DASHBOARD_API_KEY;
+    if (!apiKey || authHeader !== `Bearer ${apiKey}`) {
+      return res.status(401).json({ error: 'Invalid or missing API key' });
+    }
+    try {
+      const { template, name, category } = req.body;
+      const data = loadData();
+      if (!data.templates) data.templates = [];
+      const tmpl = data.templates.find(t => t.id === req.params.templateId);
+      if (!tmpl) return res.status(404).json({ error: 'Template not found' });
+      if (template !== undefined) tmpl.template = template;
+      if (name !== undefined) tmpl.name = name;
+      if (category !== undefined) tmpl.category = category;
+      saveData(data);
+      res.json({ ok: true });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+  });
+
   // ── Content Distribution ──
   router.get('/content-distribution', (req, res) => {
     const data = loadData();
