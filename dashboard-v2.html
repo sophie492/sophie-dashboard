@@ -904,39 +904,6 @@ const DATA = {
     ]
   },
 
-  marketingReporting: {
-    title: "Marketing Meeting & Reporting System",
-    icon: "\ud83d\udcca",
-    reviewFeedback: "Proactive problem-solving + Taking work off leadership\u2019s plate",
-    phases: [
-      {name:"Phase 1: Foundation (Live)",deadline:"Mar 27",tasks:[
-        {text:"Propose 3x/week standup format (M/W/F)",done:true},
-        {text:"Get buy-in from Rishabh, Jennifer, Saunder",done:true},
-        {text:"Create #marketing-agendas channel",done:true},
-        {text:"Build automated prep brief system",done:true},
-        {text:"Post first live brief (Maya\u2019s Friday prep)",done:true},
-        {text:"Move plugin to ~/Desktop/Claude Cowork/Marketing/",done:true}
-      ]},
-      {name:"Phase 2: Iterate & Expand",deadline:"Apr 4",tasks:[
-        {text:"Collect feedback from Saunder and Jennifer\u2019s briefs",done:false},
-        {text:"Add Jennifer\u2019s strategy docs as context for Wednesday briefs",done:false},
-        {text:"Add Moxie PR agency tracking per Jennifer\u2019s feedback",done:false},
-        {text:"Build post-standup digest automation (SKILL.md)",done:true},
-        {text:"Schedule post-standup digest in Cowork",done:false},
-        {text:"Test digest after next standup",done:false}
-      ]},
-      {name:"Phase 3: Weekly Rollup",deadline:"Apr 11",tasks:[
-        {text:"Build weekly marketing rollup automation (SKILL.md)",done:true},
-        {text:"Schedule weekly rollup in Cowork (Fri 3pm)",done:false},
-        {text:"Run first rollup manually to calibrate",done:false}
-      ]},
-      {name:"Phase 4: Accountability",deadline:"Apr 18",tasks:[
-        {text:"Track action item completion vs. carryover",done:false},
-        {text:"Surface stale items (3+ weeks) in weekly rollup",done:false}
-      ]}
-    ]
-  },
-
   linkedinPipeline: {
     title: "LinkedIn Thought Leadership \u2014 Podcast Pipeline",
     icon: "\ud83d\udcbc",
@@ -1585,7 +1552,7 @@ function applyPersistedState() {
   }
 
   // 5. Apply project done-states for BD, Marketing, LinkedIn
-  const gpProjects = {marketing:'marketingReporting', linkedin:'linkedinPipeline'};
+  const gpProjects = {linkedin:'linkedinPipeline'};
   Object.entries(gpProjects).forEach(([key, dataKey]) => {
     if (DATA[dataKey]) {
       const done = new Set(loadGPDone(key));
@@ -1623,9 +1590,6 @@ function renderSidebar(){
   const hwDone=DATA.hackWeek?DATA.hackWeek.phases.reduce((s,p)=>s+p.tasks.filter(t=>t.done).length,0):0;
   const hwPct=hwTotal?Math.round((hwDone/hwTotal)*100):0;
 
-  const mktTotal=DATA.marketingReporting?DATA.marketingReporting.phases.reduce((s,p)=>s+p.tasks.length,0):0;
-  const mktDone=DATA.marketingReporting?DATA.marketingReporting.phases.reduce((s,p)=>s+p.tasks.filter(t=>t.done).length,0):0;
-  const mktPct=mktTotal?Math.round((mktDone/mktTotal)*100):0;
   const liTotal=DATA.linkedinPipeline?DATA.linkedinPipeline.phases.reduce((s,p)=>s+p.tasks.length,0):0;
   const liDone=DATA.linkedinPipeline?DATA.linkedinPipeline.phases.reduce((s,p)=>s+p.tasks.filter(t=>t.done).length,0):0;
   const liPct=liTotal?Math.round((liDone/liTotal)*100):0;
@@ -1647,10 +1611,8 @@ function renderSidebar(){
     <div class="sidebar-item" data-page="podcast"><span class="si-icon">&#127908;</span><span class="si-label">Podcast</span></div>
     <div class="sidebar-item" data-page="offsite"><span class="si-icon">&#9992;&#65039;</span><span class="si-label">Leadership Offsite</span><span class="si-badge gold" id="offsite-sidebar-badge">${(function(){ var nu = getNextUpcomingOffsite(); if(nu && nu.dates && nu.dates !== 'TBD'){ var cd = nu.dates.replace(/[\u2013\u2014-]\d+/, '').trim(); return Math.ceil((new Date(cd) - new Date()) / 86400000) + 'd'; } return ''; })()}</span></div>
 
-    <div class="sidebar-item" data-page="marketing-hub"><span class="si-icon">&#128202;</span><span class="si-label">Marketing</span></div>
     <div class="sidebar-item" data-page="project-hackweek"><span class="si-icon">🧪</span><span class="si-label">Hack Week</span><span style="font-size:8px;color:var(--text-muted);margin-left:auto">${hwPct}%</span></div>
 
-    <div class="sidebar-item" data-page="project-marketing"><span class="si-icon">📊</span><span class="si-label">Marketing Reporting</span><span style="font-size:8px;color:var(--text-muted);margin-left:auto">${mktPct}%</span></div>
     <div class="sidebar-item" data-page="project-linkedin"><span class="si-icon">💼</span><span class="si-label">LinkedIn Pipeline</span><span style="font-size:8px;color:var(--text-muted);margin-left:auto">${liPct}%</span></div>
     <div class="sidebar-group">Company</div>
     <div class="sidebar-item" data-page="news"><span class="si-icon">&#128240;</span><span class="si-label">News</span></div>
@@ -5322,7 +5284,7 @@ function toggleGPTask(el) {
   const key = el.dataset.gpkey;
   const pi = +el.dataset.gpphase;
   const ti = +el.dataset.gptask;
-  const dataMap = {marketing:'marketingReporting',linkedin:'linkedinPipeline'};
+  const dataMap = {linkedin:'linkedinPipeline'};
   const proj = DATA[dataMap[key]];
   if(!proj) return;
   const task = proj.phases[pi].tasks[ti];
@@ -5394,10 +5356,6 @@ function renderProjectsPage(){
         ${renderFPPCProject()}
       </div>
 
-      <div class="project-pane ${activeProject==='marketing'?'active':''}" id="pane-marketing">
-        <div class="page-header"><div class="page-title">📊 Marketing Reporting</div></div>
-        ${renderGenericProject(DATA.marketingReporting,'marketing')}
-      </div>
       <div class="project-pane ${activeProject==='linkedin'?'active':''}" id="pane-linkedin">
         <div class="page-header"><div class="page-title">💼 LinkedIn Pipeline</div></div>
         ${renderGenericProject(DATA.linkedinPipeline,'linkedin')}
@@ -6223,8 +6181,6 @@ async function init(){
   // Async pages — each wrapped independently so one failure doesn't block others
   renderPodcastPage().catch(e=>console.warn('[Init] Podcast failed:',e.message));
   renderOffsitePage().catch(e=>console.warn('[Init] Offsite failed:',e.message));
-
-  renderMarketingHubPage().catch(e=>console.warn('[Init] Marketing failed:',e.message));
 
   try{
     const lastPage=loadActivePage();
