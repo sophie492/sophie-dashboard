@@ -2336,6 +2336,96 @@ app.post('/api/events/update', async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
+// ── Auto-enrich events from Notion pages ──
+app.post('/api/events/enrich-from-notion', async (req, res) => {
+  const authHeader = req.headers.authorization || '';
+  const token = authHeader.replace('Bearer ', '');
+  if (token !== (process.env.DASHBOARD_API_KEY || 'sophie-dashboard-secret-change-me')) {
+    return res.status(401).json({ error: 'Invalid API key' });
+  }
+  if (!notion) return res.status(503).json({ error: 'Notion not configured' });
+  try {
+    const { events } = req.body; // [{ id, notionLink }]
+    if (!events || !events.length) return res.json({ ok: true, enriched: 0 });
+
+    const overrides = fs.existsSync(EVENTS_OVERRIDES_PATH) ? JSON.parse(fs.readFileSync(EVENTS_OVERRIDES_PATH, 'utf8')) : {};
+    let enriched = 0;
+    const results = [];
+
+    // Known Notion user IDs for Rishabh and Shreyas
+    const RISHABH_IDS = ['e072d31e-60d1-48d3-9f1c-8e4b46308e6e'];
+    const SHREYAS_IDS = ['100d872b-594c-8126-a435-0002ef89562d'];
+
+    for (const ev of events) {
+      if (!ev.notionLink) continue;
+      // Extract page ID from URL
+      const pageIdMatch = ev.notionLink.match(/([a-f0-9]{32})$/);
+      if (!pageIdMatch) continue;
+      const pageId = pageIdMatch[1].replace(/(.{8})(.{4})(.{4})(.{4})(.{12})/, '$1-$2-$3-$4-$5');
+
+      try {
+        const page = await notion.pages.retrieve({ page_id: pageId });
+        const props = page.properties || {};
+        const updates = {};
+
+        // Check Attending field for Rishabh/Shreyas
+        if (props.Attending && props.Attending.people) {
+          const attendingIds = props.Attending.people.map(p => p.id);
+          updates.rishabh = RISHABH_IDS.some(id => attendingIds.includes(id));
+          updates.shreyas = SHREYAS_IDS.some(id => attendingIds.includes(id));
+        } else if (props.Attending && props.Attending.relation) {
+          // Some pages use relation instead of people
+        }
+
+        // Check Location field
+        if (props.Location) {
+          const loc = props.Location.rich_text ? props.Location.rich_text.map(t => t.plain_text).join('') : '';
+          if (loc) updates.location = loc;
+        }
+        if (props.location && props.location.rich_text) {
+          const loc = props.location.rich_text.map(t => t.plain_text).join('');
+          if (loc) updates.location = loc;
+        }
+
+        // Check Date field
+        if (props.Date && props.Date.date && props.Date.date.start) {
+          updates.notionDate = props.Date.date.start;
+        }
+        if (props.date && props.date.date && props.date.date.start) {
+          updates.notionDate = props.date.date.start;
+        }
+
+        // Check Status field
+        if (props.Status) {
+          const status = props.Status.status ? props.Status.status.name : (props.Status.select ? props.Status.select.name : '');
+          if (status) updates.notionStatus = status;
+        }
+
+        if (Object.keys(updates).length > 0) {
+          if (!overrides[ev.id]) overrides[ev.id] = {};
+          // Only update attendance — don't overwrite manual edits for other fields
+          if (updates.rishabh !== undefined) overrides[ev.id].rishabh = updates.rishabh;
+          if (updates.shreyas !== undefined) overrides[ev.id].shreyas = updates.shreyas;
+          // Store Notion metadata separately so it doesn't overwrite manual edits
+          overrides[ev.id]._notionMeta = updates;
+          overrides[ev.id].lastNotionSync = new Date().toISOString();
+          enriched++;
+          results.push({ eventId: ev.id, updates: updates });
+          console.log('[Events] Enriched from Notion:', ev.id, JSON.stringify(updates));
+        }
+      } catch (e) {
+        console.warn('[Events] Notion fetch failed for', ev.id, ':', e.message);
+      }
+    }
+
+    if (enriched > 0) {
+      fs.writeFileSync(EVENTS_OVERRIDES_PATH, JSON.stringify(overrides, null, 2));
+    }
+
+    res.json({ ok: true, enriched, results });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 // ── Auto-match events to Notion pages ──
 app.post('/api/events/auto-link-notion', async (req, res) => {
   const authHeader = req.headers.authorization || '';

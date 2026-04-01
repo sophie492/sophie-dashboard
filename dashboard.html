@@ -3159,6 +3159,28 @@ async function renderEventsPage(){
     }).catch(() => {});
   }
 
+  // Auto-enrich events from Notion (sync attendance + metadata, non-blocking)
+  var linkedEvents = MKT_EVENTS.filter(ev => ev.notionLink).map(ev => ({ id: ev.id, notionLink: ev.notionLink }));
+  if (linkedEvents.length > 0) {
+    fetch('/api/events/enrich-from-notion', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json','Authorization':'Bearer sophie-dashboard-secret-change-me'},
+      body: JSON.stringify({ events: linkedEvents })
+    }).then(r => r.json()).then(d => {
+      if (d.enriched > 0) {
+        console.log('[Events] Enriched', d.enriched, 'events from Notion');
+        (d.results || []).forEach(r => {
+          var ev = MKT_EVENTS.find(e => e.id === r.eventId);
+          if (ev && r.updates) {
+            if (r.updates.rishabh !== undefined) ev.rishabh = r.updates.rishabh;
+            if (r.updates.shreyas !== undefined) ev.shreyas = r.updates.shreyas;
+          }
+        });
+        renderEventsPage();
+      }
+    }).catch(() => {});
+  }
+
   // Auto-generate todos for events with empty todo lists
   const todoPromises = MKT_EVENTS.filter(ev => !ev.todos || ev.todos.length === 0).map(ev =>
     fetch('/api/events/generate-todos', {
