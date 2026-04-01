@@ -1670,6 +1670,35 @@ app.patch('/api/hackweek/:id/logistics', (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// ── Hack Week Team Status ──
+app.patch('/api/hackweek/:id/team-status', (req, res) => {
+  const authHeader = req.headers.authorization || '';
+  const token = authHeader.replace('Bearer ', '');
+  if (token !== (process.env.DASHBOARD_API_KEY || 'sophie-dashboard-secret-change-me')) {
+    return res.status(401).json({ error: 'Invalid API key' });
+  }
+  try {
+    const { teamName, status, action } = req.body;
+    const data = loadHackweekData();
+    const hw = findHackweekById(data, req.params.id);
+    if (!hw) return res.status(404).json({ error: 'Hack week not found' });
+    if (!hw.teams) hw.teams = [];
+
+    if (action === 'lockAll') {
+      hw.teams.forEach(t => { if (t.status === 'Approved') t.status = 'Locked'; });
+      fs.writeFileSync(HACKWEEK_PATH, JSON.stringify(data, null, 2));
+      return res.json({ ok: true, locked: hw.teams.filter(t => t.status === 'Locked').length });
+    }
+
+    if (!teamName) return res.status(400).json({ error: 'teamName required' });
+    const team = hw.teams.find(t => t.name === teamName);
+    if (!team) return res.status(404).json({ error: 'Team not found' });
+    team.status = status || 'Submitted';
+    fs.writeFileSync(HACKWEEK_PATH, JSON.stringify(data, null, 2));
+    res.json({ ok: true, team: team });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 // ── Hack Week Attendee Toggle ──
 app.patch('/api/hackweek/:id/attendee', (req, res) => {
   const authHeader = req.headers.authorization || '';
