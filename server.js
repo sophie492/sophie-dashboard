@@ -4608,6 +4608,7 @@ app.get('/api/skill-status', (req, res) => {
     { id: 'task-cron', name: 'Task Refresh (Notion)', schedule: 'Every 15 min', ...ranToday(tasksPath, 'lastUpdated') },
     { id: 'offsite-monitor', name: 'Offsite Monitor', schedule: '8 AM + 2 PM M-F', ...ranToday(offsitePath, 'lastSynced') },
     { id: 'hackweek-sheet', name: 'Hack Week Sheet Sync', schedule: 'Every 30 min', ...ranToday(HACKWEEK_PATH, 'lastSheetSync') },
+    { id: 'podcast-sync', name: 'Podcast Notion Sync', schedule: 'Every 15 min', ...ranToday(path.join(DATA_DIR, 'podcast-data.json'), 'lastNotionSync') },
     { id: 'news-cron', name: 'News Feed', schedule: 'Every 4 hours', ...ranToday(NEWS_PATH, 'lastUpdated') }
   ];
 
@@ -4707,6 +4708,129 @@ async function refreshTasksFromNotion() {
     fs.writeFileSync(TASKS_PATH, JSON.stringify(payload, null, 2));
     console.log('[Task Cron] Refreshed:', openTasks.length, 'open tasks from Notion');
   } catch (e) { console.error('[Task Cron] Error:', e.message); }
+}
+
+// ── Podcast Notion Sync ──
+const PODCAST_GUESTS_DB = '0989d5d254c8412e98b1bb92ad19ecc9';
+const PODCAST_TOPICS_DB = '3b24a758e3ae4037bd28ced51cfd8290';
+
+async function refreshPodcastFromNotion() {
+  if (!notion) { console.log('[Podcast Sync] No Notion token - skipping'); return; }
+
+  try {
+    const DATA_PATH = path.join(DATA_DIR, 'podcast-data.json');
+    let existing = {};
+    try {
+      if (fs.existsSync(DATA_PATH)) existing = JSON.parse(fs.readFileSync(DATA_PATH, 'utf8'));
+    } catch(e) {}
+
+    // Query Guests database
+    let guests = [];
+    try {
+      let hasMore = true, startCursor;
+      while (hasMore) {
+        const resp = await notion.databases.query({
+          database_id: PODCAST_GUESTS_DB,
+          start_cursor: startCursor,
+          page_size: 100
+        });
+        resp.results.forEach(page => {
+          const p = page.properties;
+          const getText = (prop) => {
+            if (!prop) return '';
+            if (prop.type === 'title') return (prop.title || []).map(t => t.plain_text).join('');
+            if (prop.type === 'rich_text') return (prop.rich_text || []).map(t => t.plain_text).join('');
+            if (prop.type === 'select') return prop.select ? prop.select.name : '';
+            if (prop.type === 'url') return prop.url || '';
+            return '';
+          };
+          guests.push({
+            id: page.id,
+            notionPageId: page.id,
+            name: getText(p['Guest Name']),
+            titleCompany: getText(p['Title & Company']),
+            industry: getText(p['Industry']),
+            tier: getText(p['Tier']),
+            relationship: getText(p['Relationship']),
+            outreachStatus: getText(p['Outreach Status']) || 'Not Started',
+            linkedin: getText(p['LinkedIn']),
+            whyGreat: getText(p['Why Theyd Be Great']),
+            episodeTopicIdea: getText(p['Episode Topic Idea']),
+            notionUrl: 'https://www.notion.so/' + page.id.replace(/-/g, '')
+          });
+        });
+        hasMore = resp.has_more;
+        startCursor = resp.next_cursor;
+      }
+      console.log('[Podcast Sync] Fetched', guests.length, 'guests from Notion');
+    } catch(e) {
+      console.warn('[Podcast Sync] Guests query failed:', e.message);
+      guests = existing.guests || [];
+    }
+
+    // Query Topics database
+    let topics = [];
+    try {
+      let hasMore = true, startCursor;
+      while (hasMore) {
+        const resp = await notion.databases.query({
+          database_id: PODCAST_TOPICS_DB,
+          start_cursor: startCursor,
+          page_size: 100
+        });
+        resp.results.forEach(page => {
+          const p = page.properties;
+          const getText = (prop) => {
+            if (!prop) return '';
+            if (prop.type === 'title') return (prop.title || []).map(t => t.plain_text).join('');
+            if (prop.type === 'rich_text') return (prop.rich_text || []).map(t => t.plain_text).join('');
+            if (prop.type === 'select') return prop.select ? prop.select.name : '';
+            if (prop.type === 'number') return prop.number;
+            return '';
+          };
+          topics.push({
+            id: page.id,
+            notionPageId: page.id,
+            title: getText(p['Episode Title']),
+            theme: getText(p['Theme']),
+            type: getText(p['Type']),
+            priority: getText(p['Priority']),
+            status: getText(p['Status']) || 'Idea',
+            keyQuestion: getText(p['Key Question']),
+            potentialGuest: getText(p['Potential Guest']),
+            notes: getText(p['Notes']),
+            rishabhRank: getText(p['Rishabh Rank']),
+            notionUrl: 'https://www.notion.so/' + page.id.replace(/-/g, '')
+          });
+        });
+        hasMore = resp.has_more;
+        startCursor = resp.next_cursor;
+      }
+      // Sort by Rishabh Rank (nulls last)
+      topics.sort((a, b) => {
+        if (a.rishabhRank && !b.rishabhRank) return -1;
+        if (!a.rishabhRank && b.rishabhRank) return 1;
+        if (a.rishabhRank && b.rishabhRank) return a.rishabhRank - b.rishabhRank;
+        return 0;
+      });
+      console.log('[Podcast Sync] Fetched', topics.length, 'topics from Notion');
+    } catch(e) {
+      console.warn('[Podcast Sync] Topics query failed:', e.message);
+      topics = existing.topics || [];
+    }
+
+    // Merge into existing data (preserve episodes, launch tasks, config, etc.)
+    existing.guests = guests;
+    existing.topics = topics;
+    existing.lastNotionSync = new Date().toISOString();
+
+    const dir = path.dirname(DATA_PATH);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(DATA_PATH, JSON.stringify(existing, null, 2));
+    console.log('[Podcast Sync] Saved', guests.length, 'guests +', topics.length, 'topics');
+  } catch(e) {
+    console.error('[Podcast Sync] Error:', e.message);
+  }
 }
 
 // ── Daily News Feed Aggregation ──
@@ -5011,6 +5135,10 @@ app.listen(PORT, () => {
   syncHackweekTeamsFromSheet();
   setInterval(syncHackweekTeamsFromSheet, 30 * 60 * 1000);
   console.log('[HW Sheet] Auto-refresh every 30 min');
+  // Refresh podcast data from Notion on startup + every 15 min
+  refreshPodcastFromNotion();
+  setInterval(refreshPodcastFromNotion, 15 * 60 * 1000);
+  console.log('[Podcast Sync] Auto-refresh every 15 min');
   // Refresh news feed on startup + every 4 hours
   refreshNewsFeed();
   setInterval(refreshNewsFeed, 4 * 60 * 60 * 1000);
