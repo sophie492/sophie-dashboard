@@ -1509,9 +1509,9 @@ function renderSidebar(){
   const offsiteTotal=_offsiteSource?_offsiteSource.phases.reduce((s,p)=>s+p.tasks.length,0):0;
   const offsiteDone=_offsiteSource?_offsiteSource.phases.reduce((s,p)=>s+p.tasks.filter(t=>t.done).length,0):0;
   const offsitePct=offsiteTotal?Math.round((offsiteDone/offsiteTotal)*100):0;
-  const _hwSidebar = (function(){ var hw = getSelectedHackweek(); return (hw.checklist && hw.checklist.phases) ? hw.checklist.phases : []; })();
-  const hwTotal=_hwSidebar.reduce(function(s,p){return s+(p.tasks||p.items||[]).length;},0);
-  const hwDone=_hwSidebar.reduce(function(s,p){return s+(p.tasks||p.items||[]).filter(function(t){return t.done;}).length;},0);
+  const _hwSidebar = (function(){ var hw = getSelectedHackweek(); if (!hw.tasks) return {total:0,done:0}; var total=0,done=0; Object.values(hw.tasks).forEach(function(arr){arr.forEach(function(t){total++;if(t.done)done++;});}); return {total:total,done:done}; })();
+  const hwTotal=_hwSidebar.total;
+  const hwDone=_hwSidebar.done;
   const hwPct=hwTotal?Math.round((hwDone/hwTotal)*100):0;
 
   const liTotal=DATA.linkedinPipeline?DATA.linkedinPipeline.phases.reduce((s,p)=>s+p.tasks.length,0):0;
@@ -1863,7 +1863,7 @@ function renderMyWorkSection(){
   const offsitePct=offsiteTotal>0?Math.round(offsiteDone/offsiteTotal*100):0;
   const hw=getSelectedHackweek();
   let hwDone=0,hwTotal=0;
-  if(hw){var hwPhases = (hw.checklist && hw.checklist.phases && hw.checklist.phases.length > 0) ? hw.checklist.phases : (hw.phases || []); hwPhases.forEach(function(p){(p.tasks||p.items||[]).forEach(function(t){hwTotal++;if(t.done)hwDone++;});});}
+  if(hw && hw.tasks){Object.values(hw.tasks).forEach(function(arr){arr.forEach(function(t){hwTotal++;if(t.done)hwDone++;});});}
   const hwPct=hwTotal>0?Math.round(hwDone/hwTotal*100):0;
 
   return `
@@ -4904,50 +4904,23 @@ function updateLunchNote(idx, value) {
 }
 
 function renderHackWeek() {
-  const hw_selected = getSelectedHackweek();
+  var hw_selected = getSelectedHackweek();
   if (!hw_selected.id) return '';
 
-  const hwApi = hw_selected;
-  const isComplete = hw_selected.status === 'Complete';
-  const isFuture = hw_selected.status === 'Future';
+  var hwApi = hw_selected;
+  var isComplete = hw_selected.status === 'Complete';
+  var isFuture = hw_selected.status === 'Future';
 
-  const phases = (hwApi.checklist && hwApi.checklist.phases) ? hwApi.checklist.phases : [];
-
-  const totalTasks = phases.reduce(function(s,p) { return s + (p.tasks||p.items||[]).length; }, 0);
-  const doneTasks = phases.reduce(function(s,p) { return s + (p.tasks||p.items||[]).filter(function(t){return t.done;}).length; }, 0);
-  const pct = totalTasks ? Math.round((doneTasks/totalTasks)*100) : 0;
-  const daysUntil = hwApi.daysUntil || Math.ceil((new Date(hwApi.targetDate || '2026-06-08') - new Date()) / 86400000);
-
-  let phaseHtml = '';
-  if (!isComplete && !isFuture && phases.length > 0) {
-    phases.forEach(function(p, pi) {
-      var tasks = p.tasks || p.items || [];
-      var pDone = tasks.filter(function(t){return t.done;}).length;
-      var pTotal = tasks.length;
-      var allDone = pDone === pTotal;
-      var isFirst = pi === 0;
-
-      phaseHtml += '<div class="hw-phase' + (allDone?' phase-done':'') + '" data-hwphase="' + pi + '">' +
-        '<div class="hw-phase-head" onclick="toggleHWPhase(this)" style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)">' +
-          '<span class="hw-chevron" style="font-size:10px;color:var(--text-muted);transition:transform .2s;transform:rotate(' + (isFirst?'90':'0') + 'deg)">&#9654;</span>' +
-          '<span style="font-size:11px;font-weight:700;color:' + (allDone?'var(--green)':'var(--text)') + ';flex:1">' + (p.name || p.deadline || '') + '</span>' +
-          '<span style="font-size:9px;color:var(--text-muted);font-weight:600">' + (p.deadline || '') + '</span>' +
-          '<span style="font-size:9px;padding:2px 6px;border-radius:4px;font-weight:700;' + (allDone?'background:var(--green-soft);color:var(--green)':'background:var(--surface);color:var(--text-muted)') + '">' + pDone + '/' + pTotal + '</span>' +
-        '</div>' +
-        '<div class="hw-phase-body" style="display:' + (isFirst?'block':'none') + ';padding:4px 0 4px 18px">';
-
-      tasks.forEach(function(t, ti) {
-        phaseHtml += '<div class="hw-task' + (t.done?' checked':'') + '" data-hwphase="' + pi + '" data-hwtask="' + ti + '" onclick="toggleHWTask(this)" style="display:flex;align-items:flex-start;gap:8px;padding:5px 4px;border-radius:5px;cursor:pointer;transition:background .15s;font-size:11px">' +
-          '<div class="task-checkbox' + (t.done?' checked':'') + '"></div>' +
-          '<span style="color:' + (t.done?'var(--text-muted)':'var(--text-dim)') + ';' + (t.done?'text-decoration:line-through;opacity:.5':'') + ';line-height:1.3">' + (t.text || t.item || '') + '</span>' +
-        '</div>';
-      });
-      phaseHtml += '</div></div>';
-    });
-  }
-
+  // Per-tab tasks
+  var hwTasks = hwApi.tasks || {};
+  var tabNames = ['schedule','teams','logistics','comms','judging'];
+  var totalTasks = 0, doneTasks = 0;
+  tabNames.forEach(function(t) { (hwTasks[t]||[]).forEach(function(tk) { totalTasks++; if (tk.done) doneTasks++; }); });
+  var pct = totalTasks ? Math.round((doneTasks/totalTasks)*100) : 0;
+  var daysUntil = hwApi.daysUntil || Math.ceil((new Date(hwApi.targetDate || '2026-06-08') - new Date()) / 86400000);
   var barColor = pct >= 75 ? 'var(--green)' : pct >= 40 ? 'var(--yellow)' : 'var(--accent)';
 
+  // Extract data
   var hwTeams = hwApi.teams || [];
   var hwSchedule = hwApi.schedule || {};
   var hwLogistics = hwApi.logistics || {};
@@ -4959,25 +4932,98 @@ function renderHackWeek() {
   var hwScores = hwApi.scores || [];
   var hwPrizes = hwApi.prizeCategories || [];
   var hwTeamRules = hwApi.teamFormationRules || [];
-  var hwLessons = hwApi.lessonsLearned || [];
-
   var completedHackweeks = _allHackweeks.filter(function(hw) { return hw.status === 'Complete'; });
-
   var budgetTotal = (hwBudget.prizes||0) + (hwBudget.travel||0) + (hwBudget.food||0) + (hwBudget.social||0);
 
-  // Schedule HTML
-  const dayNames = ['day1','day2','day3','day4','day5'];
-  const dayLabels = ['Day 1 (Mon)','Day 2 (Tue)','Day 3 (Wed)','Day 4 (Thu)','Day 5 (Fri)'];
-  let scheduleHtml = dayNames.map(function(d,i) {
+  // Helper: render task checklist for a tab
+  function renderTabTasks(tabKey, label) {
+    var tasks = hwTasks[tabKey] || [];
+    if (tasks.length === 0) return '';
+    var tabDone = tasks.filter(function(t){return t.done;}).length;
+    var html = '<div class="card" style="margin-bottom:12px">';
+    html += '<div class="card-head"><span class="card-title">' + label + '</span><span class="hw-tab-task-counter" style="font-size:10px;color:var(--text-muted)">' + tabDone + '/' + tasks.length + '</span></div>';
+    html += '<div class="card-body" style="padding:8px 14px">';
+    tasks.forEach(function(t, ti) {
+      html += '<div class="hw-task' + (t.done?' checked':'') + '" data-hwtab="' + tabKey + '" data-hwtask="' + ti + '" onclick="toggleHWTabTask(this)" style="display:flex;align-items:flex-start;gap:8px;padding:5px 4px;border-radius:5px;cursor:pointer;transition:background .15s;font-size:11px">' +
+        '<div class="task-checkbox' + (t.done?' checked':'') + '"></div>' +
+        '<span style="color:' + (t.done?'var(--text-muted)':'var(--text-dim)') + ';' + (t.done?'text-decoration:line-through;opacity:.5':'') + ';line-height:1.3">' + t.text + '</span>' +
+      '</div>';
+    });
+    html += '</div></div>';
+    return html;
+  }
+
+  // Schedule HTML (5-day cards)
+  var dayNames = ['day1','day2','day3','day4','day5'];
+  var dayLabels = ['Day 1 (Mon)','Day 2 (Tue)','Day 3 (Wed)','Day 4 (Thu)','Day 5 (Fri)'];
+  var scheduleHtml = dayNames.map(function(d,i) {
     var day = hwSchedule[d] || {theme:'TBD',events:[]};
     var dayDate = new Date(hwApi.targetDate || '2026-06-08');
     dayDate.setDate(dayDate.getDate() + i);
-    var now = new Date();
-    var dayDiff = Math.ceil((dayDate - now) / 86400000);
-    var countdownBadge = dayDiff > 0 ? '<span style="font-size:9px;padding:2px 6px;border-radius:4px;background:var(--blue-soft);color:var(--blue);font-weight:700;margin-left:8px">in ' + dayDiff + 'd</span>' : dayDiff === 0 ? '<span style="font-size:9px;padding:2px 6px;border-radius:4px;background:var(--green-soft);color:var(--green);font-weight:700;margin-left:8px">Today</span>' : '<span style="font-size:9px;padding:2px 6px;border-radius:4px;background:var(--surface);color:var(--text-muted);font-weight:700;margin-left:8px">Completed</span>';
-    var evts = day.events.length > 0 ? day.events.map(function(e) { return '<div style="padding:4px 0;font-size:11px;color:var(--text-dim);border-bottom:1px solid var(--border)">' + (e.time||'') + ' ' + (e.name||e) + '</div>'; }).join('') : '<div style="padding:8px 0;font-size:11px;color:var(--text-muted);font-style:italic">No events scheduled yet</div>';
+    var dayDiff = Math.ceil((dayDate - new Date()) / 86400000);
+    var countdownBadge = dayDiff > 0 ? '<span style="font-size:9px;padding:2px 6px;border-radius:4px;background:var(--blue-soft);color:var(--blue);font-weight:700;margin-left:8px">in ' + dayDiff + 'd</span>' : dayDiff === 0 ? '<span style="font-size:9px;padding:2px 6px;border-radius:4px;background:var(--green-soft);color:var(--green);font-weight:700;margin-left:8px">Today</span>' : '<span style="font-size:9px;padding:2px 6px;border-radius:4px;background:var(--surface);color:var(--text-muted);font-weight:700;margin-left:8px">Done</span>';
+    var evts = (day.events||[]).length > 0 ? day.events.map(function(e) { return '<div style="padding:4px 0;font-size:11px;color:var(--text-dim);border-bottom:1px solid var(--border)">' + (e.time||'') + ' ' + (e.name||e) + '</div>'; }).join('') : '<div style="padding:8px 0;font-size:11px;color:var(--text-muted);font-style:italic">No events scheduled yet</div>';
     return '<div class="card" style="margin-bottom:8px"><div class="card-head"><span class="card-title">' + dayLabels[i] + '</span><span style="display:flex;align-items:center"><span style="font-size:10px;color:var(--gold)">' + day.theme + '</span>' + countdownBadge + '</span></div><div class="card-body" style="padding:8px 14px">' + evts + '</div></div>';
   }).join('');
+
+  // Logistics pipeline helper
+  function renderLogisticsCard(category, label, icon, researchKey) {
+    var cat = hwLogistics[category] || {};
+    var research = cat[researchKey] || [];
+    var status = cat.status || 'Not Started';
+    var statusColors = {'Not Started':'var(--text-muted)','Researching':'var(--yellow)','Decided':'var(--blue)','Booked':'var(--green)'};
+    var statusColor = statusColors[status] || 'var(--text-muted)';
+    var selected = cat.selectedOption;
+
+    var html = '<div class="card" style="margin-bottom:12px;border-left:3px solid ' + statusColor + '">';
+    html += '<div class="card-head"><span class="card-title">' + icon + ' ' + label + '</span>';
+    html += '<select onchange="updateHWLogisticsStatus(\'' + category + '\', this.value)" style="padding:3px 8px;border-radius:4px;background:var(--surface);border:1px solid var(--border);color:' + statusColor + ';font-size:10px;font-weight:700;font-family:inherit;cursor:pointer">';
+    ['Not Started','Researching','Decided','Booked'].forEach(function(s) {
+      html += '<option value="' + s + '"' + (s === status ? ' selected' : '') + '>' + s + '</option>';
+    });
+    html += '</select></div>';
+    html += '<div class="card-body" style="padding:10px 14px">';
+
+    if (cat.statusDetail) {
+      html += '<div style="font-size:11px;color:var(--text-dim);margin-bottom:10px;font-style:italic">' + cat.statusDetail + '</div>';
+    }
+
+    // Selected option (if any)
+    if (selected !== null && selected !== undefined && research[selected]) {
+      var sel = research[selected];
+      html += '<div style="padding:10px;border-radius:6px;background:rgba(46,204,113,0.05);border:1px solid var(--green);margin-bottom:10px">';
+      html += '<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px"><span style="font-size:9px;padding:2px 6px;border-radius:3px;background:var(--green-soft);color:var(--green);font-weight:700">SELECTED</span><strong style="font-size:12px;color:var(--text)">' + (sel.name || sel.description || 'Option ' + (selected+1)) + '</strong></div>';
+      if (sel.notes) html += '<div style="font-size:11px;color:var(--text-dim)">' + sel.notes + '</div>';
+      html += '</div>';
+      // Confirmation details
+      html += '<div style="margin-bottom:8px"><div style="font-size:10px;color:var(--text-muted);font-weight:700;margin-bottom:4px">Confirmation Details</div>';
+      html += '<textarea onchange="updateHWLogisticsConfirmation(\'' + category + '\', this.value)" style="width:100%;min-height:40px;padding:6px 8px;border-radius:4px;background:var(--surface);border:1px solid var(--border);color:var(--text);font-size:11px;font-family:inherit;resize:vertical" placeholder="Confirmation numbers, booking dates, etc.">' + (cat.confirmationDetails || '') + '</textarea></div>';
+    }
+
+    // Research options
+    if (research.length > 0) {
+      var showAll = selected === null || selected === undefined;
+      if (!showAll) {
+        html += '<details style="margin-top:6px"><summary style="font-size:10px;color:var(--text-muted);cursor:pointer;font-weight:600">Other options considered (' + (research.length - 1) + ')</summary><div style="margin-top:8px">';
+      }
+      research.forEach(function(opt, oi) {
+        if (!showAll && oi === selected) return;
+        html += '<div style="padding:8px;margin-bottom:6px;border-radius:6px;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;gap:10px">';
+        html += '<div style="flex:1"><div style="font-size:12px;font-weight:600;color:var(--text)">' + (opt.name || opt.description || 'Option ' + (oi+1)) + '</div>';
+        if (opt.notes) html += '<div style="font-size:10px;color:var(--text-muted);margin-top:2px">' + opt.notes + '</div>';
+        if (opt.estimatedCost) html += '<div style="font-size:10px;color:var(--gold);margin-top:2px">' + opt.estimatedCost + '</div>';
+        html += '</div>';
+        html += '<button onclick="selectHWLogisticsOption(\'' + category + '\', ' + oi + ')" style="padding:4px 10px;border-radius:4px;background:var(--gold);color:#000;font-size:10px;font-weight:700;border:none;cursor:pointer;font-family:inherit;white-space:nowrap">This one</button>';
+        html += '</div>';
+      });
+      if (!showAll) html += '</div></details>';
+    } else {
+      html += '<div style="font-size:11px;color:var(--text-muted);font-style:italic">No research options added yet. Add via API.</div>';
+    }
+
+    html += '</div></div>';
+    return html;
+  }
 
   return `
   <!-- Hack Week Selector -->
@@ -4997,6 +5043,8 @@ function renderHackWeek() {
     <button class="hw-hub-nav-btn active" data-hw-tab="hw-overview">Overview</button>
     <button class="hw-hub-nav-btn" data-hw-tab="hw-schedule">Schedule</button>
     <button class="hw-hub-nav-btn" data-hw-tab="hw-teams">Teams</button>
+    <button class="hw-hub-nav-btn" data-hw-tab="hw-logistics">Logistics</button>
+    <button class="hw-hub-nav-btn" data-hw-tab="hw-comms">Comms</button>
     <button class="hw-hub-nav-btn" data-hw-tab="hw-judging">Judging</button>
     <button class="hw-hub-nav-btn" data-hw-tab="hw-archive">Archive</button>
   </div>
@@ -5008,7 +5056,7 @@ function renderHackWeek() {
         <div class="card-title">&#129470; ${hwApi.name || 'Hack Week'}</div>
         <div class="card-badges">
           ${!isComplete ? '<span class="badge ' + (daysUntil<=14?'tag-yellow':'tag-blue') + '">' + daysUntil + 'd away</span>' : '<span class="badge tag-green">Complete</span>'}
-          <a href="${hwApi.notionHub || ''}" target="_blank" style="font-size:10px;color:var(--gold)">Notion &#8599;</a>
+          ${hwApi.notionHub ? '<a href="' + hwApi.notionHub + '" target="_blank" style="font-size:10px;color:var(--gold)">Notion &#8599;</a>' : ''}
         </div>
       </div>
       <div class="card-body" style="padding:10px 14px">
@@ -5024,16 +5072,17 @@ function renderHackWeek() {
         <div style="height:6px;background:var(--surface);border-radius:3px;overflow:hidden;border:1px solid var(--border);margin-bottom:10px">
           <div style="height:100%;width:${pct}%;background:${barColor};border-radius:3px;transition:width .5s"></div>
         </div>
-        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
-          <span style="font-size:9px;padding:2px 6px;border-radius:4px;background:var(--surface);border:1px solid var(--border);color:var(--text-dim)">&#9881; ${(hwContacts.engineeringLead && hwContacts.engineeringLead.name) || hwContacts.engineeringLead || 'TBD'}</span>
-          <span style="font-size:9px;padding:2px 6px;border-radius:4px;background:var(--surface);border:1px solid var(--border);color:var(--text-dim)">&#128203; ${(hwContacts.operations && hwContacts.operations.name) || hwContacts.operations || 'TBD'}</span>
-          <span style="font-size:9px;padding:2px 6px;border-radius:4px;background:var(--surface);border:1px solid var(--border);color:var(--text-dim)">&#127919; ${hwJudges.length > 0 ? hwJudges.join(', ') : (hwContacts.judges || 'TBD')}</span>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px">
+          ${tabNames.map(function(t) {
+            var arr = hwTasks[t]||[];
+            var d = arr.filter(function(tk){return tk.done;}).length;
+            var tabLabels = {schedule:'Schedule',teams:'Teams',logistics:'Logistics',comms:'Comms',judging:'Judging'};
+            return '<span style="font-size:9px;padding:2px 8px;border-radius:4px;background:var(--surface);border:1px solid var(--border);color:' + (d===arr.length&&arr.length>0?'var(--green)':'var(--text-muted)') + '">' + tabLabels[t] + ' ' + d + '/' + arr.length + '</span>';
+          }).join('')}
         </div>
-        ${phaseHtml}
       </div>
     </div>
 
-    <!-- Logistics folded into Overview -->
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
       <div class="card" style="padding:14px;border-left:3px solid var(--gold)">
         <div style="font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);font-weight:700">Budget</div>
@@ -5057,8 +5106,15 @@ function renderHackWeek() {
     </div>
   </div>
 
+  <!-- TAB: Schedule -->
+  <div class="hw-hub-tab-pane" data-hw-pane="hw-schedule">
+    ${renderTabTasks('schedule', 'Schedule Tasks')}
+    ${scheduleHtml}
+  </div>
+
   <!-- TAB: Teams -->
   <div class="hw-hub-tab-pane" data-hw-pane="hw-teams">
+    ${renderTabTasks('teams', 'Team Tasks')}
     <div class="card" style="margin-bottom:12px">
       <div class="card-head"><span class="card-title">Team Sign-ups</span><span style="font-size:11px;color:var(--text-muted)">${hwTeams.length} teams</span></div>
       <div class="card-body" style="padding:${hwTeams.length > 0 ? '10px 14px' : '20px'};${hwTeams.length === 0 ? 'text-align:center;color:var(--text-muted)' : ''}">
@@ -5075,16 +5131,12 @@ function renderHackWeek() {
         }).join('') : '<div style="font-size:24px;margin-bottom:8px">&#128101;</div><div>No teams signed up yet.</div><div style="font-size:11px;margin-top:4px">Teams will appear here once the Google Sheet is populated.</div>'}
       </div>
     </div>
-
-    <!-- Team Formation Rules -->
     <div class="card" style="margin-bottom:12px">
       <div class="card-head"><span class="card-title">Team Formation Rules</span></div>
       <div class="card-body" style="padding:10px 14px">
         ${hwTeamRules.length > 0 ? '<ul style="margin:0;padding-left:18px;font-size:12px;color:var(--text-dim);line-height:1.8">' + hwTeamRules.map(function(r) { return '<li>' + r + '</li>'; }).join('') + '</ul>' : '<div style="font-size:12px;color:var(--text-muted)">No rules configured yet.</div>'}
       </div>
     </div>
-
-    <!-- Resource Links -->
     <div class="card">
       <div class="card-head"><span class="card-title">Resources</span></div>
       <div class="card-body" style="padding:10px 14px">
@@ -5100,14 +5152,21 @@ function renderHackWeek() {
     </div>
   </div>
 
-  <!-- TAB: Schedule -->
-  <div class="hw-hub-tab-pane" data-hw-pane="hw-schedule">
-    ${scheduleHtml}
+  <!-- TAB: Logistics -->
+  <div class="hw-hub-tab-pane" data-hw-pane="hw-logistics">
+    ${renderTabTasks('logistics', 'Logistics Tasks')}
+    ${renderLogisticsCard('travel', 'Travel', '&#9992;&#65039;', 'travelResearch')}
+    ${renderLogisticsCard('socialEvents', 'Social Events', '&#127881;', 'socialResearch')}
+  </div>
+
+  <!-- TAB: Comms -->
+  <div class="hw-hub-tab-pane" data-hw-pane="hw-comms">
+    ${renderTabTasks('comms', 'Communications Tasks')}
   </div>
 
   <!-- TAB: Judging -->
   <div class="hw-hub-tab-pane" data-hw-pane="hw-judging">
-    <!-- Rubric -->
+    ${renderTabTasks('judging', 'Post-Event Tasks')}
     <div class="card" style="margin-bottom:12px">
       <div class="card-head"><span class="card-title">Judging Rubric</span><span style="font-size:10px;color:var(--text-muted)">Equal weight (1/3 each)</span></div>
       <div class="card-body" style="padding:10px 14px">
@@ -5118,69 +5177,23 @@ function renderHackWeek() {
         </div>
       </div>
     </div>
-
-    <!-- Scores -->
     <div class="card" style="margin-bottom:12px">
       <div class="card-head"><span class="card-title">Scores</span><span style="font-size:10px;color:var(--text-muted)">${hwScores.length} submissions</span></div>
       <div class="card-body" style="padding:${hwScores.length > 0 ? '0' : '20px'};${hwScores.length === 0 ? 'text-align:center;color:var(--text-muted)' : 'overflow-x:auto'}">
         ${hwScores.length > 0 ? (function() {
           var teamScoreMap = {};
-          hwScores.forEach(function(s) {
-            if (!teamScoreMap[s.team]) teamScoreMap[s.team] = [];
-            teamScoreMap[s.team].push(s);
-          });
-          var tableHtml = '<table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr style="border-bottom:2px solid var(--border)">';
-          tableHtml += '<th style="padding:8px 10px;text-align:left;color:var(--text-muted);font-weight:700">Team</th>';
-          tableHtml += '<th style="padding:8px 10px;text-align:left;color:var(--text-muted);font-weight:700">Judge</th>';
-          tableHtml += '<th style="padding:8px 6px;text-align:center;color:var(--text-muted);font-weight:700">Idea</th>';
-          tableHtml += '<th style="padding:8px 6px;text-align:center;color:var(--text-muted);font-weight:700">Code</th>';
-          tableHtml += '<th style="padding:8px 6px;text-align:center;color:var(--text-muted);font-weight:700">Demo</th>';
-          tableHtml += '<th style="padding:8px 6px;text-align:center;color:var(--gold);font-weight:700">Avg</th>';
-          tableHtml += '</tr></thead><tbody>';
+          hwScores.forEach(function(s) { if (!teamScoreMap[s.team]) teamScoreMap[s.team] = []; teamScoreMap[s.team].push(s); });
+          var tableHtml = '<table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr style="border-bottom:2px solid var(--border)"><th style="padding:8px 10px;text-align:left;color:var(--text-muted);font-weight:700">Team</th><th style="padding:8px 10px;text-align:left;color:var(--text-muted);font-weight:700">Judge</th><th style="padding:8px 6px;text-align:center;color:var(--text-muted);font-weight:700">Idea</th><th style="padding:8px 6px;text-align:center;color:var(--text-muted);font-weight:700">Code</th><th style="padding:8px 6px;text-align:center;color:var(--text-muted);font-weight:700">Demo</th><th style="padding:8px 6px;text-align:center;color:var(--gold);font-weight:700">Avg</th></tr></thead><tbody>';
           hwScores.forEach(function(s) {
             var vals = [s.idea, s.code, s.demo].filter(function(v) { return v !== null && v !== undefined; });
             var avg = vals.length > 0 ? (vals.reduce(function(a,b) { return a+b; }, 0) / vals.length).toFixed(1) : '-';
-            tableHtml += '<tr style="border-bottom:1px solid var(--border)">';
-            tableHtml += '<td style="padding:6px 10px;font-weight:600;color:var(--text)">' + s.team + '</td>';
-            tableHtml += '<td style="padding:6px 10px;color:var(--text-dim)">' + s.judge + '</td>';
-            tableHtml += '<td style="padding:6px;text-align:center;color:var(--text-dim)">' + (s.idea || '-') + '</td>';
-            tableHtml += '<td style="padding:6px;text-align:center;color:var(--text-dim)">' + (s.code || '-') + '</td>';
-            tableHtml += '<td style="padding:6px;text-align:center;color:var(--text-dim)">' + (s.demo || '-') + '</td>';
-            tableHtml += '<td style="padding:6px;text-align:center;color:var(--gold);font-weight:700">' + avg + '</td>';
-            tableHtml += '</tr>';
+            tableHtml += '<tr style="border-bottom:1px solid var(--border)"><td style="padding:6px 10px;font-weight:600;color:var(--text)">' + s.team + '</td><td style="padding:6px 10px;color:var(--text-dim)">' + s.judge + '</td><td style="padding:6px;text-align:center;color:var(--text-dim)">' + (s.idea || '-') + '</td><td style="padding:6px;text-align:center;color:var(--text-dim)">' + (s.code || '-') + '</td><td style="padding:6px;text-align:center;color:var(--text-dim)">' + (s.demo || '-') + '</td><td style="padding:6px;text-align:center;color:var(--gold);font-weight:700">' + avg + '</td></tr>';
           });
-          var teamNames = Object.keys(teamScoreMap);
-          if (teamNames.length > 0) {
-            tableHtml += '<tr style="border-top:2px solid var(--border)"><td colspan="6" style="padding:6px 10px;font-size:10px;color:var(--text-muted);font-weight:700;text-transform:uppercase">Team Averages</td></tr>';
-            teamNames.sort(function(a,b) {
-              var aScores = teamScoreMap[a]; var bScores = teamScoreMap[b];
-              var aAvg = aScores.reduce(function(s,sc) { var v = [sc.idea,sc.code,sc.demo].filter(function(x){return x!=null;}); return s + (v.length?v.reduce(function(a,b){return a+b;},0)/v.length:0); }, 0) / aScores.length;
-              var bAvg = bScores.reduce(function(s,sc) { var v = [sc.idea,sc.code,sc.demo].filter(function(x){return x!=null;}); return s + (v.length?v.reduce(function(a,b){return a+b;},0)/v.length:0); }, 0) / bScores.length;
-              return bAvg - aAvg;
-            });
-            teamNames.forEach(function(tn, idx) {
-              var scores = teamScoreMap[tn];
-              var avgIdea = scores.filter(function(s){return s.idea!=null;}).reduce(function(a,s){return a+s.idea;},0) / (scores.filter(function(s){return s.idea!=null;}).length || 1);
-              var avgCode = scores.filter(function(s){return s.code!=null;}).reduce(function(a,s){return a+s.code;},0) / (scores.filter(function(s){return s.code!=null;}).length || 1);
-              var avgDemo = scores.filter(function(s){return s.demo!=null;}).reduce(function(a,s){return a+s.demo;},0) / (scores.filter(function(s){return s.demo!=null;}).length || 1);
-              var overall = ((avgIdea + avgCode + avgDemo) / 3).toFixed(1);
-              tableHtml += '<tr style="background:' + (idx === 0 ? 'rgba(219,203,119,0.05)' : 'transparent') + '">';
-              tableHtml += '<td style="padding:6px 10px;font-weight:700;color:var(--text)">' + (idx === 0 ? '&#127942; ' : '') + tn + '</td>';
-              tableHtml += '<td style="padding:6px 10px;color:var(--text-muted);font-size:10px">' + scores.length + ' judge' + (scores.length>1?'s':'') + '</td>';
-              tableHtml += '<td style="padding:6px;text-align:center;color:var(--text-dim)">' + avgIdea.toFixed(1) + '</td>';
-              tableHtml += '<td style="padding:6px;text-align:center;color:var(--text-dim)">' + avgCode.toFixed(1) + '</td>';
-              tableHtml += '<td style="padding:6px;text-align:center;color:var(--text-dim)">' + avgDemo.toFixed(1) + '</td>';
-              tableHtml += '<td style="padding:6px;text-align:center;color:var(--gold);font-weight:700">' + overall + '</td>';
-              tableHtml += '</tr>';
-            });
-          }
           tableHtml += '</tbody></table>';
           return tableHtml;
         })() : '<div style="font-size:24px;margin-bottom:8px">&#128202;</div><div>No scores submitted yet.</div><div style="font-size:11px;margin-top:4px">Judges submit scores via API after demo day.</div>'}
       </div>
     </div>
-
-    <!-- Prizes -->
     <div class="card">
       <div class="card-head"><span class="card-title">Prizes</span><span style="font-size:10px;color:var(--gold)">$${hwPrizes.reduce(function(s,p) { return s + (p.amount||0); }, 0).toLocaleString()} total</span></div>
       <div class="card-body" style="padding:10px 14px">
@@ -5211,7 +5224,6 @@ function renderHackWeek() {
         '</ul>' : '<div style="font-size:11px;color:var(--text-muted)">No lessons recorded.</div>') +
         '</div></div>';
     }).join('') : '<div class="card"><div class="card-body" style="padding:40px;text-align:center;color:var(--text-muted)"><div style="font-size:24px;margin-bottom:8px">&#128218;</div><div>No past hack weeks archived yet.</div></div></div>'}
-
     ${_allHackweeks.filter(function(hw) { return hw.status === 'Future'; }).length > 0 ? '<div style="margin-top:16px"><div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Upcoming</div>' + _allHackweeks.filter(function(hw) { return hw.status === 'Future'; }).map(function(hw_future) {
       return '<div class="card" style="margin-bottom:8px;opacity:0.7"><div class="card-head"><span class="card-title">' + hw_future.name + '</span><span style="font-size:10px;color:var(--text-muted)">' + (hw_future.targetDate ? new Date(hw_future.targetDate + 'T12:00:00').toLocaleDateString('en-US', {month:'short', year:'numeric'}) : 'TBD') + '</span></div>' +
         (hw_future.planningStart ? '<div class="card-body" style="padding:6px 14px"><div style="font-size:11px;color:var(--text-muted)">Planning starts: ' + hw_future.planningStart + '</div></div>' : '') +
@@ -5220,40 +5232,27 @@ function renderHackWeek() {
   </div>`;
 }
 
-function toggleHWPhase(el) {
-  const body = el.nextElementSibling;
-  const chevron = el.querySelector('.hw-chevron');
-  const open = body.style.display === 'none';
-  body.style.display = open ? 'block' : 'none';
-  chevron.style.transform = open ? 'rotate(90deg)' : 'rotate(0deg)';
-}
-
-function toggleHWTask(el) {
-  const pi = +el.dataset.hwphase;
-  const ti = +el.dataset.hwtask;
-  const hwSel = getSelectedHackweek();
-  const phases = (hwSel.checklist && hwSel.checklist.phases) ? hwSel.checklist.phases : [];
-  if (!phases[pi] || !(phases[pi].tasks||phases[pi].items||[])[ti]) return;
-  const tasks = phases[pi].tasks || phases[pi].items || [];
-  const task = tasks[ti];
+function toggleHWTabTask(el) {
+  var tab = el.dataset.hwtab;
+  var idx = +el.dataset.hwtask;
+  var hwSel = getSelectedHackweek();
+  if (!hwSel.tasks || !hwSel.tasks[tab] || !hwSel.tasks[tab][idx]) return;
+  var task = hwSel.tasks[tab][idx];
   task.done = !task.done;
-  const isChecked = task.done;
+  var isChecked = task.done;
 
-  const hwId = hwSel.id || 'default';
-  const doneKeys = loadHackWeekDone();
-  const key = hwId + '-' + pi + '-' + ti;
-  if(isChecked) {
-    if(!doneKeys.includes(key)) doneKeys.push(key);
-  } else {
-    const idx = doneKeys.indexOf(key);
-    if(idx >= 0) doneKeys.splice(idx, 1);
-  }
-  saveHackWeekDone(doneKeys);
-  syncCheckbox('hackweek-'+hwId+'-'+pi+'-'+ti, isChecked, hwSel.notionPageId || '', task.text || task.item || '');
+  var hwId = hwSel.id || 'default';
+  syncCheckbox('hackweek-' + hwId + '-' + tab + '-' + idx, isChecked, hwSel.notionPageId || '', task.text || '');
 
-  const cb = el.querySelector('.task-checkbox');
-  const label = el.querySelector('span:last-child');
-  if(isChecked) {
+  fetch('/api/hackweek/' + hwId + '/task', {
+    method: 'PATCH',
+    headers: {'Content-Type':'application/json','Authorization':'Bearer sophie-dashboard-secret-change-me'},
+    body: JSON.stringify({ tab: tab, index: idx, done: isChecked })
+  }).catch(function(e) { console.warn('[HW Task] Toggle failed:', e.message); });
+
+  var cb = el.querySelector('.task-checkbox');
+  var label = el.querySelector('span:last-child');
+  if (isChecked) {
     el.classList.add('checked');
     cb.classList.add('checked');
     label.style.textDecoration = 'line-through';
@@ -5267,25 +5266,55 @@ function toggleHWTask(el) {
     label.style.color = 'var(--text-dim)';
   }
 
-  const pTasks = tasks;
-  const pDone = pTasks.filter(t=>t.done).length;
-  const pTotal = pTasks.length;
-  const phaseEl = el.closest('[data-hwphase]');
-  const counter = phaseEl.querySelector('.hw-phase-head span:last-child');
-  if(counter) counter.textContent = pDone + '/' + pTotal;
-
-  const totalDone = phases.reduce((s,p) => s + (p.tasks||p.items||[]).filter(t=>t.done).length, 0);
-  const totalAll = phases.reduce((s,p) => s + (p.tasks||p.items||[]).length, 0);
-  const newPct = totalAll ? Math.round((totalDone/totalAll)*100) : 0;
-  const card = el.closest('.card');
-  const pctLabel = card.querySelector('.card-body > div:first-child > span:last-child');
-  if(pctLabel) pctLabel.textContent = totalDone + '/' + totalAll + ' tasks (' + newPct + '%)';
-  const bar = card.querySelector('.card-body > div:nth-child(2) > div');
-  if(bar) {
-    bar.style.width = newPct + '%';
-    bar.style.background = newPct >= 75 ? 'var(--green)' : newPct >= 40 ? 'var(--yellow)' : 'var(--accent)';
-  }
+  var tabTasks = hwSel.tasks[tab];
+  var tabDone = tabTasks.filter(function(t){return t.done;}).length;
+  var card = el.closest('.card');
+  var counter = card ? card.querySelector('.hw-tab-task-counter') : null;
+  if (counter) counter.textContent = tabDone + '/' + tabTasks.length;
 }
+
+function updateHWLogisticsStatus(category, value) {
+  var hwSel = getSelectedHackweek();
+  if (!hwSel.id || !hwSel.logistics || !hwSel.logistics[category]) return;
+  hwSel.logistics[category].status = value;
+  var body = {};
+  body[category] = { status: value };
+  fetch('/api/hackweek/' + hwSel.id + '/logistics', {
+    method: 'PATCH',
+    headers: {'Content-Type':'application/json','Authorization':'Bearer sophie-dashboard-secret-change-me'},
+    body: JSON.stringify(body)
+  }).then(function() { renderProjectsPage(); })
+  .catch(function(e) { console.warn('[HW Logistics] Status update failed:', e.message); });
+}
+
+function selectHWLogisticsOption(category, idx) {
+  var hwSel = getSelectedHackweek();
+  if (!hwSel.id || !hwSel.logistics || !hwSel.logistics[category]) return;
+  hwSel.logistics[category].selectedOption = idx;
+  hwSel.logistics[category].status = 'Decided';
+  var body = {};
+  body[category] = { selectedOption: idx, status: 'Decided' };
+  fetch('/api/hackweek/' + hwSel.id + '/logistics', {
+    method: 'PATCH',
+    headers: {'Content-Type':'application/json','Authorization':'Bearer sophie-dashboard-secret-change-me'},
+    body: JSON.stringify(body)
+  }).then(function() { renderProjectsPage(); })
+  .catch(function(e) { console.warn('[HW Logistics] Selection failed:', e.message); });
+}
+
+function updateHWLogisticsConfirmation(category, value) {
+  var hwSel = getSelectedHackweek();
+  if (!hwSel.id || !hwSel.logistics || !hwSel.logistics[category]) return;
+  hwSel.logistics[category].confirmationDetails = value;
+  var body = {};
+  body[category] = { confirmationDetails: value };
+  fetch('/api/hackweek/' + hwSel.id + '/logistics', {
+    method: 'PATCH',
+    headers: {'Content-Type':'application/json','Authorization':'Bearer sophie-dashboard-secret-change-me'},
+    body: JSON.stringify(body)
+  }).catch(function(e) { console.warn('[HW Logistics] Confirmation update failed:', e.message); });
+}
+
 
 function renderFPPCProject(){
   const fppc=DATA.fppcEvents||{};
@@ -6144,16 +6173,17 @@ async function loadServerCheckboxStates() {
         });
       });
     }
-    // Apply to hack week tasks
+    // Apply to hack week tasks (per-tab format)
     var _hwRestore = getSelectedHackweek();
     var _hwRestoreId = _hwRestore.id || 'default';
-    var _hwPhases = (_hwRestore.checklist && _hwRestore.checklist.phases) ? _hwRestore.checklist.phases : [];
-    _hwPhases.forEach(function(p, pi) {
-      (p.tasks || p.items || []).forEach(function(t, ti) {
-        var s = states['hackweek-' + _hwRestoreId + '-' + pi + '-' + ti] || states['hackweek-' + pi + '-' + ti];
-        if (s) t.done = s.checked;
+    if (_hwRestore.tasks) {
+      Object.keys(_hwRestore.tasks).forEach(function(tab) {
+        (_hwRestore.tasks[tab] || []).forEach(function(t, ti) {
+          var s = states['hackweek-' + _hwRestoreId + '-' + tab + '-' + ti];
+          if (s) t.done = s.checked;
+        });
       });
-    });
+    }
     // Apply to marketing event todos
     MKT_EVENTS.forEach(ev => {
       ev.todos.forEach((t, ti) => {
