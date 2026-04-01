@@ -1573,6 +1573,60 @@ async function syncHackweekTeamsFromSheet() {
   }
 }
 
+// ── Hack Week Scoring ──
+app.patch('/api/hackweek/scores', (req, res) => {
+  const authHeader = req.headers.authorization || '';
+  const token = authHeader.replace('Bearer ', '');
+  if (token !== (process.env.DASHBOARD_API_KEY || 'sophie-dashboard-secret-change-me')) {
+    return res.status(401).json({ error: 'Invalid API key' });
+  }
+  try {
+    const { team, judge, idea, code, demo } = req.body;
+    if (!team || !judge) return res.status(400).json({ error: 'team and judge required' });
+
+    // Validate scores are 1-10
+    for (const [key, val] of Object.entries({ idea, code, demo })) {
+      if (val !== undefined && (typeof val !== 'number' || val < 1 || val > 10)) {
+        return res.status(400).json({ error: key + ' must be a number 1-10' });
+      }
+    }
+
+    const data = fs.existsSync(HACKWEEK_PATH) ? JSON.parse(fs.readFileSync(HACKWEEK_PATH, 'utf8')) : {};
+    if (!data.scores) data.scores = [];
+
+    // Validate team exists (if teams are loaded)
+    if (data.teams && data.teams.length > 0) {
+      const teamExists = data.teams.some(t => t.name.toLowerCase() === team.toLowerCase());
+      if (!teamExists) return res.status(400).json({ error: 'Team not found: ' + team, availableTeams: data.teams.map(t => t.name) });
+    }
+
+    // Upsert: find existing score for same judge+team combo
+    const existingIdx = data.scores.findIndex(s => s.team.toLowerCase() === team.toLowerCase() && s.judge.toLowerCase() === judge.toLowerCase());
+    const scoreEntry = {
+      team: team,
+      judge: judge,
+      idea: idea || null,
+      code: code || null,
+      demo: demo || null,
+      submittedAt: new Date().toISOString()
+    };
+
+    if (existingIdx >= 0) {
+      // Merge: only overwrite fields that are provided
+      const existing = data.scores[existingIdx];
+      if (idea !== undefined) existing.idea = idea;
+      if (code !== undefined) existing.code = code;
+      if (demo !== undefined) existing.demo = demo;
+      existing.submittedAt = new Date().toISOString();
+    } else {
+      data.scores.push(scoreEntry);
+    }
+
+    fs.writeFileSync(HACKWEEK_PATH, JSON.stringify(data, null, 2));
+    res.json({ ok: true, scoresCount: data.scores.length });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 // ── BD Notion Sync ──
 app.post('/api/bd/relationships/add', async (req, res) => {
   const authHeader = req.headers.authorization || '';
