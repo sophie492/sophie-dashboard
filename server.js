@@ -1964,6 +1964,132 @@ app.patch('/api/hackweek/:id/attendee', (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// ── Hack Week Budget Sheet Sync ──
+app.post('/api/hackweek/:id/budget/sheet-sync', async (req, res) => {
+  const authHeader = req.headers.authorization || '';
+  const token = authHeader.replace('Bearer ', '');
+  if (token !== (process.env.DASHBOARD_API_KEY || 'sophie-dashboard-secret-change-me')) {
+    return res.status(401).json({ error: 'Invalid API key' });
+  }
+  try {
+    let auth = null;
+    if (fs.existsSync(TOKEN_PATH)) {
+      try {
+        const refreshToken = fs.readFileSync(TOKEN_PATH, 'utf8').trim();
+        if (refreshToken && GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET) {
+          const oauth2 = new google.auth.OAuth2(GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET);
+          oauth2.setCredentials({ refresh_token: refreshToken });
+          await oauth2.getAccessToken();
+          auth = oauth2;
+        }
+      } catch (e) { console.log('[HW Sheets] OAuth failed:', e.message); }
+    }
+    if (!auth) auth = await getGoogleSheetsAuth();
+    if (!auth) return res.status(400).json({ error: 'No auth available' });
+
+    const data = loadHackweekData();
+    const hw = findHackweekById(data, req.params.id);
+    if (!hw) return res.status(404).json({ error: 'Hack week not found' });
+
+    const budget = hw.logistics && hw.logistics.budget;
+    if (!budget) return res.status(400).json({ error: 'No budget data' });
+
+    const sheets = google.sheets({ version: 'v4', auth });
+    const drive = google.drive({ version: 'v3', auth });
+    let spreadsheetId = hw.budgetSheetId;
+
+    if (!spreadsheetId) {
+      const createResult = await sheets.spreadsheets.create({
+        requestBody: {
+          properties: { title: hw.name + ' — Budget' },
+          sheets: [{ properties: { title: 'Budget' } }]
+        }
+      });
+      spreadsheetId = createResult.data.spreadsheetId;
+      hw.budgetSheetId = spreadsheetId;
+
+      // Move to Hack Week folder
+      try {
+        const folderSearch = await drive.files.list({
+          q: "name='Hack Weeks' and mimeType='application/vnd.google-apps.folder' and trashed=false",
+          fields: 'files(id)'
+        });
+        let folderId;
+        if (folderSearch.data.files.length > 0) {
+          folderId = folderSearch.data.files[0].id;
+        } else {
+          const folder = await drive.files.create({
+            requestBody: { name: 'Hack Weeks', mimeType: 'application/vnd.google-apps.folder' }
+          });
+          folderId = folder.data.id;
+        }
+        await drive.files.update({ fileId: spreadsheetId, addParents: folderId, fields: 'id, parents' });
+      } catch (e) { console.log('[HW Sheets] Folder setup skipped:', e.message); }
+
+      fs.writeFileSync(HACKWEEK_PATH, JSON.stringify(data, null, 2));
+    }
+
+    // Compute values
+    const categories = ['prizes', 'travel', 'food', 'social'];
+    const attendees = hw.attendees || [];
+    const travelers = attendees.filter(a => a.attending !== false && a.needsFlight);
+    const attendeeCount = attendees.filter(a => a.attending !== false).length;
+
+    const values = [
+      ['Category', 'Estimated', 'Notes', 'Source'],
+      ...categories.map(cat => [
+        cat.charAt(0).toUpperCase() + cat.slice(1),
+        budget[cat] || 0,
+        budget[cat + 'Note'] || '',
+        budget[cat] ? 'Manual' : 'Auto-estimate'
+      ]),
+      [],
+      ['TOTAL', categories.reduce((s, c) => s + (budget[c] || 0), 0), '', ''],
+      [],
+      ['Hack Week', hw.name, '', ''],
+      ['Target Date', hw.targetDate, '', ''],
+      ['Teams', (hw.teams || []).length, '', ''],
+      ['Attendees', attendeeCount, 'SF: ' + attendees.filter(a => a.office === 'SF' && a.attending !== false).length + ' / BLR: ' + attendees.filter(a => a.office === 'BLR' && a.attending !== false).length, ''],
+      ['Travelers', travelers.length, '', ''],
+      ['Approver', budget.approver || 'Evelyn', '', ''],
+      ['Status', budget.approved ? 'Approved' : 'Pending Approval', '', ''],
+      [],
+      ['Last synced', new Date().toISOString(), '', '']
+    ];
+
+    await sheets.spreadsheets.values.update({
+      spreadsheetId,
+      range: 'Budget!A1',
+      valueInputOption: 'USER_ENTERED',
+      requestBody: { values }
+    });
+
+    // Format header + currency
+    try {
+      await sheets.spreadsheets.batchUpdate({
+        spreadsheetId,
+        requestBody: {
+          requests: [
+            { repeatCell: {
+              range: { sheetId: 0, startRowIndex: 0, endRowIndex: 1 },
+              cell: { userEnteredFormat: { textFormat: { bold: true }, backgroundColor: { red: 0.9, green: 0.9, blue: 0.9 } } },
+              fields: 'userEnteredFormat(textFormat,backgroundColor)'
+            }},
+            { repeatCell: {
+              range: { sheetId: 0, startColumnIndex: 1, endColumnIndex: 2, startRowIndex: 1, endRowIndex: categories.length + 2 },
+              cell: { userEnteredFormat: { numberFormat: { type: 'CURRENCY', pattern: '$#,##0' } } },
+              fields: 'userEnteredFormat.numberFormat'
+            }}
+          ]
+        }
+      });
+    } catch (e) { console.log('[HW Sheets] Format failed:', e.message); }
+
+    fs.writeFileSync(HACKWEEK_PATH, JSON.stringify(data, null, 2));
+    res.json({ ok: true, spreadsheetId, url: 'https://docs.google.com/spreadsheets/d/' + spreadsheetId });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 // ── Hack Week Task CRUD ──
 app.patch('/api/hackweek/:id/task', (req, res) => {
   const authHeader = req.headers.authorization || '';

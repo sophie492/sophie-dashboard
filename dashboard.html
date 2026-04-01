@@ -5243,6 +5243,8 @@ function renderHackWeek() {
         <div style="font-size:10px;margin-top:6px;color:${hwBudget.approved?'var(--green)':'var(--yellow)'}">
           ${hwBudget.approved ? '&#10003; Approved' : '&#9679; Pending approval from ' + (hwBudget.approver || 'Finance')}
         </div>
+        ${!isComplete ? '<button onclick="exportHWBudgetToSheet()" style="margin-top:6px;padding:4px 10px;border-radius:4px;background:var(--surface);border:1px solid var(--border);color:var(--gold);font-size:9px;font-weight:700;cursor:pointer;font-family:inherit;width:100%">&#128196; Export to Google Sheet</button>' : ''}
+        ${hwApi.budgetSheetId ? '<a href="https://docs.google.com/spreadsheets/d/' + hwApi.budgetSheetId + '" target="_blank" style="display:block;margin-top:4px;font-size:9px;color:var(--gold);text-align:center">Open Sheet &#8599;</a>' : ''}
       </div>
       <div class="card" style="padding:14px;border-left:3px solid var(--lavender)">
         <div style="font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);font-weight:700">Key Contacts</div>
@@ -5770,6 +5772,32 @@ function updateHWBudget(category, field, value) {
       renderProjectsPage();
     }
   }).catch(function(e) { console.warn('[HW Budget] Update failed:', e.message); });
+}
+
+function exportHWBudgetToSheet() {
+  var hwSel = getSelectedHackweek();
+  if (!hwSel.id) return;
+  var btn = event.target;
+  btn.textContent = 'Exporting...';
+  btn.disabled = true;
+
+  fetch('/api/hackweek/' + hwSel.id + '/budget/sheet-sync', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json','Authorization':'Bearer sophie-dashboard-secret-change-me'}
+  }).then(function(r) { return r.json(); }).then(function(d) {
+    if (d.ok) {
+      hwSel.budgetSheetId = d.spreadsheetId;
+      btn.textContent = '✓ Exported';
+      window.open(d.url, '_blank');
+      setTimeout(function() { renderProjectsPage(); }, 1000);
+    } else {
+      btn.textContent = 'Failed: ' + (d.error || 'unknown');
+      setTimeout(function() { btn.textContent = '📄 Export to Google Sheet'; btn.disabled = false; }, 3000);
+    }
+  }).catch(function(e) {
+    btn.textContent = 'Failed';
+    setTimeout(function() { btn.textContent = '📄 Export to Google Sheet'; btn.disabled = false; }, 3000);
+  });
 }
 
 function updateHWTeamStatus(teamName, status) {
