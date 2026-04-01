@@ -4757,28 +4757,34 @@ async function refreshNewsFeed() {
   }
 
   try {
-    const aiFeedUrls = [
-      'https://techcrunch.com/category/artificial-intelligence/feed/',
-      'https://www.theverge.com/rss/ai-artificial-intelligence/index.xml',
-      'https://feeds.arstechnica.com/arstechnica/technology-lab'
-    ];
-    const bizFeedUrls = [
-      'https://techcrunch.com/category/startups/feed/',
-      'https://www.axios.com/feeds/tag/deals'
-    ];
+    const feedConfig = {
+      ai: [
+        'https://techcrunch.com/category/artificial-intelligence/feed/',
+        'https://www.theverge.com/rss/ai-artificial-intelligence/index.xml',
+        'https://feeds.arstechnica.com/arstechnica/technology-lab',
+        'https://venturebeat.com/category/ai/feed/',
+        'https://techcrunch.com/category/machine-learning/feed/'
+      ],
+      ecommerce: [
+        'https://www.modernretail.co/feed/',
+        'https://www.retaildive.com/feeds/news/',
+        'https://techcrunch.com/category/commerce/feed/',
+        'https://www.digitalcommerce360.com/feed/'
+      ],
+      biz: [
+        'https://techcrunch.com/category/startups/feed/',
+        'https://www.axios.com/feeds/tag/deals',
+        'https://techcrunch.com/category/venture/feed/',
+        'https://news.crunchbase.com/feed/'
+      ]
+    };
+
+    // Fermat competitive keywords — stories matching these get a relevance tag
+    const fermatKeywords = ['personalization','landing page','post-click','conversion optimization','shopify','ecommerce AI','DTC','direct to consumer','commerce experience','ad-to-purchase','checkout','attentive','rebuy','nosto','tapcart','postscript','elevar','triple whale','retail media','shoppable'];
 
     const cutoff = new Date();
     cutoff.setHours(cutoff.getHours() - 28); // Last 28 hours to ensure coverage
     const cutoffISO = cutoff.toISOString();
-
-    // Fetch all feeds in parallel
-    const aiResults = await Promise.allSettled(aiFeedUrls.map(url => fetchUrl(url).then(parseRSS)));
-    const bizResults = await Promise.allSettled(bizFeedUrls.map(url => fetchUrl(url).then(parseRSS)));
-
-    let aiStories = [];
-    aiResults.forEach(r => { if (r.status === 'fulfilled') aiStories.push(...r.value); });
-    let bizStories = [];
-    bizResults.forEach(r => { if (r.status === 'fulfilled') bizStories.push(...r.value); });
 
     // Filter to recent stories and deduplicate by headline
     function filterRecent(stories) {
@@ -4792,10 +4798,56 @@ async function refreshNewsFeed() {
       }).sort((a, b) => (b.pubDate || '').localeCompare(a.pubDate || ''));
     }
 
-    aiStories = filterRecent(aiStories).slice(0, 8);
-    bizStories = filterRecent(bizStories).slice(0, 5);
+    // Fetch all feeds in parallel by category
+    const results = {};
+    for (const [category, urls] of Object.entries(feedConfig)) {
+      const categoryResults = await Promise.allSettled(urls.map(url => fetchUrl(url).then(parseRSS).catch(() => [])));
+      let stories = [];
+      categoryResults.forEach(r => { if (r.status === 'fulfilled') stories.push(...r.value); });
+      results[category] = stories;
+    }
 
-    if (aiStories.length === 0 && bizStories.length === 0) {
+    // Filter and deduplicate per category
+    let aiStories = filterRecent(results.ai || []).slice(0, 6);
+    let ecomStories = filterRecent(results.ecommerce || []).slice(0, 4);
+    let bizStories = filterRecent(results.biz || []).slice(0, 4);
+
+    // Tag stories with Fermat relevance
+    function tagFermatRelevance(stories) {
+      stories.forEach(s => {
+        const text = (s.headline + ' ' + s.summary).toLowerCase();
+        const matches = fermatKeywords.filter(kw => text.includes(kw.toLowerCase()));
+        if (matches.length > 0) {
+          s.fermatAngle = generateFermatAngle(s, matches);
+          s.fermatRelevance = matches.length;
+        }
+      });
+      // Sort by relevance (stories with Fermat angle first within category)
+      stories.sort((a, b) => (b.fermatRelevance || 0) - (a.fermatRelevance || 0));
+    }
+
+    function generateFermatAngle(story, keywords) {
+      const text = (story.headline + ' ' + story.summary).toLowerCase();
+      if (keywords.some(k => ['attentive','rebuy','nosto','tapcart','postscript','elevar','triple whale'].includes(k))) {
+        return 'Competitive move in Fermat\'s space — monitor for positioning implications.';
+      }
+      if (keywords.some(k => ['shopify'].includes(k))) {
+        return 'Shopify ecosystem update — may affect Fermat\'s integration strategy.';
+      }
+      if (keywords.some(k => ['personalization','landing page','post-click','conversion optimization','commerce experience'].includes(k))) {
+        return 'Directly relevant to Fermat\'s AI-powered post-click experience positioning.';
+      }
+      if (keywords.some(k => ['ecommerce AI','DTC','direct to consumer','retail media'].includes(k))) {
+        return 'Market signal for Fermat\'s target customer base.';
+      }
+      return 'Relevant to Fermat\'s market.';
+    }
+
+    tagFermatRelevance(aiStories);
+    tagFermatRelevance(ecomStories);
+    tagFermatRelevance(bizStories);
+
+    if (aiStories.length === 0 && ecomStories.length === 0 && bizStories.length === 0) {
       console.log('[News Cron] No recent stories found — keeping existing data');
       return;
     }
@@ -4903,6 +4955,7 @@ async function refreshNewsFeed() {
     const todayEntry = {
       date: dateLabel,
       aiStories: aiStories,
+      ecomStories: ecomStories,
       bizStories: bizStories,
       rishabh_picks: rishabhPicks
     };
@@ -4937,7 +4990,7 @@ async function refreshNewsFeed() {
     const dir = path.dirname(NEWS_PATH);
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
     fs.writeFileSync(NEWS_PATH, JSON.stringify(payload, null, 2));
-    console.log('[News Cron] Refreshed:', aiStories.length, 'AI +', bizStories.length, 'biz stories for', dateLabel);
+    console.log('[News Cron] Refreshed:', aiStories.length, 'AI +', ecomStories.length, 'ecom +', bizStories.length, 'biz +', rishabhPicks.length, 'picks for', dateLabel);
   } catch (e) {
     console.error('[News Cron] Error:', e.message);
   }

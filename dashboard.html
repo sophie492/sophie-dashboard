@@ -2769,6 +2769,7 @@ function renderNewsPage(){
     return `<a href="${s.url}" target="_blank" class="news-story">
       <div class="news-headline">${s.headline}</div>
       <div class="news-summary">${s.summary}</div>
+      ${s.fermatAngle ? '<div style="font-size:10px;color:var(--gold);font-style:italic;margin-top:2px">&#128279; ' + s.fermatAngle + '</div>' : ''}
       <div class="news-source">&#8599; ${domain(s.url)}</div>
     </a>`;
   }
@@ -2782,6 +2783,7 @@ function renderNewsPage(){
     if (!today) return '<div style="padding:40px;text-align:center;color:var(--text-muted)">No news data available</div>';
     const ai = today.aiStories || today.ai || [];
     const biz = today.bizStories || today.biz || [];
+    const ecom = today.ecomStories || [];
     const picks = today.rishabh_picks || today.picks || [];
     const lead = ai[0];
     if (!lead) return '';
@@ -2797,7 +2799,7 @@ function renderNewsPage(){
       </div>
       <div class="paper-dateline">
         <span>${today.date}</span>
-        <span>${ai.length + biz.length} stories today</span>
+        <span>${ai.length + ecom.length + biz.length} stories today</span>
         <span>Fermat Commerce &bull; San Francisco</span>
       </div>
 
@@ -2816,8 +2818,9 @@ function renderNewsPage(){
         </div>
         <div class="news-col-divider"></div>
         <div class="news-col">
-          <div class="news-section">Business &amp; Startups</div>
-          ${biz.map(s => storyCard(s)).join('')}
+          <div class="news-section">E-commerce &amp; DTC</div>
+          ${ecom.map(s => storyCard(s)).join('')}
+          ${biz.length > 0 ? '<hr class="paper-rule" style="margin:8px 0"><div class="news-section">Business &amp; Startups</div>' + biz.map(s => storyCard(s)).join('') : ''}
           ${colRight.length > 0 ? `
             <hr class="paper-rule" style="margin:8px 0">
             ${colRight.map(s => storyCard(s)).join('')}
