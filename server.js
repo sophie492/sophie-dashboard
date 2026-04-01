@@ -1492,6 +1492,87 @@ app.post('/api/hackweek', (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// ── Hack Week Google Sheet Sync ──
+const HACKWEEK_SHEET_ID = '1qf2DWzf9852ARQFBnMxv1T5b5r_Zj73_VJyniG5HAv0';
+
+async function syncHackweekTeamsFromSheet() {
+  try {
+    const auth = await getGoogleSheetsAuth();
+    if (!auth) { console.log('[HW Sheet] No auth - skipping sync'); return; }
+
+    const sheets = google.sheets({ version: 'v4', auth });
+
+    // Get all sheet tabs to find the right one for current hack week
+    const spreadsheet = await sheets.spreadsheets.get({ spreadsheetId: HACKWEEK_SHEET_ID });
+    const sheetTabs = spreadsheet.data.sheets.map(s => s.properties.title);
+
+    // Look for a tab matching current hack week (e.g. "Hack Week #3" or "Jun 2026")
+    // Fall back to last tab if no match (most recent hack week)
+    const hwData = fs.existsSync(HACKWEEK_PATH) ? JSON.parse(fs.readFileSync(HACKWEEK_PATH, 'utf8')) : {};
+    const hwName = (hwData.config && hwData.config.name) || 'Hack Week #3';
+    let targetTab = sheetTabs.find(t => t.toLowerCase().includes(hwName.toLowerCase()));
+    if (!targetTab) targetTab = sheetTabs.find(t => t.toLowerCase().includes('jun 2026') || t.toLowerCase().includes('#3'));
+    if (!targetTab) targetTab = sheetTabs[sheetTabs.length - 1]; // last tab = most recent
+
+    console.log('[HW Sheet] Reading tab:', targetTab, 'from', sheetTabs.length, 'tabs');
+
+    const range = targetTab + '!A1:Z100';
+    const result = await sheets.spreadsheets.values.get({
+      spreadsheetId: HACKWEEK_SHEET_ID,
+      range: range
+    });
+
+    const rows = result.data.values;
+    if (!rows || rows.length < 2) {
+      console.log('[HW Sheet] No data rows found');
+      return;
+    }
+
+    // Row 1 = headers, dynamically map columns
+    const headers = rows[0].map(h => h.toLowerCase().trim());
+    const colMap = {
+      name: headers.findIndex(h => h.includes('team') && h.includes('name') || h === 'team'),
+      members: headers.findIndex(h => h.includes('member') || h.includes('people') || h.includes('who')),
+      idea: headers.findIndex(h => h.includes('idea') || h.includes('description') || h.includes('project')),
+      techStack: headers.findIndex(h => h.includes('tech') || h.includes('stack') || h.includes('technolog')),
+      loomUrl: headers.findIndex(h => h.includes('loom') || h.includes('video') || h.includes('demo link'))
+    };
+
+    // Fallback: if 'team' header not found, try first column
+    if (colMap.name === -1) colMap.name = 0;
+
+    const teams = [];
+    for (let i = 1; i < rows.length; i++) {
+      const row = rows[i];
+      const name = (colMap.name >= 0 && row[colMap.name]) ? row[colMap.name].trim() : '';
+      if (!name) continue; // skip empty rows
+
+      const membersRaw = (colMap.members >= 0 && row[colMap.members]) ? row[colMap.members] : '';
+      const members = membersRaw.split(/[,\n]+/).map(m => m.trim()).filter(Boolean);
+
+      teams.push({
+        name: name,
+        members: members,
+        idea: (colMap.idea >= 0 && row[colMap.idea]) ? row[colMap.idea].trim() : '',
+        techStack: (colMap.techStack >= 0 && row[colMap.techStack]) ? row[colMap.techStack].trim() : '',
+        loomUrl: (colMap.loomUrl >= 0 && row[colMap.loomUrl]) ? row[colMap.loomUrl].trim() : '',
+        sheetRow: i + 1
+      });
+    }
+
+    // Merge into existing hackweek data (preserve other fields)
+    const existing = fs.existsSync(HACKWEEK_PATH) ? JSON.parse(fs.readFileSync(HACKWEEK_PATH, 'utf8')) : {};
+    existing.teams = teams;
+    existing.lastSheetSync = new Date().toISOString();
+    const dir = path.dirname(HACKWEEK_PATH);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(HACKWEEK_PATH, JSON.stringify(existing, null, 2));
+    console.log('[HW Sheet] Synced', teams.length, 'teams from sheet');
+  } catch (e) {
+    console.error('[HW Sheet] Sync error:', e.message);
+  }
+}
+
 // ── BD Notion Sync ──
 app.post('/api/bd/relationships/add', async (req, res) => {
   const authHeader = req.headers.authorization || '';
@@ -3821,7 +3902,8 @@ app.get('/api/skill-status', (req, res) => {
     { id: 'cto-brief', name: 'CTO Brief \u2192 Shreyas', schedule: '7:00 AM M-F', ran: (function(){ try { const d = JSON.parse(fs.readFileSync(briefPath, 'utf8')); return !!(d.shreyasPriorities && d.shreyasPriorities.length > 0 && (d.briefDate === ptToday || (d.briefDate === (function(){ const dd = new Date(); dd.setDate(dd.getDate()-1); return new Intl.DateTimeFormat('en-CA', {timeZone: 'America/Los_Angeles', year: 'numeric', month: '2-digit', day: '2-digit'}).format(dd); })() && ptHour < 7))); } catch(e) { return false; } })(), lastRun: (function(){ try { return JSON.parse(fs.readFileSync(briefPath, 'utf8')).lastUpdated; } catch(e) { return null; } })() },
     { id: 'calendar-cron', name: 'Calendar Refresh', schedule: 'Every 30 min', ...ranToday(calPath, 'lastUpdated') },
     { id: 'task-cron', name: 'Task Refresh (Notion)', schedule: 'Every 15 min', ...ranToday(tasksPath, 'lastUpdated') },
-    { id: 'offsite-monitor', name: 'Offsite Monitor', schedule: '8 AM + 2 PM M-F', ...ranToday(offsitePath, 'lastSynced') }
+    { id: 'offsite-monitor', name: 'Offsite Monitor', schedule: '8 AM + 2 PM M-F', ...ranToday(offsitePath, 'lastSynced') },
+    { id: 'hackweek-sheet', name: 'Hack Week Sheet Sync', schedule: 'Every 30 min', ...ranToday(HACKWEEK_PATH, 'lastSheetSync') }
   ];
 
   // Check if today is a weekday
@@ -3933,5 +4015,9 @@ app.listen(PORT, () => {
   refreshTasksFromNotion();
   setInterval(refreshTasksFromNotion, 15 * 60 * 1000);
   console.log('[Task Cron] Auto-refresh every 15 min');
+  // Refresh hack week teams from Google Sheet on startup + every 30 min
+  syncHackweekTeamsFromSheet();
+  setInterval(syncHackweekTeamsFromSheet, 30 * 60 * 1000);
+  console.log('[HW Sheet] Auto-refresh every 30 min');
 });
 // persistence verified 1774997724
