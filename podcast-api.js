@@ -2,7 +2,8 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 
-const DATA_PATH = path.join(__dirname, 'data', 'podcast-data.json');
+const DATA_DIR = process.env.RAILWAY_VOLUME_MOUNT_PATH || path.join(__dirname, 'data');
+const DATA_PATH = path.join(DATA_DIR, 'podcast-data.json');
 
 function loadData() {
   try {
