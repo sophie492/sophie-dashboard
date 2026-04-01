@@ -4381,6 +4381,34 @@ app.post('/api/events/generate-todos', (req, res) => {
   res.json({ todos, source: 'generated' });
 });
 
+// Save event todos (add/delete/edit)
+app.post('/api/events/save-todos', (req, res) => {
+  const authHeader = req.headers.authorization || '';
+  const token = authHeader.replace('Bearer ', '');
+  if (token !== (process.env.DASHBOARD_API_KEY || 'sophie-dashboard-secret-change-me')) {
+    return res.status(401).json({ error: 'Invalid API key' });
+  }
+  try {
+    const { eventId, todos } = req.body;
+    if (!eventId) return res.status(400).json({ error: 'eventId required' });
+    const stored = loadEventTodos();
+    stored[eventId] = todos || [];
+    saveEventTodos(stored);
+
+    // Also sync checkbox states
+    const cbStates = loadCheckboxStates();
+    // Clear old keys for this event
+    Object.keys(cbStates).forEach(k => { if (k.startsWith('mkt-' + eventId + '-')) delete cbStates[k]; });
+    // Write current states
+    (todos || []).forEach((t, i) => {
+      cbStates['mkt-' + eventId + '-' + i] = { checked: !!t.done, updatedAt: new Date().toISOString() };
+    });
+    saveCheckboxStates(cbStates);
+
+    res.json({ ok: true, count: (todos || []).length });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 app.get('/api/skill-status', (req, res) => {
   const ptToday = new Intl.DateTimeFormat('en-CA', {timeZone: 'America/Los_Angeles', year: 'numeric', month: '2-digit', day: '2-digit'}).format(new Date());
   const ptHour = parseInt(new Intl.DateTimeFormat('en-US', {timeZone: 'America/Los_Angeles', hour: 'numeric', hour12: false}).format(new Date()));

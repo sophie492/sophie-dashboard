@@ -3264,6 +3264,13 @@ async function renderEventsPage(){
       e.stopPropagation();
       const item = btn.closest('.task-check-item');
       const evId = item.closest('[data-event-id]').dataset.eventId;
+      const todoIdx = parseInt(item.dataset.todoIdx);
+      const ev = MKT_EVENTS.find(e => e.id === evId);
+      // Remove from data array
+      if (ev && !isNaN(todoIdx) && ev.todos[todoIdx] !== undefined) {
+        ev.todos.splice(todoIdx, 1);
+        saveEventTodosToServer(evId, ev.todos);
+      }
       item.style.transition = 'opacity .2s, height .2s';
       item.style.opacity = '0';
       item.style.height = '0';
@@ -3304,32 +3311,63 @@ async function renderEventsPage(){
         const idx = parseInt(li.dataset.todoIdx);
         if (ev && !isNaN(idx) && ev.todos[idx]) {
           ev.todos[idx].done = isChecked;
-          const state = loadMktEventTodos();
-          if (!state[evId]) state[evId] = {};
-          state[evId][idx] = isChecked;
-          saveMktEventTodos(state);
           syncCheckbox('mkt-'+evId+'-'+idx, isChecked);
+          saveEventTodosToServer(evId, ev.todos);
         }
         updateTodoProgress(evId);
       });
 
       li.querySelector('.todo-delete').addEventListener('click', (e) => {
         e.stopPropagation();
+        const delIdx = parseInt(li.dataset.todoIdx);
+        if (ev && !isNaN(delIdx) && ev.todos[delIdx] !== undefined) {
+          ev.todos.splice(delIdx, 1);
+          saveEventTodosToServer(evId, ev.todos);
+        }
         li.style.transition='opacity .2s,height .2s'; li.style.opacity='0'; li.style.height='0'; li.style.overflow='hidden'; li.style.padding='0'; li.style.margin='0';
         setTimeout(() => { li.remove(); updateTodoProgress(evId); }, 200);
       });
 
       const input = li.querySelector('.todo-text-edit');
+      input.addEventListener('click', (e) => e.stopPropagation());
+      input.addEventListener('blur', () => {
+        const idx = parseInt(li.dataset.todoIdx);
+        if (ev && !isNaN(idx) && ev.todos[idx]) {
+          ev.todos[idx].text = input.value.trim();
+          saveEventTodosToServer(evId, ev.todos);
+        }
+      });
       input.focus();
+      // Persist the new todo to server
+      saveEventTodosToServer(evId, ev.todos);
 
       updateTodoProgress(evId);
     });
   });
 
-  // Prevent text input clicks from bubbling
+  // Prevent text input clicks from bubbling + save on blur
   document.querySelectorAll('.todo-text-edit').forEach(input => {
     input.addEventListener('click', (e) => e.stopPropagation());
+    input.addEventListener('blur', () => {
+      const item = input.closest('.task-check-item');
+      if (!item) return;
+      const evId = item.closest('[data-event-id]').dataset.eventId;
+      const idx = parseInt(item.dataset.todoIdx);
+      const ev = MKT_EVENTS.find(e => e.id === evId);
+      if (ev && !isNaN(idx) && ev.todos[idx]) {
+        ev.todos[idx].text = input.value.trim();
+        saveEventTodosToServer(evId, ev.todos);
+      }
+    });
   });
+}
+
+function saveEventTodosToServer(eventId, todos) {
+  fetch('/api/events/save-todos', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json','Authorization':'Bearer sophie-dashboard-secret-change-me'},
+    body: JSON.stringify({ eventId: eventId, todos: todos })
+  }).catch(function(e) { console.warn('[Events] Save todos failed:', e.message); });
 }
 
 // -- Projects Page --
