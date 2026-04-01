@@ -2352,10 +2352,6 @@ app.post('/api/events/enrich-from-notion', async (req, res) => {
     let enriched = 0;
     const results = [];
 
-    // Known Notion user IDs for Rishabh and Shreyas
-    const RISHABH_IDS = ['e072d31e-60d1-48d3-9f1c-8e4b46308e6e'];
-    const SHREYAS_IDS = ['100d872b-594c-8126-a435-0002ef89562d'];
-
     for (const ev of events) {
       if (!ev.notionLink) continue;
       // Extract page ID from URL
@@ -2368,14 +2364,8 @@ app.post('/api/events/enrich-from-notion', async (req, res) => {
         const props = page.properties || {};
         const updates = {};
 
-        // Check Attending field for Rishabh/Shreyas
-        if (props.Attending && props.Attending.people) {
-          const attendingIds = props.Attending.people.map(p => p.id);
-          updates.rishabh = RISHABH_IDS.some(id => attendingIds.includes(id));
-          updates.shreyas = SHREYAS_IDS.some(id => attendingIds.includes(id));
-        } else if (props.Attending && props.Attending.relation) {
-          // Some pages use relation instead of people
-        }
+        // NOTE: Notion Attending field tracks marketing team, NOT exec attendance
+        // Rishabh/Shreyas attendance is managed manually in the dashboard
 
         // Check Location field
         if (props.Location) {
@@ -2403,10 +2393,7 @@ app.post('/api/events/enrich-from-notion', async (req, res) => {
 
         if (Object.keys(updates).length > 0) {
           if (!overrides[ev.id]) overrides[ev.id] = {};
-          // Only update attendance — don't overwrite manual edits for other fields
-          if (updates.rishabh !== undefined) overrides[ev.id].rishabh = updates.rishabh;
-          if (updates.shreyas !== undefined) overrides[ev.id].shreyas = updates.shreyas;
-          // Store Notion metadata separately so it doesn't overwrite manual edits
+          // Store Notion metadata — does NOT overwrite rishabh/shreyas (managed manually)
           overrides[ev.id]._notionMeta = updates;
           overrides[ev.id].lastNotionSync = new Date().toISOString();
           enriched++;

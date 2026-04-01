@@ -3235,11 +3235,7 @@ async function renderEventsPage(){
       if (d.enriched > 0) {
         console.log('[Events] Enriched', d.enriched, 'events from Notion');
         (d.results || []).forEach(r => {
-          var ev = MKT_EVENTS.find(e => e.id === r.eventId);
-          if (ev && r.updates) {
-            if (r.updates.rishabh !== undefined) ev.rishabh = r.updates.rishabh;
-            if (r.updates.shreyas !== undefined) ev.shreyas = r.updates.shreyas;
-          }
+          // Notion metadata synced (dates, status) — rishabh/shreyas managed manually
         });
         renderEventsPage();
       }
