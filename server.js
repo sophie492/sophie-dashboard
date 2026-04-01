@@ -834,6 +834,40 @@ app.patch('/api/offsite/:id/field', (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// PATCH a task done state in an offsite phase
+app.patch('/api/offsite/:id/task', (req, res) => {
+  const authHeader = req.headers.authorization || '';
+  const token = authHeader.replace('Bearer ', '');
+  if (token !== (process.env.DASHBOARD_API_KEY || 'sophie-dashboard-secret-change-me')) {
+    return res.status(401).json({ error: 'Invalid API key' });
+  }
+  try {
+    const data = loadOffsiteData();
+    let found = null;
+    for (const year of Object.values(data.offsites)) {
+      found = year.find(o => o.id === req.params.id);
+      if (found) break;
+    }
+    if (!found) return res.status(404).json({ error: 'Offsite not found' });
+
+    const { phase, task, done } = req.body;
+    if (phase === undefined || task === undefined || done === undefined) {
+      return res.status(400).json({ error: 'phase, task, and done required' });
+    }
+    if (!found.phases || !found.phases[phase] || !found.phases[phase].tasks[task]) {
+      return res.status(404).json({ error: 'Task not found: phase ' + phase + ' task ' + task });
+    }
+
+    found.phases[phase].tasks[task].done = done;
+    console.log('[Offsite] Task toggled:', found.id, 'phase', phase, 'task', task, '->', done);
+
+    const dir = path.dirname(OFFSITE_PATH);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(OFFSITE_PATH, JSON.stringify({ ...data, lastSynced: new Date().toISOString() }, null, 2));
+    res.json({ ok: true, phase, task, done });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 // Push budget to Notion
 app.post('/api/offsite/:id/budget/notion-sync', async (req, res) => {
   const authHeader = req.headers.authorization || '';

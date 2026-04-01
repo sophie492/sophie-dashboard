@@ -3738,25 +3738,45 @@ function toggleOffsitePhase(head) {
 function toggleOffsiteTask(el) {
   const pi = parseInt(el.dataset.phase);
   const ti = parseInt(el.dataset.task);
-  // Determine which offsite ID context we're in (standalone page vs overview card)
   const offsiteId = _activeOffsiteId || '2026-Q2';
-  const task = DATA.leadershipOffsite.phases[pi].tasks[ti];
+
+  // Find the task in API data (single source of truth)
+  var offsite = getOffsiteById(offsiteId);
+  if (!offsite || !offsite.phases || !offsite.phases[pi] || !offsite.phases[pi].tasks[ti]) {
+    // Fallback to embedded DATA
+    if (DATA.leadershipOffsite && DATA.leadershipOffsite.phases[pi]) {
+      var task = DATA.leadershipOffsite.phases[pi].tasks[ti];
+      if (task) { task.done = !task.done; }
+    }
+    return;
+  }
+  var task = offsite.phases[pi].tasks[ti];
   task.done = !task.done;
   const isChecked = task.done;
 
-  // Use offsite-ID-specific localStorage keys to avoid cross-offsite contamination
+  // Also update embedded DATA if it exists (keeps overview in sync)
+  if (DATA.leadershipOffsite && DATA.leadershipOffsite.phases[pi] && DATA.leadershipOffsite.phases[pi].tasks[ti]) {
+    DATA.leadershipOffsite.phases[pi].tasks[ti].done = isChecked;
+  }
+
+  // Save via PATCH (single task, no overwrite)
+  fetch('/api/offsite/' + offsiteId + '/task', {
+    method: 'PATCH',
+    headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer sophie-dashboard-secret-change-me'},
+    body: JSON.stringify({ phase: pi, task: ti, done: isChecked })
+  }).catch(function(e) { console.error('[Offsite] Task save failed:', e); });
+
+  // Also persist to checkbox-states and Notion
+  syncCheckbox('offsite-'+offsiteId+'-'+pi+'-'+ti, isChecked, offsite.notionPageId || DATA.leadershipOffsite?.notionPageId, task.text);
+
+  // localStorage backup
   const storageKey = 'sophie-dash-offsite-done-' + offsiteId;
   let doneKeys = [];
   try { doneKeys = JSON.parse(localStorage.getItem(storageKey)) || []; } catch(e) { doneKeys = []; }
   const key = pi + '-' + ti;
-  if(isChecked) {
-    if(!doneKeys.includes(key)) doneKeys.push(key);
-  } else {
-    const idx = doneKeys.indexOf(key);
-    if(idx >= 0) doneKeys.splice(idx, 1);
-  }
+  if(isChecked) { if(!doneKeys.includes(key)) doneKeys.push(key); }
+  else { const idx = doneKeys.indexOf(key); if(idx >= 0) doneKeys.splice(idx, 1); }
   try { localStorage.setItem(storageKey, JSON.stringify(doneKeys)); } catch(e) {}
-  syncCheckbox('offsite-'+offsiteId+'-'+pi+'-'+ti, isChecked, DATA.leadershipOffsite?.notionPageId, task.text);
 
   const cb = el.querySelector('.task-checkbox');
   const textSpan = el.querySelector('span:last-child');
