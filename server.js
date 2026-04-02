@@ -4602,8 +4602,8 @@ app.get('/api/skill-status', (req, res) => {
   const offsitePath = OFFSITE_PATH;
 
   const skills = [
-    { id: 'ceo-brief', name: 'CEO Brief \u2192 Rishabh', schedule: '7:00 AM M-F', ...ranTodayByDate(briefPath, 'briefDate') },
-    { id: 'cto-brief', name: 'CTO Brief \u2192 Shreyas', schedule: '7:00 AM M-F', ran: (function(){ try { const d = JSON.parse(fs.readFileSync(briefPath, 'utf8')); return !!(d.shreyasPriorities && d.shreyasPriorities.length > 0 && (d.briefDate === ptToday || (d.briefDate === (function(){ const dd = new Date(); dd.setDate(dd.getDate()-1); return new Intl.DateTimeFormat('en-CA', {timeZone: 'America/Los_Angeles', year: 'numeric', month: '2-digit', day: '2-digit'}).format(dd); })() && ptHour < 7))); } catch(e) { return false; } })(), lastRun: (function(){ try { return JSON.parse(fs.readFileSync(briefPath, 'utf8')).lastUpdated; } catch(e) { return null; } })() },
+    { id: 'ceo-brief', name: 'CEO Brief \u2192 Rishabh', schedule: '7:00 AM M-F', ...ranToday(briefPath, 'lastUpdated') },
+    { id: 'cto-brief', name: 'CTO Brief \u2192 Shreyas', schedule: '7:00 AM M-F', ran: (function(){ try { const d = JSON.parse(fs.readFileSync(briefPath, 'utf8')); const lu = d.lastUpdated ? d.lastUpdated.slice(0,10) : ''; return !!(d.shreyasPriorities && d.shreyasPriorities.length > 0 && (lu === ptToday || (lu === (function(){ const dd = new Date(); dd.setDate(dd.getDate()-1); return new Intl.DateTimeFormat('en-CA', {timeZone: 'America/Los_Angeles', year: 'numeric', month: '2-digit', day: '2-digit'}).format(dd); })() && ptHour < 7))); } catch(e) { return false; } })(), lastRun: (function(){ try { return JSON.parse(fs.readFileSync(briefPath, 'utf8')).lastUpdated; } catch(e) { return null; } })() },
     { id: 'calendar-cron', name: 'Calendar Refresh', schedule: 'Every 30 min', ...ranToday(calPath, 'lastUpdated') },
     { id: 'task-cron', name: 'Task Refresh (Notion)', schedule: 'Every 15 min', ...ranToday(tasksPath, 'lastUpdated') },
     { id: 'offsite-monitor', name: 'Offsite Monitor', schedule: '8 AM + 2 PM M-F', ...ranToday(offsitePath, 'lastSynced') },
